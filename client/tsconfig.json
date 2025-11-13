@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+      "typeRoots": ["node_modules/@types", "node_modules"],
+      "types": ["carbon-components-react"],
+      "jsx": "react-jsx",       
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "module": "esnext",
+      "target": "es5",
+      "strict": true,
+      "skipLibCheck": true,
+      "forceConsistentCasingInFileNames": true,
+      "moduleResolution": "node",
+      "baseUrl": "./src",  
+      "paths": {
+        "@diesel-parser/json-form": ["node_modules/@diesel-parser/json-form"]
+      }
+    }
+  }
