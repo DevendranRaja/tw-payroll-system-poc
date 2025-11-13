@@ -1,4 +1,4 @@
-one‑payroll
+# One Payroll
 
 A modern payroll management application built with a full‑stack architecture.
 
