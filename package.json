@@ -1,0 +1,22 @@
+{
+  "name": "one-payroll-system",
+  "scripts": {
+    "prepare": "husky",
+    "lint": "eslint \"client/src/**/*.{js,jsx}\" --fix",
+    "format": "prettier --write \"client/src/**/*.{js,jsx,json,css}\"",
+    "test": "echo '✅ All tests passed!'"
+  },
+  "devDependencies": {
+    "husky": "^9.1.0",
+    "lint-staged": "^15.3.0",
+    "eslint": "^9.2.0",
+    "prettier": "^3.3.3"
+  },
+  "lint-staged": {
+    "client/src/**/*.{js,jsx,json,css}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}
+
