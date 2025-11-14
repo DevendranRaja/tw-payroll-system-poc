@@ -52,8 +52,49 @@ cd one‑payroll
 Setup the server:
 
 cd server
-# configure your database connection in application.properties / .env
+# configure your database connection in application.properties 
+
+⚙️ Configuration – application.yaml
+
+Your Spring Boot service requires the following DB settings:
+
+spring:
+datasource:
+url: jdbc:postgresql://postgres:5432/payroll_db
+username: payroll_user
+password: payroll_pass
+driver-class-name: org.postgresql.Driver
+
+jpa:
+hibernate:
+ddl-auto: update
+properties:
+hibernate:
+format_sql: true
+show-sql: true
+
+server:
+port: 8080
+
+🐳 Running the Application Using Docker Compose
+
+1️⃣ Build JAR
+
+./gradlew clean build
+
 ./gradlew bootRun
+
+2️⃣ Start containers
+
+docker-compose down -v
+docker-compose up -d
+
+This starts:
+
+Spring Boot app → http://localhost:8080
+
+PostgreSQL DB → port 5432
+
 
 
 Setup the client:
