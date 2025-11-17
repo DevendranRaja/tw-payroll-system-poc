@@ -31,11 +31,10 @@ class PayGroupControllerTest {
         PayGroupCreateRequest request = new PayGroupCreateRequest();
         request.setGroupName("Biweekly Engineers");
 
-        when(payGroupService.createPayGroup(any(PayGroupCreateRequest.class)))
+        when(payGroupService.create(any(PayGroupCreateRequest.class)))
                 .thenReturn(null);
 
-        ResponseEntity<PayGroupResponse> response =
-                payGroupController.create(request);
+        ResponseEntity<PayGroupResponse> response = payGroupController.createPayGroup(request);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         Assertions.assertNull(response.getBody());
