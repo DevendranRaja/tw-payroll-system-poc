@@ -5,7 +5,7 @@ import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupResponse;
 
 public class PayGroupServiceImpl implements PayGroupService {
     @Override
-    public PayGroupResponse createPayGroup(PayGroupCreateRequest request) {
+    public PayGroupResponse create(PayGroupCreateRequest request) {
         return null;
     }
 }
