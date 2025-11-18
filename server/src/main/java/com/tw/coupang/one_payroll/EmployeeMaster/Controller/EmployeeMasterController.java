@@ -35,7 +35,7 @@ public class EmployeeMasterController {
         }
     }
 
-    @PutMapping("/updateEmployee/{employeeId}")
+    @PutMapping("/employee/{employeeId}")
     public ResponseEntity<?> updateEmployee(@PathVariable String employeeId, @Valid @RequestBody UpdateEmployeeRequest request) {
         try {
             EmployeeMaster updated = employeeMasterService.updateEmployee(employeeId, request);
