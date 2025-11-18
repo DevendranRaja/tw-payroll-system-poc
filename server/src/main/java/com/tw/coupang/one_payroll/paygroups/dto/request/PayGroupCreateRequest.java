@@ -4,31 +4,36 @@ import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-@Getter
+@Data
 public class PayGroupCreateRequest {
 
-    @NotBlank
+    @NotBlank(message = "groupName must not be blank")
+    @Size(max = 50, message = "groupName must be <= 50 characters")
     private String groupName;
 
-    @NotNull
-    private PaymentCycle paymentCycle; // WEEKLY | BIWEEKLY | MONTHLY
+    @NotNull(message = "paymentCycle is required")
+    private PaymentCycle paymentCycle;
 
-    @NotNull
-    @DecimalMin("0.0")
+    @NotNull(message = "baseTaxRate is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "baseTaxRate must be >= 0.0")
     private BigDecimal baseTaxRate;
 
-    @NotNull
-    @DecimalMin("0.0")
+    @NotNull(message = "benefitRate is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "benefitRate must be >= 0.0")
     private BigDecimal benefitRate;
 
-    @NotNull
-    @DecimalMin("0.0")
+    @NotNull(message = "deductionRate is required")
+    @DecimalMin(value = "0.0", inclusive = true, message = "deductionRate must be >= 0.0")
     private BigDecimal deductionRate;
 }
-

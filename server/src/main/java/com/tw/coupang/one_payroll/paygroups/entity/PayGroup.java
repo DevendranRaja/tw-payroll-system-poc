@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "pay_group")
+@Table(name = "pay_group", uniqueConstraints = {@UniqueConstraint(name = "uk_pay_group_name", columnNames = "group_name")})
 public class PayGroup {
 
     @Id
@@ -42,6 +43,7 @@ public class PayGroup {
     @Builder.Default
     private BigDecimal deductionRate = BigDecimal.valueOf(2.50);
 
-    @Column(name = "created_at", insertable = false, updatable = false)
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

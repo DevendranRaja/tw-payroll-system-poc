@@ -23,12 +23,7 @@ public class PayGroupController {
 
     @PostMapping
     public ResponseEntity<PayGroupResponse> createPayGroup(@Valid @RequestBody PayGroupCreateRequest request) {
-
         PayGroupResponse response = payGroupService.create(request);
-
-        if(response == null) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
-        }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

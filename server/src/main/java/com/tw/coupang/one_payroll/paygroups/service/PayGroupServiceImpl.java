@@ -3,8 +3,10 @@ package com.tw.coupang.one_payroll.paygroups.service;
 import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupCreateRequest;
 import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupResponse;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
+import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.repository.PayGroupRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class PayGroupServiceImpl implements PayGroupService {
@@ -15,21 +17,31 @@ public class PayGroupServiceImpl implements PayGroupService {
         this.payGroupRepository = payGroupRepository;
     }
 
+    @Transactional
     @Override
     public PayGroupResponse create(PayGroupCreateRequest request) {
+        String name = request.getGroupName().trim();
 
-        PayGroup payGroup = PayGroup.builder()
-                .groupName(request.getGroupName())
-                .paymentCycle(request.getPaymentCycle())
-                .baseTaxRate(request.getBaseTaxRate())
-                .benefitRate(request.getBenefitRate())
-                .deductionRate(request.getDeductionRate())
-                .build();
+        if (payGroupRepository.existsByGroupNameIgnoreCase(name)) {
+            throw new DuplicatePayGroupException("Pay group with name '" + name + "' already exists!");
+        }
+
+        PayGroup payGroup = buildPayGroup(request);
 
         PayGroup savedPayGroup = payGroupRepository.save(payGroup);
 
         return PayGroupResponse.builder()
                 .payGroupId(savedPayGroup.getId())
+                .build();
+    }
+
+    private PayGroup buildPayGroup(PayGroupCreateRequest request) {
+        return PayGroup.builder()
+                .groupName(request.getGroupName())
+                .paymentCycle(request.getPaymentCycle())
+                .baseTaxRate(request.getBaseTaxRate())
+                .benefitRate(request.getBenefitRate())
+                .deductionRate(request.getDeductionRate())
                 .build();
     }
 }
