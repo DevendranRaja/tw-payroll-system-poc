@@ -4,11 +4,13 @@ import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.math.BigDecimal;
 
-@Data
+@Builder
+@Getter
 public class PayGroupCreateRequest {
 
     @NotBlank

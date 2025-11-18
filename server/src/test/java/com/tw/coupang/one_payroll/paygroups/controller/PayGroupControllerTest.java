@@ -1,6 +1,5 @@
-package com.tw.coupang.one_payroll.paygroup.controller;
+package com.tw.coupang.one_payroll.paygroups.controller;
 
-import com.tw.coupang.one_payroll.paygroups.controller.PayGroupController;
 import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupCreateRequest;
 import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupResponse;
 import com.tw.coupang.one_payroll.paygroups.service.PayGroupService;
@@ -28,9 +27,7 @@ class PayGroupControllerTest {
 
     @Test
     void createPayGroup_nullResponse() {
-        PayGroupCreateRequest request = new PayGroupCreateRequest();
-        request.setGroupName("Biweekly Engineers");
-
+        PayGroupCreateRequest request = PayGroupCreateRequest.builder().groupName("Biweekly Engineers").build();
         when(payGroupService.create(any(PayGroupCreateRequest.class)))
                 .thenReturn(null);
 
