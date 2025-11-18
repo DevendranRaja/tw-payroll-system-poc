@@ -1,5 +1,6 @@
-package com.tw.coupang.one_payroll.paygroups.exception;
+package com.tw.coupang.one_payroll.common.exception;
 
+import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
