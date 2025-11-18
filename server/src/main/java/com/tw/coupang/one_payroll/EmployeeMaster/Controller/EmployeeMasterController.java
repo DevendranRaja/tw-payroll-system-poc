@@ -16,7 +16,7 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/tw-payroll")
+@RequestMapping
 @Validated
 public class EmployeeMasterController {
 
@@ -26,7 +26,7 @@ public class EmployeeMasterController {
         this.employeeMasterService = employeeMasterService;
     }
 
-    @PostMapping("/createEmployee")
+    @PostMapping("/employee")
     public ResponseEntity<?> createEmployee(@Valid @RequestBody CreateEmployeeRequest request) {
         try {
             EmployeeMaster created = employeeMasterService.createEmployee(request);
