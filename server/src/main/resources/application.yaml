@@ -16,5 +16,5 @@ spring:
         format_sql: true
 
 server:
-  server:
+  servlet:
     context-path: /tw-payroll-system/api
