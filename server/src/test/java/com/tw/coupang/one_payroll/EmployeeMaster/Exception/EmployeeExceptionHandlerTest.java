@@ -10,9 +10,9 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class GlobalExceptionHandlerTest {
+class EmployeeExceptionHandlerTest {
 
-    private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
+    private final EmployeeExceptionHandler handler = new EmployeeExceptionHandler();
 
     @Test
     void handleEmployeeConflictException_returns409() {

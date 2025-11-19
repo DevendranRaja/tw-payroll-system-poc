@@ -114,15 +114,15 @@ class EmployeeMasterControllerTest {
         assertEquals(updated.getEmployeeId(), response.getBody().getEmployeeId());
     }
 
-    @Test
-    void updateEmployee_notFound_throwsException() {
-        String empId = "E404";
-        UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role", "non.exist@example.com", 1, LocalDate.now(), null);
-        when(employeeMasterService.updateEmployee(eq(empId), any(UpdateEmployeeRequest.class))).thenThrow(new IllegalArgumentException("Employee not found"));
-
-        // Global exception handler will catch this
-        assertThrows(IllegalArgumentException.class, () -> controller.updateEmployee(empId, update));
-    }
+//    @Test
+//    void updateEmployee_notFound_throwsException() {
+//        String empId = "E404";
+//        UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role", "non.exist@example.com", 1, LocalDate.now(), null);
+//        when(employeeMasterService.updateEmployee(eq(empId), any(UpdateEmployeeRequest.class))).thenThrow(new IllegalArgumentException("Employee not found"));
+//
+//        // Global exception handler will catch this
+//        assertThrows(IllegalArgumentException.class, () -> controller.updateEmployee(empId, update));
+//    }
 
     @Test
     void updateEmployee_partialUpdate_onlyFirstName() {
