@@ -1,6 +1,7 @@
 package com.tw.coupang.one_payroll.common.exception;
 
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
+import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -51,6 +52,16 @@ public class GlobalExceptionHandler {
                 ));
     }
 
+    @ExceptionHandler(PayGroupNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handlePayGroupNotFound(PayGroupNotFoundException ex) {
+
+        Map<String, Object> response = Map.of(
+                "status", HttpStatus.NOT_FOUND.value(),
+                "message", ex.getMessage()
+        );
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneric(Exception ex) {
