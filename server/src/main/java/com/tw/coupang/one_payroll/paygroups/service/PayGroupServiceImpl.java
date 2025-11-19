@@ -1,6 +1,7 @@
 package com.tw.coupang.one_payroll.paygroups.service;
 
 import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupCreateRequest;
+import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupUpdateRequest;
 import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupResponse;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
@@ -33,6 +34,11 @@ public class PayGroupServiceImpl implements PayGroupService {
         return PayGroupResponse.builder()
                 .payGroupId(savedPayGroup.getId())
                 .build();
+    }
+
+    @Override
+    public PayGroupResponse update(Integer id, PayGroupUpdateRequest request) {
+        return null;
     }
 
     private PayGroup buildPayGroup(PayGroupCreateRequest request) {
