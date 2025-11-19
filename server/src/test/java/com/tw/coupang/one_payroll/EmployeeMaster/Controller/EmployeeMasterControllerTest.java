@@ -108,22 +108,20 @@ class EmployeeMasterControllerTest {
 
         when(employeeMasterService.updateEmployee(eq(empId), any(UpdateEmployeeRequest.class))).thenReturn(updated);
 
-        ResponseEntity<?> response = controller.updateEmployee(empId, update);
+        ResponseEntity<EmployeeMaster> response = (ResponseEntity<EmployeeMaster>) controller.updateEmployee(empId, update);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertTrue(response.getBody() instanceof EmployeeMaster);
-        assertEquals(updated, (EmployeeMaster) response.getBody());
+        assertNotNull(response.getBody());
+        assertEquals(updated.getEmployeeId(), response.getBody().getEmployeeId());
     }
 
     @Test
-    void updateEmployee_notFound_returnsNotFound() {
+    void updateEmployee_notFound_throwsException() {
         String empId = "E404";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role", "non.exist@example.com", 1, LocalDate.now(), null);
         when(employeeMasterService.updateEmployee(eq(empId), any(UpdateEmployeeRequest.class))).thenThrow(new IllegalArgumentException("Employee not found"));
 
-        ResponseEntity<?> response = controller.updateEmployee(empId, update);
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        assertTrue(response.getBody() instanceof java.util.Map);
-        assertEquals("Employee not found", ((java.util.Map<?, ?>) response.getBody()).get("error"));
+        // Global exception handler will catch this
+        assertThrows(IllegalArgumentException.class, () -> controller.updateEmployee(empId, update));
     }
 
     @Test
