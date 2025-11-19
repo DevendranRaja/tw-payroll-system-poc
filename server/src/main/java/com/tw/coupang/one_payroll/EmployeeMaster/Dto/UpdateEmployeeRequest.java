@@ -15,7 +15,7 @@ public class UpdateEmployeeRequest {
     private String lastName;
     private String department;
     private String designation;
-    @Email private String email;
+    @Email(message = "Email should be valid") private String email;
     private Integer payGroupId;
     private LocalDate joiningDate;
     private String status;

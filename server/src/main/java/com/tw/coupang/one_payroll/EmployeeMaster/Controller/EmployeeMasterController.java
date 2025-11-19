@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import com.tw.coupang.one_payroll.EmployeeMaster.Dto.CreateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Dto.UpdateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
 
 import jakarta.validation.Valid;
@@ -30,13 +31,17 @@ public class EmployeeMasterController {
         try {
             EmployeeMaster created = employeeMasterService.createEmployee(request);
             return new ResponseEntity<>(created, HttpStatus.CREATED);
+        } catch (EmployeeConflictException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
         } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred"));
         }
     }
 
     @PutMapping("/employee/{employeeId}")
-    public ResponseEntity<?> updateEmployee(@PathVariable String employeeId, @Valid @RequestBody UpdateEmployeeRequest request) {
+    public ResponseEntity<?> updateEmployee(@PathVariable String employeeId, @RequestBody UpdateEmployeeRequest request) {
         try {
             EmployeeMaster updated = employeeMasterService.updateEmployee(employeeId, request);
             return new ResponseEntity<>(updated, HttpStatus.OK);

@@ -4,6 +4,7 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Dto.CreateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Dto.UpdateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
+import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,14 +60,29 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void createEmployee_emailAlreadyExists_throwsException() {
+    void createEmployee_employeeIdAlreadyExists_throwsConflictException() {
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
                 "E002", "Jane", "Smith", "HR", "Manager", "jane.smith@example.com", 2, LocalDate.now()
         );
 
+        when(repository.existsByEmployeeId(request.getEmployeeId())).thenReturn(true);
+
+        EmployeeConflictException exception = assertThrows(EmployeeConflictException.class, () -> service.createEmployee(request));
+        assertEquals("Employee ID already exists", exception.getMessage());
+        verify(repository, never()).save(any(EmployeeMaster.class));
+    }
+
+    @Test
+    void createEmployee_emailAlreadyExists_throwsConflictException() {
+        CreateEmployeeRequest request =  new CreateEmployeeRequest(
+                "E003", "Alice", "Brown", "Finance", "Analyst", "alice.brown@example.com", 3, LocalDate.now()
+        );
+
+        when(repository.existsByEmployeeId(request.getEmployeeId())).thenReturn(false);
         when(repository.existsByEmail(request.getEmail())).thenReturn(true);
 
-        assertThrows(IllegalArgumentException.class, () -> service.createEmployee(request));
+        EmployeeConflictException exception = assertThrows(EmployeeConflictException.class, () -> service.createEmployee(request));
+        assertEquals("Email already in use", exception.getMessage());
         verify(repository, never()).save(any(EmployeeMaster.class));
     }
 

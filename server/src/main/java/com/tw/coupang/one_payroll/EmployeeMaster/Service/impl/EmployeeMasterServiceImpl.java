@@ -1,5 +1,6 @@
 package com.tw.coupang.one_payroll.EmployeeMaster.Service.impl;
 
+import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,8 +24,12 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
     @Transactional
     public EmployeeMaster createEmployee(CreateEmployeeRequest request) {
 
+        if (repository.existsByEmployeeId(request.getEmployeeId())) {
+            throw new EmployeeConflictException("Employee ID already exists");
+        }
+
         if (repository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already in use");
+            throw new EmployeeConflictException("Email already in use");
         }
 
         EmployeeMaster employee = EmployeeMaster.builder()

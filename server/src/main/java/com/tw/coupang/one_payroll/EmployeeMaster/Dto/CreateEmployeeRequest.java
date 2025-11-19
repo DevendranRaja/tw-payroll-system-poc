@@ -23,6 +23,7 @@ public class CreateEmployeeRequest {
     @NotBlank
     private String lastName;
 
+    @NotBlank
     private String department;
 
     private String designation;

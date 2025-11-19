@@ -1,7 +1,7 @@
 package com.tw.coupang.one_payroll.error.entity;
 
 
-import com.tw.coupang.one_payroll.employee.EmployeeMaster;
+import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

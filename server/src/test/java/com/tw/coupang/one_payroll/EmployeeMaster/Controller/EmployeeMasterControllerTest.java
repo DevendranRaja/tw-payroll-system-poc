@@ -4,6 +4,7 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Dto.CreateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Dto.UpdateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
+import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -63,6 +64,36 @@ class EmployeeMasterControllerTest {
     }
 
     @Test
+    void createEmployee_employeeIdAlreadyExists_returnsConflict() {
+        CreateEmployeeRequest request = new CreateEmployeeRequest(
+                "E004", "Bob", "Johnson", "Sales", "Executive", "bob.johnson@example.com", 4, LocalDate.now()
+        );
+
+        when(employeeMasterService.createEmployee(any(CreateEmployeeRequest.class)))
+                .thenThrow(new EmployeeConflictException("Employee ID already exists"));
+
+        ResponseEntity<?> response = controller.createEmployee(request);
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertTrue(response.getBody() instanceof java.util.Map);
+        verify(employeeMasterService, times(1)).createEmployee(any(CreateEmployeeRequest.class));
+    }
+
+    @Test
+    void createEmployee_emailAlreadyExists_returnsConflict() {
+        CreateEmployeeRequest request = new CreateEmployeeRequest(
+                "E005", "Carol", "Davis", "Marketing", "Coordinator", "carol.davis@example.com", 5, LocalDate.now()
+        );
+
+        when(employeeMasterService.createEmployee(any(CreateEmployeeRequest.class)))
+                .thenThrow(new EmployeeConflictException("Email already in use"));
+
+        ResponseEntity<?> response = controller.createEmployee(request);
+        assertEquals(HttpStatus.CONFLICT, response.getStatusCode());
+        assertTrue(response.getBody() instanceof java.util.Map);
+        verify(employeeMasterService, times(1)).createEmployee(any(CreateEmployeeRequest.class));
+    }
+
+    @Test
     void updateEmployee_success() {
         String empId = "E003";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest("Alice", "BrownUpdated", "Finance", "Sr Analyst", "alice.brown@example.com", 3, LocalDate.now(), "INACTIVE");
@@ -93,5 +124,53 @@ class EmployeeMasterControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertTrue(response.getBody() instanceof java.util.Map);
         assertEquals("Employee not found", ((java.util.Map<?, ?>) response.getBody()).get("error"));
+    }
+
+    @Test
+    void updateEmployee_partialUpdate_onlyFirstName() {
+        String empId = "E003";
+        // Update request with only firstName, other fields are null
+        UpdateEmployeeRequest update = new UpdateEmployeeRequest();
+        update.setFirstName("Alice_Updated");
+
+        EmployeeMaster updated = EmployeeMaster.builder()
+                .employeeId(empId)
+                .firstName("Alice_Updated")
+                .lastName("Brown")
+                .email("alice.brown@example.com")
+                .payGroupId(3)
+                .status(EmployeeStatus.ACTIVE)
+                .build();
+
+        when(employeeMasterService.updateEmployee(eq(empId), any(UpdateEmployeeRequest.class))).thenReturn(updated);
+
+        ResponseEntity<?> response = controller.updateEmployee(empId, update);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody() instanceof EmployeeMaster);
+        assertEquals("Alice_Updated", ((EmployeeMaster) response.getBody()).getFirstName());
+    }
+
+    @Test
+    void updateEmployee_partialUpdate_onlyEmail() {
+        String empId = "E003";
+        // Update request with only email, other fields are null
+        UpdateEmployeeRequest update = new UpdateEmployeeRequest();
+        update.setEmail("newemail@example.com");
+
+        EmployeeMaster updated = EmployeeMaster.builder()
+                .employeeId(empId)
+                .firstName("Alice")
+                .lastName("Brown")
+                .email("newemail@example.com")
+                .payGroupId(3)
+                .status(EmployeeStatus.ACTIVE)
+                .build();
+
+        when(employeeMasterService.updateEmployee(eq(empId), any(UpdateEmployeeRequest.class))).thenReturn(updated);
+
+        ResponseEntity<?> response = controller.updateEmployee(empId, update);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody() instanceof EmployeeMaster);
+        assertEquals("newemail@example.com", ((EmployeeMaster) response.getBody()).getEmail());
     }
 }
