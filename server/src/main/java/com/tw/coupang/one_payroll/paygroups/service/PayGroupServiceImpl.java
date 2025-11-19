@@ -6,9 +6,11 @@ import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupResponse;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.repository.PayGroupRepository;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 public class PayGroupServiceImpl implements PayGroupService {
 
@@ -24,25 +26,30 @@ public class PayGroupServiceImpl implements PayGroupService {
     @Override
     public PayGroupResponse create(PayGroupCreateRequest request) {
         String name = request.getGroupName().trim();
+        log.info("Creating new pay group with name: {}", name);
 
         payGroupValidator.validateDuplicateName(name);
+        log.debug("Duplicate name validation passed for: {}", name);
 
         PayGroup payGroup = buildPayGroup(request, name);
-
         PayGroup savedPayGroup = payGroupRepository.save(payGroup);
 
+        log.info("Pay group '{}' created successfully with ID: {}", name, savedPayGroup.getId());
         return buildPayGroupResponse(savedPayGroup.getId());
     }
 
     @Transactional
     @Override
     public PayGroupResponse update(Integer id, PayGroupUpdateRequest request) {
+        log.info("Updating pay group with ID: {}", id);
+
         PayGroup existing = payGroupValidator.validatePayGroupExists(id);
+        log.debug("Existing pay group retrieved: {}", existing);
 
         String newName = request.getGroupName() != null ? request.getGroupName().trim() : null;
-
         if (newName != null) {
             payGroupValidator.validateDuplicateName(newName);
+            log.debug("Duplicate name validation passed for new name: {}", newName);
         }
 
         PayGroup updated = PayGroup.builder()
@@ -56,6 +63,7 @@ public class PayGroupServiceImpl implements PayGroupService {
                 .build();
 
         updated = payGroupRepository.save(updated);
+        log.info("Pay group ID {} updated successfully", updated.getId());
 
         return buildPayGroupResponse(updated.getId());
     }
