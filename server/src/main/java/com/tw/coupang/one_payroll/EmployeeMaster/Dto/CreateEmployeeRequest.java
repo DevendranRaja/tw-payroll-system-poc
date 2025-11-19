@@ -3,6 +3,7 @@ package com.tw.coupang.one_payroll.EmployeeMaster.Dto;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -35,6 +36,7 @@ public class CreateEmployeeRequest {
     @NotNull
     private Integer payGroupId; //Once PayGroup entity is created, this can be validated with valid existing PayGroup IDs.
 
+    @FutureOrPresent(message = "Joining date must be today or in the future")
     private LocalDate joiningDate;
 }
 

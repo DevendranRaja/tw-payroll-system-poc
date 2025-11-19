@@ -29,36 +29,16 @@ public class EmployeeMasterController {
 
     @PostMapping("/employee")
     public ResponseEntity<?> createEmployee(@Valid @RequestBody CreateEmployeeRequest request) {
-        try {
-            EmployeeMaster created = employeeMasterService.createEmployee(request);
-            return new ResponseEntity<>(created, HttpStatus.CREATED);
-        } catch (EmployeeConflictException ex) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
-        } catch (IllegalArgumentException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", ex.getMessage()));
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred"));
-        }
+        EmployeeMaster created = employeeMasterService.createEmployee(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/employee/{employeeId}")
-    public ResponseEntity<?> updateEmployee(@PathVariable String employeeId, @RequestBody UpdateEmployeeRequest request) {
-        try {
-            EmployeeMaster updated = employeeMasterService.updateEmployee(employeeId, request);
-            return new ResponseEntity<>(updated, HttpStatus.OK);
-        } catch (IllegalArgumentException ex) {
-            String msg = ex.getMessage() == null ? "Bad request" : ex.getMessage();
-            String lower = msg.toLowerCase();
-            if (lower.contains("not found")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", msg));
-            } else if (lower.contains("invalid status")) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", msg));
-            } else {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("error", msg));
-            }
-        } catch (Exception ex) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", "An unexpected error occurred"));
-        }
+    public ResponseEntity<?> updateEmployee(@PathVariable String employeeId,
+                                            @Valid @RequestBody UpdateEmployeeRequest request) {
+        EmployeeMaster updated = employeeMasterService.updateEmployee(employeeId, request);
+        return ResponseEntity.ok(updated);
     }
+
 
 }
