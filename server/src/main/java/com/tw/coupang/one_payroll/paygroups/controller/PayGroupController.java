@@ -39,5 +39,4 @@ public class PayGroupController {
         PayGroupResponse response = payGroupService.update(id, request);
         return ResponseEntity.ok(response);
     }
-
 }

@@ -35,7 +35,7 @@ class PayGroupControllerTest {
 
     @Test
     void createPayGroup_duplicatePayGroup_throwsException() {
-        PayGroupCreateRequest request = validRequest();
+        PayGroupCreateRequest request = buildCreateRequest();
 
         when(payGroupService.create(any(PayGroupCreateRequest.class)))
                 .thenThrow(new DuplicatePayGroupException("Pay group already exists"));
@@ -51,7 +51,7 @@ class PayGroupControllerTest {
 
     @Test
     void createPayGroup_success() {
-        PayGroupCreateRequest request = validRequest();
+        PayGroupCreateRequest request = buildCreateRequest();
 
         PayGroupResponse expected = PayGroupResponse.builder()
                 .payGroupId(1)
@@ -72,7 +72,7 @@ class PayGroupControllerTest {
 
     @Test
     void updatePayGroup_success() {
-        PayGroupUpdateRequest request = validUpdateRequest();
+        PayGroupUpdateRequest request = buildUpdateRequest();
 
         PayGroupResponse expected = PayGroupResponse.builder()
                 .payGroupId(1)
@@ -92,9 +92,8 @@ class PayGroupControllerTest {
 
     @Test
     void updatePayGroup_failure_throwsRuntimeException() {
-        PayGroupUpdateRequest request = validUpdateRequest();
+        PayGroupUpdateRequest request = buildUpdateRequest();
 
-        // Simulate failure when updating
         when(payGroupService.update(99, request))
                 .thenThrow(new RuntimeException("Update failed"));
 
@@ -108,7 +107,7 @@ class PayGroupControllerTest {
     }
 
 
-    private PayGroupCreateRequest validRequest() {
+    private PayGroupCreateRequest buildCreateRequest() {
         return PayGroupCreateRequest.builder()
                 .groupName("Monthly Engineers")
                 .paymentCycle(PaymentCycle.MONTHLY)
@@ -118,7 +117,7 @@ class PayGroupControllerTest {
                 .build();
     }
 
-    private PayGroupUpdateRequest validUpdateRequest() {
+    private PayGroupUpdateRequest buildUpdateRequest() {
         return PayGroupUpdateRequest.builder()
                 .groupName("Monthly Engineers Updated")
                 .paymentCycle(PaymentCycle.MONTHLY)
