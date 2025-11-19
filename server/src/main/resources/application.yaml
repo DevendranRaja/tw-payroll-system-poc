@@ -14,3 +14,7 @@ spring:
     properties:
       hibernate:
         format_sql: true
+
+server:
+  servlet:
+    context-path: /tw-payroll-system/api
