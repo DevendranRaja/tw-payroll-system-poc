@@ -72,6 +72,7 @@ public class PayGroupServiceImpl implements PayGroupService {
         return buildPayGroupResponse(updated.getId());
     }
 
+    @Transactional(readOnly = true)
     @Override
     public List<PayGroupDetailsResponse> getAll(PaymentCycle paymentCycle) {
         log.info("Fetching all pay groups. Filter paymentCycle={}", paymentCycle);
