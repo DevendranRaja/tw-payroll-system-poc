@@ -3,6 +3,7 @@ plugins {
     id 'org.springframework.boot' version '3.5.7'
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'checkstyle'
+	id "org.sonarqube" version "4.4.1.3373"
 }
 
 group = 'com.tw.coupang'
@@ -50,4 +51,13 @@ checkstyle {
 tasks.withType(Checkstyle).configureEach {
 	ignoreFailures = false
 	showViolations = true
+}
+
+sonarqube {
+	properties {
+		property "sonar.projectKey", "tw-payroll-system"
+		property "sonar.projectName", "tw-payroll-system"
+		property "sonar.host.url", "http://localhost:9000"
+		property "sonar.login", "YOUR_TOKEN"
+	}
 }
