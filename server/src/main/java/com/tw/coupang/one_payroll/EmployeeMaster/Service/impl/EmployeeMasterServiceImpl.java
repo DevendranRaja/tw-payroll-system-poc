@@ -12,7 +12,6 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterReposi
 import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class EmployeeMasterServiceImpl implements EmployeeMasterService {
@@ -92,19 +91,21 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EmployeeMaster getEmployeeById(String employeeId) {
         return repository.findById(employeeId)
                 .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EmployeeMaster> getEmployeesByDepartment(String department, boolean includeInactive) {
         if (department == null || department.trim().isEmpty()) {
             return java.util.Collections.emptyList();
         }
         if (includeInactive) {
-            return repository.findByDepartment(department);
+            return repository.findByDepartmentIgnoreCase(department.trim());
         }
-        return repository.findByDepartmentAndStatus(department, EmployeeStatus.ACTIVE);
+        return repository.findByDepartmentIgnoreCaseAndStatus(department.trim(), EmployeeStatus.ACTIVE);
     }
 }

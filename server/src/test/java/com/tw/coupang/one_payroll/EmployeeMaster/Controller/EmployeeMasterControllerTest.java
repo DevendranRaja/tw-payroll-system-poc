@@ -178,7 +178,7 @@ class EmployeeMasterControllerTest {
     }
 
     @Test
-    void retrieveEmployees_byEmployeeId_success() {
+    void getEmployeeById_success() {
         String empId = "E010";
         EmployeeMaster existing = EmployeeMaster.builder()
                 .employeeId(empId)
@@ -191,41 +191,63 @@ class EmployeeMasterControllerTest {
 
         when(employeeMasterService.getEmployeeById(empId)).thenReturn(existing);
 
-        ResponseEntity<?> response = controller.retrieveEmployees(empId, null, false);
+        ResponseEntity<?> response = controller.getEmployeeById(empId);
 
         assertEquals(200, response.getStatusCodeValue());
         assertEquals(existing, response.getBody());
     }
 
     @Test
-    void retrieveEmployees_byEmployeeId_notFound_propagatesToGlobalHandler() {
+    void getEmployeeById_notFound() {
         String empId = "E404";
         when(employeeMasterService.getEmployeeById(empId)).thenThrow(new IllegalArgumentException("Employee not found"));
 
-        assertThrows(IllegalArgumentException.class, () -> controller.retrieveEmployees(empId, null, false));
+        assertThrows(IllegalArgumentException.class, () -> controller.getEmployeeById(empId));
     }
 
     @Test
-    void retrieveEmployees_byDepartment_filtersCorrectly() {
+    void getEmployeesByDepartment_success_activeOnly() {
         String dept = "HR";
         EmployeeMaster a = EmployeeMaster.builder().employeeId("E101").department(dept).status(EmployeeStatus.ACTIVE).build();
         EmployeeMaster b = EmployeeMaster.builder().employeeId("E102").department(dept).status(EmployeeStatus.ACTIVE).build();
 
         when(employeeMasterService.getEmployeesByDepartment(dept, false)).thenReturn(Arrays.asList(a, b));
 
-        ResponseEntity<?> response = controller.retrieveEmployees(null, dept, false);
+        ResponseEntity<?> response = controller.getEmployeesByDepartment(dept, false);
 
         assertEquals(200, response.getStatusCodeValue());
         assertTrue(((java.util.List) response.getBody()).size() == 2);
     }
 
     @Test
-    void retrieveEmployees_byDepartment_emptyWhenNoDept() {
-        when(employeeMasterService.getEmployeesByDepartment(null, false)).thenReturn(Collections.emptyList());
+    void getEmployeesByDepartment_success_includeInactive() {
+        String dept = "Finance";
+        EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
+        EmployeeMaster b = EmployeeMaster.builder().employeeId("E202").department(dept).status(EmployeeStatus.INACTIVE).build();
 
-        ResponseEntity<?> response = controller.retrieveEmployees(null, null, false);
+        when(employeeMasterService.getEmployeesByDepartment(dept, true)).thenReturn(Arrays.asList(a, b));
+
+        ResponseEntity<?> response = controller.getEmployeesByDepartment(dept, true);
 
         assertEquals(200, response.getStatusCodeValue());
-        assertTrue(((java.util.List) response.getBody()).isEmpty());
+        assertEquals(2, ((java.util.List) response.getBody()).size());
+    }
+
+    @Test
+    void getEmployeesByDepartment_missingDepartment_throws() {
+        assertThrows(IllegalArgumentException.class, () -> controller.getEmployeesByDepartment(null, false));
+    }
+
+    @Test
+    void getEmployeesByDepartment_includeInactiveWithoutDept_throws() {
+        assertThrows(IllegalArgumentException.class, () -> controller.getEmployeesByDepartment(null, true));
+    }
+
+    @Test
+    void getEmployeesByDepartment_noResults_throws() {
+        String dept = "NonDept";
+        when(employeeMasterService.getEmployeesByDepartment(dept, false)).thenReturn(Collections.emptyList());
+
+        assertThrows(IllegalArgumentException.class, () -> controller.getEmployeesByDepartment(dept, false));
     }
 }

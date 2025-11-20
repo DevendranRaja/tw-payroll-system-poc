@@ -160,8 +160,7 @@ class EmployeeMasterServiceImplTest {
         String dept = "Finance";
         EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
         EmployeeMaster b = EmployeeMaster.builder().employeeId("E202").department(dept).status(EmployeeStatus.INACTIVE).build();
-
-        when(repository.findByDepartmentAndStatus(dept, EmployeeStatus.ACTIVE)).thenReturn(Arrays.asList(a));
+        when(repository.findByDepartmentIgnoreCaseAndStatus(dept, EmployeeStatus.ACTIVE)).thenReturn(Arrays.asList(a));
 
         java.util.List<EmployeeMaster> result = service.getEmployeesByDepartment(dept, false);
 
@@ -175,8 +174,7 @@ class EmployeeMasterServiceImplTest {
         String dept = "Finance";
         EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
         EmployeeMaster b = EmployeeMaster.builder().employeeId("E202").department(dept).status(EmployeeStatus.INACTIVE).build();
-
-        when(repository.findByDepartment(dept)).thenReturn(Arrays.asList(a, b));
+        when(repository.findByDepartmentIgnoreCase(dept)).thenReturn(Arrays.asList(a, b));
 
         java.util.List<EmployeeMaster> result = service.getEmployeesByDepartment(dept, true);
 

@@ -47,6 +47,9 @@ BEFORE UPDATE ON employee_master
 FOR EACH ROW
 EXECUTE FUNCTION update_timestamp();
 
+-- Add index for department
+CREATE INDEX idx_employee_master_department ON employee_master(department);
+
 -------------------------------------------------------
 -- pay_group
 -------------------------------------------------------

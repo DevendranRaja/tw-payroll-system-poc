@@ -39,18 +39,31 @@ public class EmployeeMasterController {
         return ResponseEntity.ok(updated);
     }
 
+    @GetMapping("/employee/{employeeId}")
+    public ResponseEntity<?> getEmployeeById(@PathVariable String employeeId) {
+        EmployeeMaster employee = employeeMasterService.getEmployeeById(employeeId);
+        return ResponseEntity.ok(employee);
+    }
+
     @GetMapping("/employees")
-    public ResponseEntity<?> retrieveEmployees(
-            @RequestParam(value = "employeeId", required = false) String employeeId,
+    public ResponseEntity<?> getEmployeesByDepartment(
             @RequestParam(value = "department", required = false) String department,
             @RequestParam(value = "includeInactive", required = false, defaultValue = "false") boolean includeInactive) {
 
-        if (employeeId != null && !employeeId.trim().isEmpty()) {
-            EmployeeMaster employee = employeeMasterService.getEmployeeById(employeeId.trim());
-            return ResponseEntity.ok(employee);
+        if (includeInactive && (department == null || department.trim().isEmpty())) {
+            throw new IllegalArgumentException("includeInactive parameter requires department to be specified");
+        }
+
+        if (department == null || department.trim().isEmpty()) {
+            throw new IllegalArgumentException("department query parameter is required");
         }
 
         List<EmployeeMaster> list = employeeMasterService.getEmployeesByDepartment(department, includeInactive);
+
+        if (list == null || list.isEmpty()) {
+            throw new IllegalArgumentException("No employees found for department: " + department);
+        }
+
         return ResponseEntity.ok(list);
     }
 

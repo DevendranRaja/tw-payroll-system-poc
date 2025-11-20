@@ -11,6 +11,11 @@ import java.util.List;
 public interface EmployeeMasterRepository extends JpaRepository<EmployeeMaster, String> {
     boolean existsByEmail(String email);
     boolean existsByEmployeeId(String employeeId);
+
     List<EmployeeMaster> findByDepartment(String department);
     List<EmployeeMaster> findByDepartmentAndStatus(String department, EmployeeStatus status);
+
+    // Case-insensitive variants
+    List<EmployeeMaster> findByDepartmentIgnoreCase(String department);
+    List<EmployeeMaster> findByDepartmentIgnoreCaseAndStatus(String department, EmployeeStatus status);
 }
