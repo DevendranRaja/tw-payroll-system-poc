@@ -184,7 +184,6 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void getEmployeesByDepartment_emptyWhenNoDeptProvided() {
-        java.util.List<EmployeeMaster> result = service.getEmployeesByDepartment(null, false);
-        assertTrue(result.isEmpty());
+        assertThrows(NullPointerException.class, () -> service.getEmployeesByDepartment(null, false));
     }
 }

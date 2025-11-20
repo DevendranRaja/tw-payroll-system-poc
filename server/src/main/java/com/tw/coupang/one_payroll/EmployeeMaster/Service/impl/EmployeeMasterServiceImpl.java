@@ -100,9 +100,6 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
     @Override
     @Transactional(readOnly = true)
     public List<EmployeeMaster> getEmployeesByDepartment(String department, boolean includeInactive) {
-        if (department == null || department.trim().isEmpty()) {
-            return java.util.Collections.emptyList();
-        }
         if (includeInactive) {
             return repository.findByDepartmentIgnoreCase(department.trim());
         }
