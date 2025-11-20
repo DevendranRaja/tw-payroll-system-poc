@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+
+    <module name="TreeWalker">
+
+        <!-- BLOCK UNUSED IMPORTS -->
+        <module name="UnusedImports"/>
+
+        <!-- Prevent unused local variables -->
+        <module name="UnusedLocalVariable"/>
+
+        <!-- Class / variable / method naming -->
+        <module name="ConstantName"/>
+        <module name="LocalVariableName"/>
+        <module name="MethodName"/>
+
+    </module>
+
+</module>
