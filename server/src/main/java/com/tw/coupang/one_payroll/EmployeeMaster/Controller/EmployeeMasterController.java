@@ -1,19 +1,18 @@
 package com.tw.coupang.one_payroll.EmployeeMaster.Controller;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
-
 import com.tw.coupang.one_payroll.EmployeeMaster.Dto.CreateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Dto.UpdateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
 import jakarta.validation.Valid;
 
-import java.util.Map;
+import java.util.List;
 
 
 @RestController
@@ -40,5 +39,32 @@ public class EmployeeMasterController {
         return ResponseEntity.ok(updated);
     }
 
+    @GetMapping("/employee/{employeeId}")
+    public ResponseEntity<?> getEmployeeById(@PathVariable String employeeId) {
+        EmployeeMaster employee = employeeMasterService.getEmployeeById(employeeId);
+        return ResponseEntity.ok(employee);
+    }
+
+    @GetMapping("/employees")
+    public ResponseEntity<?> getEmployeesByDepartment(
+            @RequestParam(value = "department", required = false) String department,
+            @RequestParam(value = "includeInactive", required = false, defaultValue = "false") boolean includeInactive) {
+
+        if (includeInactive && (department == null || department.trim().isEmpty())) {
+            throw new IllegalArgumentException("includeInactive parameter requires department to be specified");
+        }
+
+        if (department == null || department.trim().isEmpty()) {
+            throw new IllegalArgumentException("department query parameter is required");
+        }
+
+        List<EmployeeMaster> list = employeeMasterService.getEmployeesByDepartment(department, includeInactive);
+
+        if (list == null || list.isEmpty()) {
+            throw new IllegalArgumentException("No employees found for department: " + department);
+        }
+
+        return ResponseEntity.ok(list);
+    }
 
 }
