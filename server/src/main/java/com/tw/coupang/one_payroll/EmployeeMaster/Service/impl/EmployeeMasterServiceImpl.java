@@ -11,6 +11,9 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
 import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Service
 public class EmployeeMasterServiceImpl implements EmployeeMasterService {
 
@@ -86,5 +89,22 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
             }
         }
         return repository.save(employee);
+    }
+
+    @Override
+    public EmployeeMaster getEmployeeById(String employeeId) {
+        return repository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+    }
+
+    @Override
+    public List<EmployeeMaster> getEmployeesByDepartment(String department, boolean includeInactive) {
+        if (department == null || department.trim().isEmpty()) {
+            return java.util.Collections.emptyList();
+        }
+        if (includeInactive) {
+            return repository.findByDepartment(department);
+        }
+        return repository.findByDepartmentAndStatus(department, EmployeeStatus.ACTIVE);
     }
 }

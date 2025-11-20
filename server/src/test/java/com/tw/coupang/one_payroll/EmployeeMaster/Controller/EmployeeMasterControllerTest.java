@@ -16,6 +16,8 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -173,5 +175,57 @@ class EmployeeMasterControllerTest {
         assertEquals(200, response.getStatusCodeValue());
         assertEquals("newemail@example.com",
                 ((EmployeeMaster) response.getBody()).getEmail());
+    }
+
+    @Test
+    void retrieveEmployees_byEmployeeId_success() {
+        String empId = "E010";
+        EmployeeMaster existing = EmployeeMaster.builder()
+                .employeeId(empId)
+                .firstName("Sam")
+                .lastName("Lee")
+                .email("sam.lee@example.com")
+                .payGroupId(2)
+                .status(EmployeeStatus.ACTIVE)
+                .build();
+
+        when(employeeMasterService.getEmployeeById(empId)).thenReturn(existing);
+
+        ResponseEntity<?> response = controller.retrieveEmployees(empId, null, false);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(existing, response.getBody());
+    }
+
+    @Test
+    void retrieveEmployees_byEmployeeId_notFound_propagatesToGlobalHandler() {
+        String empId = "E404";
+        when(employeeMasterService.getEmployeeById(empId)).thenThrow(new IllegalArgumentException("Employee not found"));
+
+        assertThrows(IllegalArgumentException.class, () -> controller.retrieveEmployees(empId, null, false));
+    }
+
+    @Test
+    void retrieveEmployees_byDepartment_filtersCorrectly() {
+        String dept = "HR";
+        EmployeeMaster a = EmployeeMaster.builder().employeeId("E101").department(dept).status(EmployeeStatus.ACTIVE).build();
+        EmployeeMaster b = EmployeeMaster.builder().employeeId("E102").department(dept).status(EmployeeStatus.ACTIVE).build();
+
+        when(employeeMasterService.getEmployeesByDepartment(dept, false)).thenReturn(Arrays.asList(a, b));
+
+        ResponseEntity<?> response = controller.retrieveEmployees(null, dept, false);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(((java.util.List) response.getBody()).size() == 2);
+    }
+
+    @Test
+    void retrieveEmployees_byDepartment_emptyWhenNoDept() {
+        when(employeeMasterService.getEmployeesByDepartment(null, false)).thenReturn(Collections.emptyList());
+
+        ResponseEntity<?> response = controller.retrieveEmployees(null, null, false);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertTrue(((java.util.List) response.getBody()).isEmpty());
     }
 }

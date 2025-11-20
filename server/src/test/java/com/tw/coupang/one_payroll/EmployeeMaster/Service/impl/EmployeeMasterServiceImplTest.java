@@ -13,6 +13,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -124,5 +126,67 @@ class EmployeeMasterServiceImplTest {
         UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role", "non.exist@example.com", 1, LocalDate.now(), null);
         when(repository.findById(empId)).thenReturn(Optional.empty());
         assertThrows(IllegalArgumentException.class, () -> service.updateEmployee(empId, update));
+    }
+
+    @Test
+    void getEmployeeById_success() {
+        String empId = "E010";
+        EmployeeMaster existing = EmployeeMaster.builder()
+                .employeeId(empId)
+                .firstName("Sam")
+                .lastName("Lee")
+                .email("sam.lee@example.com")
+                .payGroupId(2)
+                .status(EmployeeStatus.ACTIVE)
+                .build();
+
+        when(repository.findById(empId)).thenReturn(Optional.of(existing));
+
+        EmployeeMaster result = service.getEmployeeById(empId);
+
+        assertNotNull(result);
+        assertEquals(empId, result.getEmployeeId());
+    }
+
+    @Test
+    void getEmployeeById_notFound_throws() {
+        String empId = "E404";
+        when(repository.findById(empId)).thenReturn(Optional.empty());
+        assertThrows(IllegalArgumentException.class, () -> service.getEmployeeById(empId));
+    }
+
+    @Test
+    void getEmployeesByDepartment_returnsActiveOnly_whenIncludeInactiveFalse() {
+        String dept = "Finance";
+        EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
+        EmployeeMaster b = EmployeeMaster.builder().employeeId("E202").department(dept).status(EmployeeStatus.INACTIVE).build();
+
+        when(repository.findByDepartmentAndStatus(dept, EmployeeStatus.ACTIVE)).thenReturn(Arrays.asList(a));
+
+        java.util.List<EmployeeMaster> result = service.getEmployeesByDepartment(dept, false);
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals(EmployeeStatus.ACTIVE, result.get(0).getStatus());
+    }
+
+    @Test
+    void getEmployeesByDepartment_returnsAll_whenIncludeInactiveTrue() {
+        String dept = "Finance";
+        EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
+        EmployeeMaster b = EmployeeMaster.builder().employeeId("E202").department(dept).status(EmployeeStatus.INACTIVE).build();
+
+        when(repository.findByDepartment(dept)).thenReturn(Arrays.asList(a, b));
+
+        java.util.List<EmployeeMaster> result = service.getEmployeesByDepartment(dept, true);
+
+        assertNotNull(result);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void getEmployeesByDepartment_emptyWhenNoDeptProvided() {
+        java.util.List<EmployeeMaster> result = service.getEmployeesByDepartment(null, false);
+        assertTrue(result.isEmpty());
     }
 }
