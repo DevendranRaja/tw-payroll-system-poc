@@ -58,6 +58,6 @@ sonarqube {
 		property "sonar.projectKey", "tw-payroll-system"
 		property "sonar.projectName", "tw-payroll-system"
 		property "sonar.host.url", "http://localhost:9000"
-		property "sonar.login", "YOUR_TOKEN"
+		property "sonar.gradle.skipCompile", "true"
 	}
 }
