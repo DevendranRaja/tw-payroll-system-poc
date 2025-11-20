@@ -7,6 +7,7 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -30,9 +31,19 @@ class EmployeeMasterControllerTest {
     @InjectMocks
     private EmployeeMasterController controller;
 
+    // hold the AutoCloseable returned by MockitoAnnotations.openMocks to close it later
+    private AutoCloseable mocks;
+
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this);
+        mocks = MockitoAnnotations.openMocks(this);
+    }
+
+    @AfterEach
+    void tearDown() throws Exception {
+        if (mocks != null) {
+            mocks.close();
+        }
     }
 
     /** -------------------------------------------------
@@ -40,7 +51,7 @@ class EmployeeMasterControllerTest {
      * ------------------------------------------------- */
 
     @Test
-    void createEmployee_success() {
+    void createEmployeeSuccess() {
         CreateEmployeeRequest request = new CreateEmployeeRequest(
                 "E003", "Alice", "Brown", "Finance", "Analyst",
                 "alice.brown@example.com", 3, LocalDate.now()
@@ -62,13 +73,13 @@ class EmployeeMasterControllerTest {
 
         ResponseEntity<?> response = controller.createEmployee(request);
 
-        assertEquals(201, response.getStatusCodeValue());
+        assertEquals(201, response.getStatusCode().value());
         assertEquals(created, response.getBody());
         verify(employeeMasterService, times(1)).createEmployee(request);
     }
 
     @Test
-    void createEmployee_conflictException_propagatesToGlobalHandler() {
+    void createEmployeeConflictExceptionPropagatesToGlobalHandler() {
         CreateEmployeeRequest request = new CreateEmployeeRequest(
                 "E004", "Bob", "Johnson", "Sales", "Executive",
                 "bob.johnson@example.com", 4, LocalDate.now()
@@ -89,7 +100,7 @@ class EmployeeMasterControllerTest {
      * ------------------------------------------------- */
 
     @Test
-    void updateEmployee_success() {
+    void updateEmployeeSuccess() {
         String empId = "E003";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest(
                 "Alice", "BrownUpdated", "Finance", "Sr Analyst",
@@ -109,12 +120,12 @@ class EmployeeMasterControllerTest {
 
         ResponseEntity<?> response = controller.updateEmployee(empId, update);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(updated, response.getBody());
     }
 
     @Test
-    void updateEmployee_notFound_propagatesToGlobalHandler() {
+    void updateEmployeeNotFoundPropagatesToGlobalHandler() {
         String empId = "E404";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest(
                 "Non", "Exist", "Dept", "Role",
@@ -129,7 +140,7 @@ class EmployeeMasterControllerTest {
     }
 
     @Test
-    void updateEmployee_partialUpdate_firstNameOnly() {
+    void updateEmployeePartialUpdateFirstNameOnly() {
         String empId = "E003";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest();
         update.setFirstName("Alice_Updated");
@@ -147,13 +158,13 @@ class EmployeeMasterControllerTest {
 
         ResponseEntity<?> response = controller.updateEmployee(empId, update);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals("Alice_Updated",
                 ((EmployeeMaster) response.getBody()).getFirstName());
     }
 
     @Test
-    void updateEmployee_partialUpdate_emailOnly() {
+    void updateEmployeePartialUpdateEmailOnly() {
         String empId = "E003";
 
         UpdateEmployeeRequest update = new UpdateEmployeeRequest();
@@ -172,13 +183,13 @@ class EmployeeMasterControllerTest {
 
         ResponseEntity<?> response = controller.updateEmployee(empId, update);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals("newemail@example.com",
                 ((EmployeeMaster) response.getBody()).getEmail());
     }
 
     @Test
-    void getEmployeeById_success() {
+    void getEmployeeByIdSuccess() {
         String empId = "E010";
         EmployeeMaster existing = EmployeeMaster.builder()
                 .employeeId(empId)
@@ -193,12 +204,12 @@ class EmployeeMasterControllerTest {
 
         ResponseEntity<?> response = controller.getEmployeeById(empId);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(existing, response.getBody());
     }
 
     @Test
-    void getEmployeeById_notFound() {
+    void getEmployeeByIdNotFound() {
         String empId = "E404";
         when(employeeMasterService.getEmployeeById(empId)).thenThrow(new IllegalArgumentException("Employee not found"));
 
@@ -206,7 +217,7 @@ class EmployeeMasterControllerTest {
     }
 
     @Test
-    void getEmployeesByDepartment_success_activeOnly() {
+    void getEmployeesByDepartmentSuccessActiveOnly() {
         String dept = "HR";
         EmployeeMaster a = EmployeeMaster.builder().employeeId("E101").department(dept).status(EmployeeStatus.ACTIVE).build();
         EmployeeMaster b = EmployeeMaster.builder().employeeId("E102").department(dept).status(EmployeeStatus.ACTIVE).build();
@@ -215,12 +226,12 @@ class EmployeeMasterControllerTest {
 
         ResponseEntity<?> response = controller.getEmployeesByDepartment(dept, false);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertTrue(((java.util.List) response.getBody()).size() == 2);
     }
 
     @Test
-    void getEmployeesByDepartment_success_includeInactive() {
+    void getEmployeesByDepartmentSuccessIncludeInactive() {
         String dept = "Finance";
         EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
         EmployeeMaster b = EmployeeMaster.builder().employeeId("E202").department(dept).status(EmployeeStatus.INACTIVE).build();
@@ -229,25 +240,45 @@ class EmployeeMasterControllerTest {
 
         ResponseEntity<?> response = controller.getEmployeesByDepartment(dept, true);
 
-        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(200, response.getStatusCode().value());
         assertEquals(2, ((java.util.List) response.getBody()).size());
     }
 
     @Test
-    void getEmployeesByDepartment_missingDepartment_throws() {
+    void getEmployeesByDepartmentMissingDepartmentThrows() {
         assertThrows(IllegalArgumentException.class, () -> controller.getEmployeesByDepartment(null, false));
     }
 
     @Test
-    void getEmployeesByDepartment_includeInactiveWithoutDept_throws() {
+    void getEmployeesByDepartmentIncludeInactiveWithoutDeptThrows() {
         assertThrows(IllegalArgumentException.class, () -> controller.getEmployeesByDepartment(null, true));
     }
 
     @Test
-    void getEmployeesByDepartment_noResults_throws() {
+    void getEmployeesByDepartmentNoResultsThrows() {
         String dept = "NonDept";
         when(employeeMasterService.getEmployeesByDepartment(dept, false)).thenReturn(Collections.emptyList());
 
         assertThrows(IllegalArgumentException.class, () -> controller.getEmployeesByDepartment(dept, false));
+    }
+
+    @Test
+    void deleteEmployeeSuccessMarksInactive() {
+        String empId = "E100";
+
+        doNothing().when(employeeMasterService).deleteEmployee(empId);
+
+        ResponseEntity<?> response = controller.deleteEmployee(empId);
+        assertEquals(204, response.getStatusCode().value());
+        assertNull(response.getBody());
+        verify(employeeMasterService, times(1)).deleteEmployee(empId);
+    }
+
+    @Test
+    void deleteEmployeeNotFoundPropagatesToGlobalHandler() {
+        String empId = "E404";
+        doThrow(new IllegalArgumentException("Employee not found")).when(employeeMasterService).deleteEmployee(empId);
+
+        assertThrows(IllegalArgumentException.class, () -> controller.deleteEmployee(empId));
     }
 }

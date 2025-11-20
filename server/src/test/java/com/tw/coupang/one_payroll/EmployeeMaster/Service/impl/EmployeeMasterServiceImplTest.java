@@ -14,7 +14,6 @@ import org.mockito.MockitoAnnotations;
 
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,7 +34,7 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void createEmployee_success() {
+    void createEmployeeSuccess() {
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
                 "E001", "John", "Doe", "IT", "Developer", "john.doe@example.com", 1, LocalDate.now()
         );
@@ -62,7 +61,7 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void createEmployee_employeeIdAlreadyExists_throwsConflictException() {
+    void createEmployeeEmployeeIdAlreadyExistsThrowsConflictException() {
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
                 "E002", "Jane", "Smith", "HR", "Manager", "jane.smith@example.com", 2, LocalDate.now()
         );
@@ -75,7 +74,7 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void createEmployee_emailAlreadyExists_throwsConflictException() {
+    void createEmployeeEmailAlreadyExistsThrowsConflictException() {
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
                 "E003", "Alice", "Brown", "Finance", "Analyst", "alice.brown@example.com", 3, LocalDate.now()
         );
@@ -89,7 +88,7 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void updateEmployee_success_withStatusChange() {
+    void updateEmployeeSuccessWithStatusChange() {
         String empId = "E001";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest("John", "DoeUpdated", "IT", "Senior Dev", "john.doe@example.com", 1, LocalDate.now(), "INACTIVE");
 
@@ -121,7 +120,7 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void updateEmployee_notFound_throwsException() {
+    void updateEmployeeNotFoundThrowsException() {
         String empId = "E999";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role", "non.exist@example.com", 1, LocalDate.now(), null);
         when(repository.findById(empId)).thenReturn(Optional.empty());
@@ -129,7 +128,7 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void getEmployeeById_success() {
+    void getEmployeeByIdSuccess() {
         String empId = "E010";
         EmployeeMaster existing = EmployeeMaster.builder()
                 .employeeId(empId)
@@ -149,17 +148,16 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void getEmployeeById_notFound_throws() {
+    void getEmployeeByIdNotFoundThrows() {
         String empId = "E404";
         when(repository.findById(empId)).thenReturn(Optional.empty());
         assertThrows(IllegalArgumentException.class, () -> service.getEmployeeById(empId));
     }
 
     @Test
-    void getEmployeesByDepartment_returnsActiveOnly_whenIncludeInactiveFalse() {
+    void getEmployeesByDepartmentReturnsActiveOnlyWhenIncludeInactiveFalse() {
         String dept = "Finance";
         EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
-        EmployeeMaster b = EmployeeMaster.builder().employeeId("E202").department(dept).status(EmployeeStatus.INACTIVE).build();
         when(repository.findByDepartmentIgnoreCaseAndStatus(dept, EmployeeStatus.ACTIVE)).thenReturn(Arrays.asList(a));
 
         java.util.List<EmployeeMaster> result = service.getEmployeesByDepartment(dept, false);
@@ -170,7 +168,7 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void getEmployeesByDepartment_returnsAll_whenIncludeInactiveTrue() {
+    void getEmployeesByDepartmentReturnsAllWhenIncludeInactiveTrue() {
         String dept = "Finance";
         EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
         EmployeeMaster b = EmployeeMaster.builder().employeeId("E202").department(dept).status(EmployeeStatus.INACTIVE).build();
@@ -183,7 +181,37 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void getEmployeesByDepartment_emptyWhenNoDeptProvided() {
+    void getEmployeesByDepartmentEmptyWhenNoDeptProvided() {
         assertThrows(NullPointerException.class, () -> service.getEmployeesByDepartment(null, false));
     }
+
+    @Test
+    void deleteEmployeeSuccessMarksInactive() {
+        String id = "E300";
+        EmployeeMaster existing = EmployeeMaster.builder()
+                .employeeId(id)
+                .firstName("ToDelete")
+                .lastName("User")
+                .email("todelete@example.com")
+                .status(EmployeeStatus.ACTIVE)
+                .build();
+
+        when(repository.findById(id)).thenReturn(Optional.of(existing));
+        when(repository.save(any(EmployeeMaster.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.deleteEmployee(id);
+
+        assertEquals(EmployeeStatus.INACTIVE, existing.getStatus());
+        verify(repository, times(1)).save(existing);
+    }
+
+    @Test
+    void deleteEmployeeNotFoundThrows() {
+        String id = "E404";
+        when(repository.findById(id)).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class, () -> service.deleteEmployee(id));
+        verify(repository, never()).save(any(EmployeeMaster.class));
+    }
+
 }

@@ -105,4 +105,13 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
         }
         return repository.findByDepartmentIgnoreCaseAndStatus(department.trim(), EmployeeStatus.ACTIVE);
     }
+
+    @Override
+    @Transactional
+    public void deleteEmployee(String employeeId) {
+        EmployeeMaster employee = repository.findById(employeeId)
+                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+        employee.setStatus(EmployeeStatus.INACTIVE);
+        repository.save(employee);
+    }
 }

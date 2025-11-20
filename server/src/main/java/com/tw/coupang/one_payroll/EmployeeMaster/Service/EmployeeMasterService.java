@@ -11,4 +11,5 @@ public interface EmployeeMasterService {
     EmployeeMaster updateEmployee(String employeeId, UpdateEmployeeRequest request);
     EmployeeMaster getEmployeeById(String employeeId);
     List<EmployeeMaster> getEmployeesByDepartment(String department, boolean includeInactive);
+    void deleteEmployee(String employeeId);
 }

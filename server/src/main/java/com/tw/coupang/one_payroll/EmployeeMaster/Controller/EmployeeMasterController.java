@@ -67,4 +67,10 @@ public class EmployeeMasterController {
         return ResponseEntity.ok(list);
     }
 
+    @DeleteMapping("/employee/{employeeId}")
+    public ResponseEntity<?> deleteEmployee(@PathVariable String employeeId) {
+        employeeMasterService.deleteEmployee(employeeId);
+        return ResponseEntity.noContent().build();
+    }
+
 }
