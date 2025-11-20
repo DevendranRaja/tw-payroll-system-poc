@@ -47,7 +47,7 @@ checkstyle {
 	configFile = file("$rootDir/checkstyle.xml")
 }
 
-tasks.withType(Checkstyle) {
+tasks.withType(Checkstyle).configureEach {
 	ignoreFailures = false
 	showViolations = true
 }
