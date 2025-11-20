@@ -2,6 +2,7 @@ package com.tw.coupang.one_payroll.paygroups.service;
 
 import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupCreateRequest;
 import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupUpdateRequest;
+import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupDetailsResponse;
 import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupResponse;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -173,5 +175,74 @@ class PayGroupServiceImplTest {
                 .benefitRate(BigDecimal.valueOf(5.00))
                 .deductionRate(BigDecimal.valueOf(2.50))
                 .build();
+    }
+
+    @Test
+    void getAll_ShouldReturnAllPayGroups_WhenNoFilterApplied() {
+        PayGroup pg1 = PayGroup.builder()
+                .id(1)
+                .groupName("Engineering")
+                .paymentCycle(PaymentCycle.MONTHLY)
+                .baseTaxRate(BigDecimal.TEN)
+                .benefitRate(BigDecimal.ONE)
+                .deductionRate(BigDecimal.ONE)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        PayGroup pg2 = PayGroup.builder()
+                .id(2)
+                .groupName("Ops")
+                .paymentCycle(PaymentCycle.WEEKLY)
+                .baseTaxRate(BigDecimal.TEN)
+                .benefitRate(BigDecimal.ONE)
+                .deductionRate(BigDecimal.ONE)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(payGroupRepository.findAll()).thenReturn(List.of(pg1, pg2));
+
+        List<PayGroupDetailsResponse> response = payGroupService.getAll(null);
+
+        assertThat(response).hasSize(2);
+        assertThat(response.get(0).getPayGroupId()).isEqualTo(1);
+        assertThat(response.get(1).getPayGroupId()).isEqualTo(2);
+
+        verify(payGroupRepository).findAll();
+        verify(payGroupRepository, never()).findByPaymentCycle(any());
+    }
+
+    @Test
+    void getAll_ShouldReturnFilteredGroups_WhenPaymentCycleProvided() {
+        PayGroup pg = PayGroup.builder()
+                .id(1)
+                .groupName("Engineering")
+                .paymentCycle(PaymentCycle.MONTHLY)
+                .baseTaxRate(BigDecimal.TEN)
+                .benefitRate(BigDecimal.ONE)
+                .deductionRate(BigDecimal.ONE)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        when(payGroupRepository.findByPaymentCycle(PaymentCycle.MONTHLY))
+                .thenReturn(List.of(pg));
+
+        List<PayGroupDetailsResponse> response = payGroupService.getAll(PaymentCycle.MONTHLY);
+
+        assertThat(response).hasSize(1);
+        assertThat(response.get(0).getPaymentCycle()).isEqualTo(PaymentCycle.MONTHLY);
+
+        verify(payGroupRepository).findByPaymentCycle(PaymentCycle.MONTHLY);
+        verify(payGroupRepository, never()).findAll();
+    }
+
+    @Test
+    void getAll_ShouldReturnEmptyList_WhenNoPayGroupsFound() {
+        when(payGroupRepository.findAll()).thenReturn(List.of());
+
+        List<PayGroupDetailsResponse> response = payGroupService.getAll(null);
+
+        assertThat(response).isEmpty();
+
+        verify(payGroupRepository).findAll();
     }
 }

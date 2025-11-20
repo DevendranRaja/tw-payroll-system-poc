@@ -2,7 +2,9 @@ package com.tw.coupang.one_payroll.paygroups.controller;
 
 import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupCreateRequest;
 import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupUpdateRequest;
+import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupDetailsResponse;
 import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupResponse;
+import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.service.PayGroupService;
@@ -14,6 +16,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Collections;
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
@@ -21,6 +26,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
 @WebMvcTest(PayGroupController.class)
 class PayGroupControllerValidationTest {
@@ -305,5 +312,64 @@ class PayGroupControllerValidationTest {
                         .content(validJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.payGroupId").value(1));
+    }
+
+    @Test
+    void getAllPayGroups_noFilter_returnsOk() throws Exception {
+        when(payGroupService.getAll(null))
+                .thenReturn(List.of(
+                        PayGroupDetailsResponse.builder()
+                                .payGroupId(1)
+                                .groupName("Monthly Engineers")
+                                .paymentCycle(PaymentCycle.MONTHLY)
+                                .build()
+                ));
+
+        mockMvc.perform(get("/pay-groups"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                    [
+                      {
+                        "payGroupId": 1,
+                        "groupName": "Monthly Engineers",
+                        "paymentCycle": "MONTHLY"
+                      }
+                    ]
+                    """));
+    }
+
+    @Test
+    void getAllPayGroups_withFilter_returnsFiltered() throws Exception {
+        when(payGroupService.getAll(PaymentCycle.WEEKLY))
+                .thenReturn(List.of(
+                        PayGroupDetailsResponse.builder()
+                                .payGroupId(2)
+                                .groupName("Weekly Engineers")
+                                .paymentCycle(PaymentCycle.WEEKLY)
+                                .build()
+                ));
+
+        mockMvc.perform(get("/pay-groups")
+                        .param("paymentCycle", "WEEKLY"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("""
+                    [
+                      {
+                        "payGroupId": 2,
+                        "groupName": "Weekly Engineers",
+                        "paymentCycle": "WEEKLY"
+                      }
+                    ]
+                    """));
+    }
+
+    @Test
+    void getAllPayGroups_emptyList_returnsOk() throws Exception {
+        when(payGroupService.getAll(null))
+                .thenReturn(Collections.emptyList());
+
+        mockMvc.perform(get("/pay-groups"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
     }
 }

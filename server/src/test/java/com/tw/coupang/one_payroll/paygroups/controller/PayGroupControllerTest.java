@@ -2,6 +2,7 @@ package com.tw.coupang.one_payroll.paygroups.controller;
 
 import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupCreateRequest;
 import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupUpdateRequest;
+import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupDetailsResponse;
 import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupResponse;
 import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
@@ -15,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.math.BigDecimal;
+import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -106,6 +109,70 @@ class PayGroupControllerTest {
         verify(payGroupService, times(1)).update(99, request);
     }
 
+    @Test
+    void getAllPayGroups_noFilter_returnsAll() {
+        PayGroupDetailsResponse responseItem = PayGroupDetailsResponse.builder()
+                .payGroupId(1)
+                .groupName("Monthly Engineers")
+                .paymentCycle(PaymentCycle.MONTHLY)
+                .baseTaxRate(BigDecimal.valueOf(10))
+                .benefitRate(BigDecimal.valueOf(5))
+                .deductionRate(BigDecimal.valueOf(3))
+                .build();
+
+        when(payGroupService.getAll(null))
+                .thenReturn(List.of(responseItem));
+
+        ResponseEntity<List<PayGroupDetailsResponse>> response =
+                payGroupController.getAllPayGroups(null);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().size());
+        assertEquals(responseItem.getPayGroupId(), response.getBody().get(0).getPayGroupId());
+
+        verify(payGroupService, times(1)).getAll(null);
+    }
+
+    @Test
+    void getAllPayGroups_withPaymentCycleFilter_returnsFiltered() {
+        PayGroupDetailsResponse responseItem = PayGroupDetailsResponse.builder()
+                .payGroupId(2)
+                .groupName("Weekly Engineers")
+                .paymentCycle(PaymentCycle.WEEKLY)
+                .baseTaxRate(BigDecimal.valueOf(8))
+                .benefitRate(BigDecimal.valueOf(4))
+                .deductionRate(BigDecimal.valueOf(2))
+                .build();
+
+        when(payGroupService.getAll(PaymentCycle.WEEKLY))
+                .thenReturn(List.of(responseItem));
+
+        ResponseEntity<List<PayGroupDetailsResponse>> response =
+                payGroupController.getAllPayGroups(PaymentCycle.WEEKLY);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(1, response.getBody().size());
+        assertEquals(responseItem.getPayGroupId(), response.getBody().get(0).getPayGroupId());
+
+        verify(payGroupService, times(1)).getAll(PaymentCycle.WEEKLY);
+    }
+
+    @Test
+    void getAllPayGroups_emptyList_returnsEmpty() {
+        when(payGroupService.getAll(null))
+                .thenReturn(Collections.emptyList());
+
+        ResponseEntity<List<PayGroupDetailsResponse>> response =
+                payGroupController.getAllPayGroups(null);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(0, response.getBody().size());
+
+        verify(payGroupService, times(1)).getAll(null);
+    }
 
     private PayGroupCreateRequest buildCreateRequest() {
         return PayGroupCreateRequest.builder()

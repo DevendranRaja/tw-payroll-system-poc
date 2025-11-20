@@ -2,13 +2,17 @@ package com.tw.coupang.one_payroll.paygroups.service;
 
 import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupCreateRequest;
 import com.tw.coupang.one_payroll.paygroups.dto.request.PayGroupUpdateRequest;
+import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupDetailsResponse;
 import com.tw.coupang.one_payroll.paygroups.dto.response.PayGroupResponse;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
+import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import com.tw.coupang.one_payroll.paygroups.repository.PayGroupRepository;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -66,6 +70,38 @@ public class PayGroupServiceImpl implements PayGroupService {
         log.info("Pay group ID {} updated successfully", updated.getId());
 
         return buildPayGroupResponse(updated.getId());
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<PayGroupDetailsResponse> getAll(PaymentCycle paymentCycle) {
+        log.info("Fetching all pay groups. Filter paymentCycle={}", paymentCycle);
+
+        List<PayGroup> groups =
+                (paymentCycle != null)
+                        ? payGroupRepository.findByPaymentCycle(paymentCycle)
+                        : payGroupRepository.findAll();
+
+        if (groups.isEmpty()) {
+            log.info("No pay groups found, returning empty list.");
+            return List.of();
+        }
+
+        return groups.stream()
+                .map(this::mapToResponse)
+                .toList();
+    }
+
+    private PayGroupDetailsResponse mapToResponse(PayGroup entity) {
+        return PayGroupDetailsResponse.builder()
+                .payGroupId(entity.getId())
+                .groupName(entity.getGroupName())
+                .paymentCycle(entity.getPaymentCycle())
+                .baseTaxRate(entity.getBaseTaxRate())
+                .benefitRate(entity.getBenefitRate())
+                .deductionRate(entity.getDeductionRate())
+                .createdAt(entity.getCreatedAt())
+                .build();
     }
 
     private PayGroup buildPayGroup(PayGroupCreateRequest request, String name) {
