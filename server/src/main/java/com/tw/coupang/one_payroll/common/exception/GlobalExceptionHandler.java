@@ -1,6 +1,7 @@
 package com.tw.coupang.one_payroll.common.exception;
 
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
+import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -93,6 +94,18 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(EmployeeNotFoundException.class)
+    public ResponseEntity<?> handleEmployeeNotFound(EmployeeNotFoundException ex) {
+        log.warn("Employee not found: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                Map.of(
+                        "status", HttpStatus.NOT_FOUND.value(),
+                        "message", ex.getMessage()
+                )
+        );
+    }
+
     @ExceptionHandler(DuplicatePayGroupException.class)
     public ResponseEntity<?> handleDuplicate(DuplicatePayGroupException ex) {
         log.warn("Duplicate pay group error: {}", ex.getMessage());
@@ -124,12 +137,12 @@ public class GlobalExceptionHandler {
 
         if (msg.toLowerCase().contains("not found")) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    Map.of("status", HttpStatus.NOT_FOUND, "message", msg)
+                    Map.of("status", HttpStatus.NOT_FOUND.value(), "message", msg)
             );
         }
 
         return ResponseEntity.badRequest().body(
-                Map.of("status", HttpStatus.BAD_REQUEST, "message", msg)
+                Map.of("status", HttpStatus.BAD_REQUEST.value(), "message", msg)
         );
     }
 

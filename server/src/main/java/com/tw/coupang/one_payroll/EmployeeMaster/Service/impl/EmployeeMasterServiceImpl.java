@@ -1,15 +1,15 @@
 package com.tw.coupang.one_payroll.EmployeeMaster.Service.impl;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.tw.coupang.one_payroll.EmployeeMaster.Dto.CreateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Dto.UpdateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
+import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
+import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
 import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -53,11 +53,11 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
     @Transactional
     public EmployeeMaster updateEmployee(String employeeId, UpdateEmployeeRequest request) {
         EmployeeMaster employee = repository.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID '" + employeeId + "' not found"));
 
         if (request.getEmail() != null && !request.getEmail().isBlank()) {
             if (!employee.getEmail().equals(request.getEmail()) && repository.existsByEmail(request.getEmail())) {
-                throw new IllegalArgumentException("Email already in use");
+                throw new EmployeeConflictException("Email already in use");
             }
             employee.setEmail(request.getEmail());
         }
@@ -94,7 +94,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
     @Transactional(readOnly = true)
     public EmployeeMaster getEmployeeById(String employeeId) {
         return repository.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID '" + employeeId + "' not found"));
     }
 
     @Override
@@ -110,7 +110,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
     @Transactional
     public void deleteEmployee(String employeeId) {
         EmployeeMaster employee = repository.findById(employeeId)
-                .orElseThrow(() -> new IllegalArgumentException("Employee not found"));
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID '" + employeeId + "' not found"));
         employee.setStatus(EmployeeStatus.INACTIVE);
         repository.save(employee);
     }

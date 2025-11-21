@@ -5,6 +5,7 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Dto.UpdateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
+import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
 
 import org.junit.jupiter.api.AfterEach;
@@ -133,9 +134,9 @@ class EmployeeMasterControllerTest {
         );
 
         when(employeeMasterService.updateEmployee(empId, update))
-                .thenThrow(new IllegalArgumentException("Employee not found"));
+                .thenThrow(new EmployeeNotFoundException("Employee with ID '" + empId + "' not found"));
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(EmployeeNotFoundException.class,
                 () -> controller.updateEmployee(empId, update));
     }
 
@@ -211,9 +212,9 @@ class EmployeeMasterControllerTest {
     @Test
     void getEmployeeByIdNotFound() {
         String empId = "E404";
-        when(employeeMasterService.getEmployeeById(empId)).thenThrow(new IllegalArgumentException("Employee not found"));
+        when(employeeMasterService.getEmployeeById(empId)).thenThrow(new EmployeeNotFoundException("Employee with ID '" + empId + "' not found"));
 
-        assertThrows(IllegalArgumentException.class, () -> controller.getEmployeeById(empId));
+        assertThrows(EmployeeNotFoundException.class, () -> controller.getEmployeeById(empId));
     }
 
     @Test
@@ -277,8 +278,8 @@ class EmployeeMasterControllerTest {
     @Test
     void deleteEmployeeNotFoundPropagatesToGlobalHandler() {
         String empId = "E404";
-        doThrow(new IllegalArgumentException("Employee not found")).when(employeeMasterService).deleteEmployee(empId);
+        doThrow(new EmployeeNotFoundException("Employee with ID '" + empId + "' not found")).when(employeeMasterService).deleteEmployee(empId);
 
-        assertThrows(IllegalArgumentException.class, () -> controller.deleteEmployee(empId));
+        assertThrows(EmployeeNotFoundException.class, () -> controller.deleteEmployee(empId));
     }
 }

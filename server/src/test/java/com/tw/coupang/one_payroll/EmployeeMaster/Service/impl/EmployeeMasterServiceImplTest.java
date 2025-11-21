@@ -5,6 +5,7 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Dto.UpdateEmployeeRequest;
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
+import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -206,11 +207,11 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void deleteEmployeeNotFoundThrows() {
+    void deleteEmployee_notFound_throws() {
         String id = "E404";
         when(repository.findById(id)).thenReturn(Optional.empty());
 
-        assertThrows(IllegalArgumentException.class, () -> service.deleteEmployee(id));
+        assertThrows(EmployeeNotFoundException.class, () -> service.deleteEmployee(id));
         verify(repository, never()).save(any(EmployeeMaster.class));
     }
 
