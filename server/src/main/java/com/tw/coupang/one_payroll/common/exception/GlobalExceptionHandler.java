@@ -73,6 +73,32 @@ public class GlobalExceptionHandler {
             );
         }
 
+        if (details != null && details.contains("Invalid `null` value")) {
+            String fieldName = null;
+
+            if (details.contains("property")) {
+                int start = details.indexOf("property \"") + 10;
+                int end = details.indexOf("\"", start);
+                fieldName = details.substring(start, end);
+            }
+
+            String userMessage = (fieldName != null)
+                    ? "Field '" + fieldName + "' cannot be empty. Please provide a value."
+                    : "One or more required fields cannot be empty.";
+
+            String detailMsg = (fieldName != null)
+                    ? fieldName + " received empty"
+                    : "Null value encountered in request body";
+
+            return ResponseEntity.badRequest().body(
+                    Map.of(
+                            "status", HttpStatus.BAD_REQUEST.value(),
+                            "message", userMessage,
+                            "details", detailMsg
+                    )
+            );
+        }
+
         return ResponseEntity.badRequest().body(
                 Map.of(
                         "status", HttpStatus.BAD_REQUEST.value(),
