@@ -125,7 +125,7 @@ class EmployeeMasterServiceImplTest {
         String empId = "E999";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role", "non.exist@example.com", 1, LocalDate.now(), null);
         when(repository.findById(empId)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> service.updateEmployee(empId, update));
+        assertThrows(EmployeeNotFoundException.class, () -> service.updateEmployee(empId, update));
     }
 
     @Test
@@ -152,7 +152,7 @@ class EmployeeMasterServiceImplTest {
     void getEmployeeByIdNotFoundThrows() {
         String empId = "E404";
         when(repository.findById(empId)).thenReturn(Optional.empty());
-        assertThrows(IllegalArgumentException.class, () -> service.getEmployeeById(empId));
+        assertThrows(EmployeeNotFoundException.class, () -> service.getEmployeeById(empId));
     }
 
     @Test
@@ -207,7 +207,7 @@ class EmployeeMasterServiceImplTest {
     }
 
     @Test
-    void deleteEmployee_notFound_throws() {
+    void deleteEmployeeNotFoundThrows() {
         String id = "E404";
         when(repository.findById(id)).thenReturn(Optional.empty());
 
