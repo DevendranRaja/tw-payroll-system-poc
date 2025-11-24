@@ -37,7 +37,7 @@ class PayGroupControllerTest {
     private PayGroupService payGroupService;
 
     @Test
-    void createPayGroup_duplicatePayGroup_throwsException() {
+    void createPayGroupWhenDuplicatePayGroupThenThrowsException() {
         PayGroupCreateRequest request = buildCreateRequest();
 
         when(payGroupService.create(any(PayGroupCreateRequest.class)))
@@ -53,7 +53,7 @@ class PayGroupControllerTest {
     }
 
     @Test
-    void createPayGroup_success() {
+    void createPayGroupIsSuccess() {
         PayGroupCreateRequest request = buildCreateRequest();
 
         PayGroupResponse expected = PayGroupResponse.builder()
@@ -74,7 +74,7 @@ class PayGroupControllerTest {
     }
 
     @Test
-    void updatePayGroup_success() {
+    void updatePayGroupIsSuccess() {
         PayGroupUpdateRequest request = buildUpdateRequest();
 
         PayGroupResponse expected = PayGroupResponse.builder()
@@ -94,7 +94,7 @@ class PayGroupControllerTest {
     }
 
     @Test
-    void updatePayGroup_failure_throwsRuntimeException() {
+    void updatePayGroupWhenFailureThenThrowsRuntimeException() {
         PayGroupUpdateRequest request = buildUpdateRequest();
 
         when(payGroupService.update(99, request))
@@ -110,7 +110,7 @@ class PayGroupControllerTest {
     }
 
     @Test
-    void getAllPayGroups_noFilter_returnsAll() {
+    void getAllPayGroupsWhenNoFilterThenReturnsAll() {
         PayGroupDetailsResponse responseItem = PayGroupDetailsResponse.builder()
                 .payGroupId(1)
                 .groupName("Monthly Engineers")
@@ -135,7 +135,7 @@ class PayGroupControllerTest {
     }
 
     @Test
-    void getAllPayGroups_withPaymentCycleFilter_returnsFiltered() {
+    void getAllPayGroupsWithPaymentCycleFilterThenReturnsFiltered() {
         PayGroupDetailsResponse responseItem = PayGroupDetailsResponse.builder()
                 .payGroupId(2)
                 .groupName("Weekly Engineers")
@@ -160,7 +160,7 @@ class PayGroupControllerTest {
     }
 
     @Test
-    void getAllPayGroups_emptyList_returnsEmpty() {
+    void getAllPayGroupsWhenEmptyListThenReturnsEmpty() {
         when(payGroupService.getAll(null))
                 .thenReturn(Collections.emptyList());
 
