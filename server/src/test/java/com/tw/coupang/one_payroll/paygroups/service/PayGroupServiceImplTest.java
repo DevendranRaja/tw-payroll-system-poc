@@ -41,7 +41,7 @@ class PayGroupServiceImplTest {
     private PayGroupServiceImpl payGroupService;
 
     @Test
-    void create_ShouldSaveAndReturnResponse() {
+    void createShouldSaveAndReturnResponse() {
         PayGroupCreateRequest request = buildCreateRequest();
 
         PayGroup expected = PayGroup.builder()
@@ -67,7 +67,7 @@ class PayGroupServiceImplTest {
     }
 
     @Test
-    void create_ShouldThrowDuplicatePayGroupException_WhenGroupNameAlreadyExists() {
+    void createShouldThrowDuplicatePayGroupExceptionWhenGroupNameAlreadyExists() {
         PayGroupCreateRequest request = buildCreateRequest();
 
         doThrow(new DuplicatePayGroupException("Pay group with name 'Engineering' already exists!"))
@@ -86,7 +86,7 @@ class PayGroupServiceImplTest {
     }
 
     @Test
-    void create_ShouldThrowException_WhenGroupNameIsNull() {
+    void createShouldThrowExceptionWhenGroupNameIsNull() {
         PayGroupCreateRequest request = PayGroupCreateRequest.builder()
                 .groupName(null)
                 .paymentCycle(PaymentCycle.WEEKLY)
@@ -99,7 +99,7 @@ class PayGroupServiceImplTest {
     }
 
     @Test
-    void update_ShouldUpdateAndReturnResponse() {
+    void updateShouldUpdateAndReturnResponse() {
         PayGroupUpdateRequest request = PayGroupUpdateRequest.builder()
                 .groupName("Engineering-New")
                 .paymentCycle(PaymentCycle.BIWEEKLY)
@@ -144,7 +144,7 @@ class PayGroupServiceImplTest {
     }
 
     @Test
-    void update_ShouldThrowDuplicatePayGroupException_WhenNewNameExists() {
+    void updateShouldThrowDuplicatePayGroupExceptionWhenNewNameExists() {
         PayGroupUpdateRequest request = PayGroupUpdateRequest.builder()
                 .groupName("Engineering")
                 .build();
@@ -167,18 +167,8 @@ class PayGroupServiceImplTest {
         verify(payGroupRepository, never()).save(any());
     }
 
-    private PayGroupCreateRequest buildCreateRequest() {
-        return PayGroupCreateRequest.builder()
-                .groupName("Engineering")
-                .paymentCycle(PaymentCycle.MONTHLY)
-                .baseTaxRate(BigDecimal.valueOf(10.00))
-                .benefitRate(BigDecimal.valueOf(5.00))
-                .deductionRate(BigDecimal.valueOf(2.50))
-                .build();
-    }
-
     @Test
-    void getAll_ShouldReturnAllPayGroups_WhenNoFilterApplied() {
+    void getAllShouldReturnAllPayGroupsWhenNoFilterApplied() {
         PayGroup pg1 = PayGroup.builder()
                 .id(1)
                 .groupName("Engineering")
@@ -212,7 +202,7 @@ class PayGroupServiceImplTest {
     }
 
     @Test
-    void getAll_ShouldReturnFilteredGroups_WhenPaymentCycleProvided() {
+    void getAllShouldReturnFilteredGroupsWhenPaymentCycleProvided() {
         PayGroup pg = PayGroup.builder()
                 .id(1)
                 .groupName("Engineering")
@@ -236,7 +226,7 @@ class PayGroupServiceImplTest {
     }
 
     @Test
-    void getAll_ShouldReturnEmptyList_WhenNoPayGroupsFound() {
+    void getAllShouldReturnEmptyListWhenNoPayGroupsFound() {
         when(payGroupRepository.findAll()).thenReturn(List.of());
 
         List<PayGroupDetailsResponse> response = payGroupService.getAll(null);
@@ -244,5 +234,15 @@ class PayGroupServiceImplTest {
         assertThat(response).isEmpty();
 
         verify(payGroupRepository).findAll();
+    }
+
+    private PayGroupCreateRequest buildCreateRequest() {
+        return PayGroupCreateRequest.builder()
+                .groupName("Engineering")
+                .paymentCycle(PaymentCycle.MONTHLY)
+                .baseTaxRate(BigDecimal.valueOf(10.00))
+                .benefitRate(BigDecimal.valueOf(5.00))
+                .deductionRate(BigDecimal.valueOf(2.50))
+                .build();
     }
 }

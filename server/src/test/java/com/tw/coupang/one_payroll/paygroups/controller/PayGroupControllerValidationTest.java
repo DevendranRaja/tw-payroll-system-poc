@@ -47,7 +47,7 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void createPayGroup_invalidRequest_returnsBadRequest() throws Exception {
+    void createPayGroupWhenInvalidRequestThenReturnsBadRequest() throws Exception {
         String invalidJson = """
             { "groupName": "" }
         """;
@@ -65,7 +65,7 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void createPayGroup_missingRequiredFields_returnsBadRequest() throws Exception {
+    void createPayGroupWhenMissingRequiredFieldsThenReturnsBadRequest() throws Exception {
         String invalidJson = """
             {
               "groupName": "Valid Name"
@@ -84,7 +84,7 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void createPayGroup_negativeDecimalValue_returnsBadRequest() throws Exception {
+    void createPayGroupWhenNegativeDecimalValueThenReturnsBadRequest() throws Exception {
         String invalidJson = """
             {
               "groupName": "Valid",
@@ -104,7 +104,7 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void createPayGroup_invalidEnumValue_returnsBadRequest() throws Exception {
+    void createPayGroupWhenInvalidEnumValueThenReturnsBadRequest() throws Exception {
         String invalidJson = """
             {
               "groupName": "Valid",
@@ -123,13 +123,13 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void createPayGroup_duplicatePayGroup_returnsConflict() throws Exception {
+    void createPayGroupWhenDuplicatePayGroupThenReturnsConflict() throws Exception {
         when(payGroupService.create(any(PayGroupCreateRequest.class)))
                 .thenThrow(new DuplicatePayGroupException("Pay group already exists!"));
 
         String validJson = """
         {
-          "groupName": "Valid Group",
+          "groupName": "ValidGroup",
           "paymentCycle": "MONTHLY",
           "baseTaxRate": 10,
           "benefitRate": 5,
@@ -145,13 +145,13 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void createPayGroup_unexpectedException_returnsInternalServerError() throws Exception {
+    void createPayGroupWhenUnexpectedExceptionThenReturnsInternalServerError() throws Exception {
         when(payGroupService.create(any(PayGroupCreateRequest.class)))
                 .thenThrow(new RuntimeException("Something failed"));
 
         String validJson = """
         {
-          "groupName": "Valid Group",
+          "groupName": "ValidGroup",
           "paymentCycle": "MONTHLY",
           "baseTaxRate": 10,
           "benefitRate": 5,
@@ -168,18 +168,18 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void createPayGroup_validRequest_returnsCreated() throws Exception {
+    void createPayGroupWhenValidRequestThenReturnsCreated() throws Exception {
         when(payGroupService.create(any(PayGroupCreateRequest.class)))
                 .thenReturn(PayGroupResponse.builder().payGroupId(1).build());
 
         String validJson = """
-            {
-              "groupName": "Valid Group",
-              "paymentCycle": "MONTHLY",
-              "baseTaxRate": 10,
-              "benefitRate": 5,
-              "deductionRate": 3
-            }
+        {
+          "groupName": "ValidGroup",
+          "paymentCycle": "MONTHLY",
+          "baseTaxRate": 10,
+          "benefitRate": 5,
+          "deductionRate": 3
+        }
         """;
 
         mockMvc.perform(post("/pay-groups")
@@ -190,12 +190,12 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void updatePayGroup_blankGroupName_isAllowedAndReturnsOk() throws Exception {
+    void updatePayGroupWhenBlankGroupNameIsAllowedAndReturnsOk() throws Exception {
         when(payGroupService.update(eq(1), any(PayGroupUpdateRequest.class)))
                 .thenReturn(PayGroupResponse.builder().payGroupId(1).build());
 
         String json = """
-            { "groupName": "" }
+            { "groupName": null }
         """;
 
         mockMvc.perform(put("/pay-groups/1")
@@ -206,7 +206,7 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void updatePayGroup_invalidEnumValue_returnsBadRequest() throws Exception {
+    void updatePayGroupWhenInvalidEnumValueThenReturnsBadRequest() throws Exception {
         String invalidJson = """
             {
                 "paymentCycle": "YEARLY"
@@ -221,7 +221,7 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void updatePayGroup_negativeDecimalValue_returnsBadRequest() throws Exception {
+    void updatePayGroupWhenNegativeDecimalValueThenReturnsBadRequest() throws Exception {
         String invalidJson = """
             {
                 "baseTaxRate": -5
@@ -237,7 +237,7 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void updatePayGroup_duplicateName_returnsConflict() throws Exception {
+    void updatePayGroupWhenDuplicateNameThenReturnsConflict() throws Exception {
         when(payGroupService.update(eq(1), any(PayGroupUpdateRequest.class)))
                 .thenThrow(new DuplicatePayGroupException("Pay group already exists!"));
 
@@ -257,15 +257,15 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void updatePayGroup_notFound_returnsNotFound() throws Exception {
+    void updatePayGroupWhenNotFoundThenReturnsNotFound() throws Exception {
         when(payGroupService.update(eq(99), any(PayGroupUpdateRequest.class)))
                 .thenThrow(new PayGroupNotFoundException("Pay group with ID '99' not found!"));
 
         String validJson = """
-            {
-                "groupName": "Updated Name",
-                "paymentCycle": "MONTHLY"
-            }
+        {
+            "groupName": "UpdatedName",
+            "paymentCycle": "MONTHLY"
+        }
         """;
 
         mockMvc.perform(put("/pay-groups/99")
@@ -276,7 +276,7 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void updatePayGroup_unexpectedException_returnsInternalServerError() throws Exception {
+    void updatePayGroupWhenUnexpectedExceptionThenReturnsInternalServerError() throws Exception {
         when(payGroupService.update(eq(1), any(PayGroupUpdateRequest.class)))
                 .thenThrow(new RuntimeException("Something failed"));
 
@@ -296,15 +296,15 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void updatePayGroup_validRequest_returnsOk() throws Exception {
+    void updatePayGroupWhenValidRequestThenReturnsOk() throws Exception {
         when(payGroupService.update(eq(1), any(PayGroupUpdateRequest.class)))
                 .thenReturn(PayGroupResponse.builder().payGroupId(1).build());
 
         String validJson = """
-            {
-                "groupName": "Updated Group",
-                "paymentCycle": "MONTHLY"
-            }
+        {
+            "groupName": "UpdatedGroup",
+            "paymentCycle": "MONTHLY"
+        }
         """;
 
         mockMvc.perform(put("/pay-groups/1")
@@ -315,7 +315,7 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void getAllPayGroups_noFilter_returnsOk() throws Exception {
+    void getAllPayGroupsWhenNoFilterThenReturnsOk() throws Exception {
         when(payGroupService.getAll(null))
                 .thenReturn(List.of(
                         PayGroupDetailsResponse.builder()
@@ -339,7 +339,7 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void getAllPayGroups_withFilter_returnsFiltered() throws Exception {
+    void getAllPayGroupsWithFilterThenReturnsFiltered() throws Exception {
         when(payGroupService.getAll(PaymentCycle.WEEKLY))
                 .thenReturn(List.of(
                         PayGroupDetailsResponse.builder()
@@ -364,7 +364,7 @@ class PayGroupControllerValidationTest {
     }
 
     @Test
-    void getAllPayGroups_emptyList_returnsOk() throws Exception {
+    void getAllPayGroupsWhenEmptyListThenReturnsOk() throws Exception {
         when(payGroupService.getAll(null))
                 .thenReturn(Collections.emptyList());
 

@@ -17,7 +17,7 @@ class PayGroupValidatorTest {
     private final PayGroupValidator validator = new PayGroupValidator(repository);
 
     @Test
-    void validateDuplicateName_whenNameExists_shouldThrowException() {
+    void validateDuplicateNameWhenNameExistsShouldThrowException() {
         when(repository.existsByGroupNameIgnoreCase("HR")).thenReturn(true);
 
         assertThrows(DuplicatePayGroupException.class,
@@ -25,14 +25,14 @@ class PayGroupValidatorTest {
     }
 
     @Test
-    void validateDuplicateName_whenNameUnique_shouldNotThrowException() {
+    void validateDuplicateNameWhenNameUniqueShouldNotThrowException() {
         when(repository.existsByGroupNameIgnoreCase("Finance")).thenReturn(false);
 
         assertDoesNotThrow(() -> validator.validateDuplicateName("Finance"));
     }
 
     @Test
-    void validatePayGroupExists_whenFound_shouldReturnEntity() {
+    void validatePayGroupExistsWhenFoundShouldReturnEntity() {
         PayGroup payGroup = PayGroup.builder().id(1).groupName("HR").build();
 
         when(repository.findById(1)).thenReturn(Optional.of(payGroup));
@@ -44,7 +44,7 @@ class PayGroupValidatorTest {
     }
 
     @Test
-    void validatePayGroupExists_whenNotFound_shouldThrowException() {
+    void validatePayGroupExistsWhenNotFoundShouldThrowException() {
         when(repository.findById(99)).thenReturn(Optional.empty());
 
         assertThrows(PayGroupNotFoundException.class,
