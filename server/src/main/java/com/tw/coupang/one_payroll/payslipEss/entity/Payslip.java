@@ -1,6 +1,6 @@
 package com.tw.coupang.one_payroll.payslipEss.entity;
 
-import com.tw.coupang.one_payroll.payslipEss.dto.PayslipComponentDto;
+import com.tw.coupang.one_payroll.payslipEss.dto.PayslipItemDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -56,11 +56,11 @@ public class Payslip {
     // JSON columns for break-up
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "earnings_json", columnDefinition = "jsonb")
-    private List<PayslipComponentDto> earnings;
+    private List<PayslipItemDto> earnings;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "deductions_json", columnDefinition = "jsonb")
-    private List<PayslipComponentDto> deductions;
+    private List<PayslipItemDto> deductions;
 
 }
 
