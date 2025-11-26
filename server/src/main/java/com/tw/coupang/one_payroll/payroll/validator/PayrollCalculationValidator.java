@@ -2,20 +2,30 @@ package com.tw.coupang.one_payroll.payroll.validator;
 
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
+@Slf4j
 @Component
 public class PayrollCalculationValidator {
 
     public void validatePayPeriodAgainstPayGroup(LocalDate periodStart, LocalDate periodEnd, PayGroup payGroup) {
-        switch (payGroup.getPaymentCycle()) {
-            case MONTHLY -> validateMonthlyCycle(periodStart, periodEnd);
-            case WEEKLY -> validateWeeklyCycle(periodStart, periodEnd);
-            case BIWEEKLY -> validateBiWeeklyCycle(periodStart, periodEnd);
-            default -> throw new InvalidPayPeriodException("Unsupported pay cycle: " + payGroup.getPaymentCycle());
+        try {
+            switch (payGroup.getPaymentCycle()) {
+                case MONTHLY -> validateMonthlyCycle(periodStart, periodEnd);
+                case WEEKLY -> validateWeeklyCycle(periodStart, periodEnd);
+                case BIWEEKLY -> validateBiWeeklyCycle(periodStart, periodEnd);
+                default -> throw new InvalidPayPeriodException("Unsupported pay cycle: " + payGroup.getPaymentCycle());
+            }
+            log.info("Pay period validated successfully for Employee's PayGroup: {}, cycle: {}, period: {} to {}",
+                    payGroup.getGroupName(), payGroup.getPaymentCycle(), periodStart, periodEnd);
+        } catch (InvalidPayPeriodException e) {
+            log.error("Invalid pay period for Employee's PayGroup: {}, period: {} to {}, reason: {}",
+                    payGroup.getGroupName(), periodStart, periodEnd, e.getMessage());
+            throw e;
         }
     }
 

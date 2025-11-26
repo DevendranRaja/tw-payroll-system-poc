@@ -3,11 +3,13 @@ package com.tw.coupang.one_payroll.payroll.validator;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
 
+@Slf4j
 @Component
 public class PayPeriodValidator implements ConstraintValidator<ValidPayPeriod, PayrollCalculationRequest> {
 
@@ -20,12 +22,16 @@ public class PayPeriodValidator implements ConstraintValidator<ValidPayPeriod, P
 
         if (start == null || end == null) return true;
 
+        log.debug("Validating pay period: start={}, end={}", start, end);
+
         if (!isEndAfterStart(start, end)) {
+            log.warn("Invalid pay period: end is not after start (start={}, end={})", start, end);
             addViolation(context, "periodEnd", "periodEnd must be after periodStart");
             return false;
         }
 
         if (!isSameMonth(start, end)) {
+            log.warn("Invalid pay period: start and end not within same month (start={}, end={})", start, end);
             addViolation(context, "periodStart", "period must be within a single calendar cycle (same month)");
             return false;
         }

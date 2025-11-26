@@ -28,18 +28,25 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
 
     @Override
     public ApiResponse calculate(PayrollCalculationRequest request) {
+        log.info("Initiating payroll calculation for employeeId={}", request.getEmployeeId());
+
         EmployeeMaster employee = employeeMasterService.getEmployeeById(request.getEmployeeId());
 
-        if(employee.getStatus() != EmployeeStatus.ACTIVE)
+        if(employee.getStatus() != EmployeeStatus.ACTIVE) {
+            log.warn("Inactive employee attempted payroll calculation. employeeId={}", request.getEmployeeId());
             throw new EmployeeInactiveException("Employee with ID '" + request.getEmployeeId() + "' is not active");
+        }
 
         PayGroup payGroup = payGroupValidator.validatePayGroupExists(employee.getPayGroupId());
 
-        log.info("Payroll calculation request received for Employee ID: {}, Pay Group: {}", request.getEmployeeId(), payGroup.getGroupName());
+        log.info("Validated employee and pay group for employeeId={}, payGroupId={}", request.getEmployeeId(), employee.getPayGroupId());
 
         payrollCalculationValidator.validatePayPeriodAgainstPayGroup(request.getPeriodStart(), request.getPeriodEnd(), payGroup);
 
+        log.info("Pay period validated for employeeId={} ({} → {})", request.getEmployeeId(), request.getPeriodStart(), request.getPeriodEnd());
+
         // TODO: Make a call to Payroll Calculation Engine here and get the response
+        log.debug("Calling Payroll Calculation Engine for employeeId={}", request.getEmployeeId());
 
         return ApiResponse.success("PAYROLL_CALCULATION_SUCCESS", "Payroll calculation completed successfully", null);
     }
