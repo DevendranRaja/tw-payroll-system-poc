@@ -101,22 +101,22 @@ class PayPeriodValidatorTest {
 
     @Test
     void validWhenPeriodStartIsNull() {
-        PayrollCalculationRequest req = PayrollCalculationRequest.builder()
+        PayrollCalculationRequest request = PayrollCalculationRequest.builder()
                 .periodEnd(LocalDate.now())
                 .hoursWorked(10)
                 .build();
 
-        assertTrue(validator.isValid(req, context));
+        assertTrue(validator.isValid(request, context));
     }
 
     @Test
     void validWhenPeriodEndIsNull() {
-        PayrollCalculationRequest req = PayrollCalculationRequest.builder()
+        PayrollCalculationRequest request = PayrollCalculationRequest.builder()
                 .periodStart(LocalDate.now())
                 .hoursWorked(10)
                 .build();
 
-        assertTrue(validator.isValid(req, context));
+        assertTrue(validator.isValid(request, context));
     }
 
     private void mockViolationFlow() {

@@ -8,6 +8,7 @@ import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
+import com.tw.coupang.one_payroll.payroll.validator.PayrollCalculationValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +18,12 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
 
     private final EmployeeMasterService employeeMasterService;
     private final PayGroupValidator payGroupValidator;
+    private final PayrollCalculationValidator payrollCalculationValidator;
 
-    public PayrollCalculationServiceImpl(EmployeeMasterService employeeMasterService, PayGroupValidator payGroupValidator) {
+    public PayrollCalculationServiceImpl(EmployeeMasterService employeeMasterService, PayGroupValidator payGroupValidator, PayrollCalculationValidator payrollCalculationValidator) {
         this.employeeMasterService = employeeMasterService;
         this.payGroupValidator = payGroupValidator;
+        this.payrollCalculationValidator = payrollCalculationValidator;
     }
 
     @Override
@@ -33,6 +36,8 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
         PayGroup payGroup = payGroupValidator.validatePayGroupExists(employee.getPayGroupId());
 
         log.info("Payroll calculation request received for Employee ID: {}, Pay Group: {}", request.getEmployeeId(), payGroup.getGroupName());
+
+        payrollCalculationValidator.validatePayPeriodAgainstPayGroup(request.getPeriodStart(), request.getPeriodEnd(), payGroup);
 
         // TODO: Make a call to Payroll Calculation Engine here and get the response
 
