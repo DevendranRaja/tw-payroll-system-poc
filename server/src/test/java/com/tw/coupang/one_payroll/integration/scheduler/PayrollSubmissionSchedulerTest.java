@@ -5,11 +5,13 @@ import com.tw.coupang.one_payroll.integration.dto.PayrollBatchResponse;
 import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
 import com.tw.coupang.one_payroll.integration.enums.PayrollStatus;
 import com.tw.coupang.one_payroll.integration.repository.PayrollRunRepository;
+import com.tw.coupang.one_payroll.integration.service.MockIntegrationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -27,13 +29,17 @@ class PayrollSubmissionSchedulerTest {
     private PayrollRunRepository payrollRunRepository;
 
     @Mock
+    private MockIntegrationService mockIntegrationService;
+
+    @Mock
     private RestTemplate restTemplate;
 
     @InjectMocks
     private PayrollSubmissionScheduler scheduler;
 
     @Test
-    void shouldSubmitBatchAndUpdateStatus_WhenApiCallSucceeds() {
+    void shouldSubmitBatchAndUpdateStatusWhenApiCallSucceeds() {
+        // Arrange
         PayrollRun run = PayrollRun.builder()
                 .employeeId("E001")
                 .payPeriodEnd(LocalDate.now())
@@ -41,23 +47,22 @@ class PayrollSubmissionSchedulerTest {
                 .status(PayrollStatus.PROCESSED)
                 .build();
 
+        ReflectionTestUtils.setField(scheduler, "mockApiUrl", "http://localhost:8080/test-url");
+
         when(payrollRunRepository.findTop100ByStatus(PayrollStatus.PROCESSED))
                 .thenReturn(List.of(run));
 
-        PayrollBatchResponse mockResponse = new PayrollBatchResponse("BATCH-123", "SUCCESS", "time");
+        PayrollBatchResponse mockResponse = new PayrollBatchResponse("BATCH-123", "SUCCESS", "time", "Batch processed successfully.");
         when(restTemplate.postForObject(anyString(), any(PayrollBatchRequest.class), eq(PayrollBatchResponse.class)))
                 .thenReturn(mockResponse);
 
         scheduler.submitPendingBatches();
 
-        verify(payrollRunRepository).saveAll(argThat(iterable -> {
-            List<PayrollRun> list = (List<PayrollRun>) iterable;
-            return list.get(0).getStatus() == PayrollStatus.SUBMITTED;
-        }));
+        verify(mockIntegrationService).updateLocalRecords(anyList(), eq("SUCCESS"));
     }
 
     @Test
-    void shouldNotUpdateRecords_WhenApiCallFails() {
+    void shouldNotUpdateRecordsWhenApiCallFails() {
         // Arrange
         PayrollRun run = PayrollRun.builder()
                 .employeeId("E001")

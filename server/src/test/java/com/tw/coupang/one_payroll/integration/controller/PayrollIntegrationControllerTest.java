@@ -33,28 +33,28 @@ class PayrollIntegrationControllerTest {
     private ObjectMapper objectMapper;
 
     @Test
-    void shouldReturn200AndResponse_WhenRequestIsValid() throws Exception {
+    void shouldReturn200AndResponseWhenRequestIsValid() throws Exception {
         PayrollBatchRequest request = new PayrollBatchRequest();
-        request.setBatchId("BATCH-001");
+        request.setBatchRefId("BATCH-001");
         request.setPayPeriod("2023-10");
         request.setTotalAmount(new BigDecimal("5000.00"));
         request.setEmployeeIds(List.of("E001", "E002"));
 
-        PayrollBatchResponse mockResponse = new PayrollBatchResponse("BATCH-001", "SUCCESS", "2023-10-01T10:00:00");
+        PayrollBatchResponse mockResponse = new PayrollBatchResponse("BATCH-001", "SUCCESS", "2023-10-01T10:00:00", "");
         when(mockIntegrationService.processBatch(any(PayrollBatchRequest.class))).thenReturn(mockResponse);
 
         mockMvc.perform(post("/integration/payroll/submit")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.batchId").value("BATCH-001"))
+                .andExpect(jsonPath("$.batchRefId").value("BATCH-001"))
                 .andExpect(jsonPath("$.status").value("SUCCESS"));
     }
 
     @Test
-    void shouldReturn400_WhenRequestIsInvalid() throws Exception {
+    void shouldReturn400WhenRequestIsInvalid() throws Exception {
         PayrollBatchRequest invalidRequest = new PayrollBatchRequest();
-        invalidRequest.setBatchId("BATCH-001");
+        invalidRequest.setBatchRefId("BATCH-001");
         invalidRequest.setTotalAmount(null);
 
         mockMvc.perform(post("/integration/payroll/submit")

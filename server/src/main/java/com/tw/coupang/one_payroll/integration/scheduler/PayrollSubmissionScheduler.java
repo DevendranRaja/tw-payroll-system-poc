@@ -5,11 +5,12 @@ import com.tw.coupang.one_payroll.integration.dto.PayrollBatchResponse;
 import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
 import com.tw.coupang.one_payroll.integration.enums.PayrollStatus;
 import com.tw.coupang.one_payroll.integration.repository.PayrollRunRepository;
+import com.tw.coupang.one_payroll.integration.service.MockIntegrationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-
+import org.springframework.beans.factory.annotation.Value;
 import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -22,11 +23,15 @@ public class PayrollSubmissionScheduler {
 
     private PayrollRunRepository payrollRunRepository;
     private RestTemplate restTemplate;
-    private final String MOCK_API_URL = "http://localhost:8080/tw-payroll-system/api/integration/payroll/submit";
+    private MockIntegrationService mockIntegrationService;
 
-    public PayrollSubmissionScheduler(PayrollRunRepository payrollRunRepository, RestTemplate restTemplate) {
+    @Value("${integration.payroll.submit-url}")
+    private String mockApiUrl;
+
+    public PayrollSubmissionScheduler(PayrollRunRepository payrollRunRepository, RestTemplate restTemplate, MockIntegrationService mockIntegrationService) {
         this.payrollRunRepository = payrollRunRepository;
         this.restTemplate = restTemplate;
+        this.mockIntegrationService = mockIntegrationService;
     }
 
     // Runs every minute for the PoC to demonstrate the flow
@@ -49,12 +54,13 @@ public class PayrollSubmissionScheduler {
             PayrollBatchRequest batchRequest = createBatchRequest(pendingRuns);
 
             // 3. Call the Mock API
-            log.info("Sending Batch ID: {} to Mock SAP...", batchRequest.getBatchId());
-            PayrollBatchResponse response = restTemplate.postForObject(MOCK_API_URL, batchRequest, PayrollBatchResponse.class);
+            log.info("Sending Batch ID: {} to Mock SAP...", batchRequest.getBatchRefId());
+            PayrollBatchResponse response = restTemplate.postForObject(mockApiUrl, batchRequest, PayrollBatchResponse.class);
 
             // 4. Update Local Database based on Response
             if (response != null) {
-                updateLocalRecords(pendingRuns, response.getStatus());
+                log.info("Response received: Status={}, Message={}", response.getStatus(), response.getErrorMessage());
+                mockIntegrationService.updateLocalRecords(pendingRuns, response.getStatus());
             }
 
         } catch (Exception e) {
@@ -66,7 +72,7 @@ public class PayrollSubmissionScheduler {
         PayrollBatchRequest request = new PayrollBatchRequest();
 
         // Generate a unique Batch ID
-        request.setBatchId("BATCH-" + UUID.randomUUID().toString().substring(0, 8));
+        request.setBatchRefId("BATCH-" + UUID.randomUUID().toString().substring(0, 8));
 
         // Derive Pay Period from the first record and Format YYYY-MM
         String payPeriod = runs.get(0).getPayPeriodEnd().format(DateTimeFormatter.ofPattern("yyyy-MM"));
@@ -85,31 +91,5 @@ public class PayrollSubmissionScheduler {
         request.setTotalAmount(totalAmount);
 
         return request;
-    }
-
-    private void updateLocalRecords(List<PayrollRun> runs, String responseStatus) {
-        PayrollStatus newStatus;
-
-        // Map Mock API string status to our internal Enum
-        switch (responseStatus) {
-            case "SUCCESS":
-                newStatus = PayrollStatus.SUBMITTED;
-                break;
-            case "RETRY":
-                // retry mechanism can be implemented here
-                log.info("Batch marked for RETRY. Leaving records as PROCESSED.");
-                return;
-            case "FAILED":
-                newStatus = PayrollStatus.SUBMISSION_FAILED;
-                break;
-            default:
-                newStatus = PayrollStatus.SUBMISSION_FAILED;
-        }
-
-        // Update all records in this chunk
-        runs.forEach(run -> run.setStatus(newStatus));
-        payrollRunRepository.saveAll(runs);
-
-        log.info("Updated {} records to status: {}", runs.size(), newStatus);
     }
 }

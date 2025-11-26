@@ -6,7 +6,8 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class PayrollBatchResponse {
-    private String batchId;
+    private String batchRefId;
     private String status;
     private String timestamp;
+    private String errorMessage;
 }
