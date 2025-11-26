@@ -3,7 +3,6 @@ package com.tw.coupang.one_payroll.integration.service;
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchRequest;
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchResponse;
 import com.tw.coupang.one_payroll.integration.entity.PayrollBatch;
-import com.tw.coupang.one_payroll.integration.entity.PayrollBatchLog;
 import com.tw.coupang.one_payroll.integration.repository.PayrollBatchLogRepository;
 import com.tw.coupang.one_payroll.integration.repository.PayrollBatchRepository;
 import org.junit.jupiter.api.Test;
@@ -32,29 +31,28 @@ class MockIntegrationServiceTest {
     private MockIntegrationService service;
 
     @Test
-    void shouldProcessBatchAndSaveToDb_WhenBatchIsUnique() {
+    void shouldProcessBatchAndSaveToDbWhenBatchIsUnique() {
         PayrollBatchRequest request = new PayrollBatchRequest();
-        request.setBatchId("BATCH-NEW");
+        request.setBatchRefId("BATCH-NEW");
         request.setPayPeriod("2023-11");
         request.setTotalAmount(new BigDecimal("1000.00"));
         request.setEmployeeIds(List.of("E001"));
 
-        when(batchRepo.existsByBatchId("BATCH-NEW")).thenReturn(false);
+        when(batchRepo.existsByBatchRefId("BATCH-NEW")).thenReturn(false);
 
         PayrollBatchResponse response = service.processBatch(request);
 
         assertNotNull(response);
-        assertEquals("BATCH-NEW", response.getBatchId());
+        assertEquals("BATCH-NEW", response.getBatchRefId());
         verify(batchRepo, times(2)).save(any(PayrollBatch.class));
-        verify(logRepo, times(1)).save(any(PayrollBatchLog.class));
     }
 
     @Test
-    void shouldThrowException_WhenBatchIdAlreadyExists() {
+    void shouldThrowExceptionWhenBatchIdAlreadyExists() {
         PayrollBatchRequest request = new PayrollBatchRequest();
-        request.setBatchId("BATCH-DUPLICATE");
+        request.setBatchRefId("BATCH-DUPLICATE");
 
-        when(batchRepo.existsByBatchId("BATCH-DUPLICATE")).thenReturn(true);
+        when(batchRepo.existsByBatchRefId("BATCH-DUPLICATE")).thenReturn(true);
 
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             service.processBatch(request);

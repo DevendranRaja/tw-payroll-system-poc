@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PayrollBatchRepository extends JpaRepository<PayrollBatch, Long> {
-    boolean existsByBatchId(String batchId);
+    boolean existsByBatchRefId(String batchId);
 }

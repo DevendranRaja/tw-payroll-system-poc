@@ -9,7 +9,7 @@ import java.util.List;
 public class PayrollBatchRequest {
 
     @NotBlank(message = "Batch ID is required")
-    private String batchId;
+    private String batchRefId;
 
     @Pattern(regexp = "^\\d{4}-(0[1-9]|1[0-2])$", message = "Pay period must be YYYY-MM")
     private String payPeriod;

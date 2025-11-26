@@ -17,7 +17,7 @@ public class PayrollBatch {
     private Long id;
 
     @Column(nullable = false, unique = true)
-    private String batchId;
+    private String batchRefId;
 
     private String payPeriod;
     private BigDecimal totalAmount;
