@@ -1,12 +1,14 @@
 package com.tw.coupang.one_payroll.payroll.dto.response;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Getter;
 
 import java.time.LocalDateTime;
 
-@Data
 @AllArgsConstructor
+@Builder
+@Getter
 public class ApiResponse {
 
     private String code;
@@ -14,8 +16,8 @@ public class ApiResponse {
     private LocalDateTime timestamp;
     private Object details;
 
-    public static ApiResponse success(String msg, Object details) {
-        return new ApiResponse("SUCCESS", msg, LocalDateTime.now(), details);
+    public static ApiResponse success(String code, String message, Object details) {
+        return new ApiResponse(code, message, LocalDateTime.now(), details);
     }
 
     public static ApiResponse error(String code, String msg) {
