@@ -133,6 +133,27 @@ CREATE TABLE bank_integration_log (
     FOREIGN KEY (payroll_id) REFERENCES payroll_run(payroll_id)
 );
 
+-- Tracks the overall bulk transmission
+CREATE TABLE payroll_batch (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    batch_id VARCHAR(50) NOT NULL UNIQUE,
+    pay_period VARCHAR(7) NOT NULL, -- Format: YYYY-MM
+    total_amount DECIMAL(15,2),
+    status VARCHAR(20) NOT NULL, -- PENDING, SUCCESS, RETRY, FAILED
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Tracks individual employee status within that batch
+CREATE TABLE payroll_batch_log (
+    log_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    batch_id VARCHAR(50) NOT NULL,
+    employee_id VARCHAR(10) NOT NULL,
+    status VARCHAR(20),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (batch_id) REFERENCES payroll_batch(batch_id)
+);
+
 -------------------------------------------------------
 -- INSERT DATA
 -------------------------------------------------------
