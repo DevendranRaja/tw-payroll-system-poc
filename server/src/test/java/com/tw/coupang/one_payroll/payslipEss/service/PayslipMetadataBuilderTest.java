@@ -2,7 +2,6 @@ package com.tw.coupang.one_payroll.payslipEss.service;
 
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
-import com.tw.coupang.one_payroll.payslipEss.dto.PayslipItemDto;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,9 +9,9 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class PayslipMetadataBuilderTest {
 
@@ -69,17 +68,11 @@ public class PayslipMetadataBuilderTest {
     {
         PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
-        assertNotNull(payslipMetadata.getEarnings());
-        assertEquals(2, payslipMetadata.getEarnings().size());
-
-        PayslipItemDto grossPayItem = payslipMetadata.getEarnings().get(0);
-        assertEquals("Gross Pay", grossPayItem.getDescription());
-        assertEquals(new BigDecimal("5000.00"), grossPayItem.getAmount());
-
-        PayslipItemDto benefitsItem = payslipMetadata.getEarnings().get(1);
-        assertEquals("Benefits", benefitsItem.getDescription());
-        assertEquals(new BigDecimal("250.00"), benefitsItem.getAmount());
-
+        Map<String, BigDecimal> earnings = payslipMetadata.getEarnings();
+        assertNotNull(earnings);
+        assertEquals(2, earnings.size());
+        assertEquals("5000", earnings.get("grossPay").stripTrailingZeros().toPlainString());
+        assertEquals("250", earnings.get("benefits").stripTrailingZeros().toPlainString());
     }
 
     @Test
@@ -88,18 +81,20 @@ public class PayslipMetadataBuilderTest {
         payroll.setBenefitAddition(BigDecimal.ZERO);
         PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
+        Map<String, BigDecimal> earnings = payslipMetadata.getEarnings();
         // Should only have gross pay in earnings
-        assertNotNull(payslipMetadata.getEarnings());
-        assertEquals(1, payslipMetadata.getEarnings().size());
-        assertEquals("Gross Pay", payslipMetadata.getEarnings().get(0).getDescription());
+        assertNotNull(earnings);
+        assertEquals(1, earnings.size());
+        assertEquals("5000", earnings.get("grossPay").stripTrailingZeros().toPlainString());
 
         payroll.setBenefitAddition(null);
         payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
+        earnings = payslipMetadata.getEarnings();
 
         // Should only have gross pay in earnings
-        assertNotNull(payslipMetadata.getEarnings());
-        assertEquals(1, payslipMetadata.getEarnings().size());
-        assertEquals("Gross Pay", payslipMetadata.getEarnings().get(0).getDescription());
+        assertNotNull(earnings);
+        assertEquals(1, earnings.size());
+        assertEquals("5000", earnings.get("grossPay").stripTrailingZeros().toPlainString());
     }
 
     @Test
@@ -107,11 +102,11 @@ public class PayslipMetadataBuilderTest {
     {
         PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
-        assertNotNull(payslipMetadata.getDeductions());
-        assertEquals(1, payslipMetadata.getDeductions().size());
+        Map<String, BigDecimal> deductions = payslipMetadata.getDeductions();
 
-        assertEquals("Tax", payslipMetadata.getDeductions().get(0).getDescription());
-        assertEquals(new BigDecimal("500.00"), payslipMetadata.getDeductions().get(0).getAmount());
+        assertNotNull(deductions);
+        assertEquals(1, deductions.size());
+        assertEquals("500", deductions.get("tax").stripTrailingZeros().toPlainString());
     }
 
     @Test
@@ -119,17 +114,17 @@ public class PayslipMetadataBuilderTest {
     {
         payroll.setTaxDeduction(BigDecimal.ZERO);
         PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
+        Map<String, BigDecimal> deductions = payslipMetadata.getDeductions();
 
-        // Should only have gross pay in earnings
-        assertNotNull(payslipMetadata.getDeductions());
-        assertEquals(0, payslipMetadata.getDeductions().size());
+        assertNotNull(deductions);
+        assertEquals(0, deductions.size());
 
         payroll.setTaxDeduction(null);
         payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
+        deductions = payslipMetadata.getDeductions();
 
-        // Should only have gross pay in earnings
-        assertNotNull(payslipMetadata.getDeductions());
-        assertEquals(0, payslipMetadata.getDeductions().size());
+        assertNotNull(deductions);
+        assertEquals(0, deductions.size());
     }
 
     @Test

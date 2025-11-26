@@ -1,6 +1,5 @@
 package com.tw.coupang.one_payroll.payslipEss.entity;
 
-import com.tw.coupang.one_payroll.payslipEss.dto.PayslipItemDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +10,7 @@ import org.hibernate.type.SqlTypes;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
 
 
 @Entity
@@ -56,11 +55,11 @@ public class Payslip {
     // JSON columns for break-up
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "earnings_json", columnDefinition = "jsonb")
-    private List<PayslipItemDto> earnings;
+    private Map<String, BigDecimal> earnings;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "deductions_json", columnDefinition = "jsonb")
-    private List<PayslipItemDto> deductions;
+    private Map<String, BigDecimal> deductions;
 
 }
 

@@ -10,9 +10,9 @@ import java.util.Optional;
 @Repository
 public interface PayrollRunRepository extends JpaRepository<PayrollRun, Integer>
 {
-    @Query(value = "SELECT * FROM public.payroll_run pr WHERE pr.employeeId = :employeeId " +
+    @Query(value = "SELECT * FROM public.payroll_run pr WHERE pr.employee_id = :employeeId " +
             "AND TO_CHAR(pr.pay_period_end, 'YYYY-MM') = :yearMonth " +
-            "ORDER BY pr.payPeriodEnd DESC",
+            "ORDER BY pr.pay_period_end DESC",
             nativeQuery = true)
     Optional<PayrollRun> findPayrollForEmployeeIdAndPayPeriod(
             @Param("employeeId") String employeeId,

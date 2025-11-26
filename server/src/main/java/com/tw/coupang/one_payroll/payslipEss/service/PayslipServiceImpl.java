@@ -4,7 +4,6 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
-import com.tw.coupang.one_payroll.payslipEss.dto.PayslipItemDto;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslipEss.entity.Payslip;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -60,7 +58,7 @@ public class PayslipServiceImpl implements PayslipService
         // Build metadata
         PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
-        // Save or update payslip entity
+        // Save payslip metadata
         savePayslipMetadata(payslipMetadata);
 
         log.info("Payslip metadata successfully saved for employee: {}", employeeId);
@@ -69,25 +67,11 @@ public class PayslipServiceImpl implements PayslipService
 
     private void savePayslipMetadata(PayslipMetadataDTO payslipMetadata)
     {
+        log.info("Going to save Payslip metadata");
         // Check if payslip already exists (idempotent)
         Payslip payslip = payslipRepository
                 .findByEmployeeIdAndPayPeriod(payslipMetadata.getEmployeeId(),  payslipMetadata.getPayPeriod())
                 .orElse(new Payslip());
-
-        // Convert DTOs to entity classes
-        List<PayslipItemDto> earnings = payslipMetadata.getEarnings().stream()
-                .map(e -> PayslipItemDto.builder()
-                        .description(e.getDescription())
-                        .amount(e.getAmount())
-                        .build())
-                .toList();
-
-        List<PayslipItemDto> deductions = payslipMetadata.getDeductions().stream()
-                .map(e -> PayslipItemDto.builder()
-                        .description(e.getDescription())
-                        .amount(e.getAmount())
-                        .build())
-                .toList();
 
         // Update payslip fields
         payslip.setEmployeeId(payslipMetadata.getEmployeeId());
@@ -97,8 +81,8 @@ public class PayslipServiceImpl implements PayslipService
         payslip.setNetPay(payslipMetadata.getNetPay());
         payslip.setTax(payslipMetadata.getTaxAmount());
         payslip.setBenefits(payslipMetadata.getBenefitAmount());
-        payslip.setEarnings(earnings);
-        payslip.setDeductions(deductions);
+        payslip.setEarnings(payslipMetadata.getEarnings());
+        payslip.setDeductions(payslipMetadata.getDeductions());
         payslip.setFilePath(payslipMetadata.getFilePath());
         payslip.setCreatedAt(payslipMetadata.getCreatedAt());
 

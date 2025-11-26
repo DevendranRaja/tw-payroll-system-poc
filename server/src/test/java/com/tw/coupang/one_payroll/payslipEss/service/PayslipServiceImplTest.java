@@ -4,7 +4,6 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
-import com.tw.coupang.one_payroll.payslipEss.dto.PayslipItemDto;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslipEss.entity.Payslip;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
@@ -21,7 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -81,14 +80,15 @@ public class PayslipServiceImplTest {
         payroll.setNetPay(new BigDecimal("4750.00"));
         payroll.setStatus(PayrollRun.PayrollStatus.PROCESSED);
 
-        List<PayslipItemDto> earnings = List.of(
-                new PayslipItemDto("Gross Pay", new BigDecimal("5000.00")),
-                new PayslipItemDto("Benefits", new BigDecimal("250.00"))
+        Map<String, BigDecimal> earnings = Map.of(
+                "grossPay", new BigDecimal("5000.00"),
+                "benefits",  new BigDecimal("250.00")
         );
 
-        List<PayslipItemDto> deductions = List.of(
-                new PayslipItemDto("Tax", new BigDecimal("500.00"))
+        Map<String, BigDecimal> deductions = Map.of(
+                "tax", new BigDecimal("500.00")
         );
+
 
         mockMetadata = PayslipMetadataDTO.builder()
                 .employeeId(employeeId)

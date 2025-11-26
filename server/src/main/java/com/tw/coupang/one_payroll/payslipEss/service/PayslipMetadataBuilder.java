@@ -1,7 +1,6 @@
 package com.tw.coupang.one_payroll.payslipEss.service;
 
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
-import com.tw.coupang.one_payroll.payslipEss.dto.PayslipItemDto;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
 import lombok.extern.slf4j.Slf4j;
@@ -11,8 +10,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 @Slf4j
@@ -23,9 +22,9 @@ public class PayslipMetadataBuilder {
     public PayslipMetadataDTO buildPayslipMetadata(EmployeeMaster employee, PayrollRun payrollRun, LocalDate payPeriodEndOfMonth) {
         log.info("Building payslip metadata for employee: {}, period: {}",
                 employee.getEmployeeId(), payrollRun.getPayPeriodEnd());
-        
-        List<PayslipItemDto> earnings = calculateEarnings(payrollRun);
-        List<PayslipItemDto> deductions = calculateDeductions(payrollRun);
+
+        Map<String, BigDecimal> earnings = calculateEarnings(payrollRun);
+        Map<String, BigDecimal> deductions = calculateDeductions(payrollRun);
 
         // Format pay period for file path
         String filePathPayPeriod = payrollRun.getPayPeriodEnd()
@@ -59,41 +58,28 @@ public class PayslipMetadataBuilder {
 
     }
 
-    private List<PayslipItemDto> calculateEarnings(PayrollRun payrollRun) {
-        List<PayslipItemDto> earnings = new ArrayList<>();
+    private Map<String, BigDecimal> calculateEarnings(PayrollRun payrollRun) {
+        Map<String, BigDecimal> earnings = new HashMap<>();
 
         //Adding Gross Pay to Earnings
-        earnings.add(PayslipItemDto.builder()
-                .description("Gross Pay")
-                .amount(payrollRun.getGrossPay())
-                .build());
+        if(payrollRun.getGrossPay() != null)
+            earnings.put("grossPay", payrollRun.getGrossPay().stripTrailingZeros());
 
         //Adding Benefits to Earnings
-        if (payrollRun.getBenefitAddition() != null && payrollRun.getBenefitAddition().compareTo(BigDecimal.ZERO) > 0) {
-            earnings.add(PayslipItemDto.builder()
-                    .description("Benefits")
-                    .amount(payrollRun.getBenefitAddition())
-                    .build());
-        }
+        if (payrollRun.getBenefitAddition() != null && payrollRun.getBenefitAddition().compareTo(BigDecimal.ZERO) > 0)
+            earnings.put("benefits", payrollRun.getBenefitAddition().stripTrailingZeros());
 
         log.info("Earnings: {}", earnings);
         return earnings;
 
     }
 
-    private List<PayslipItemDto> calculateDeductions(PayrollRun payrollRun) {
-        List<PayslipItemDto> deductions = new ArrayList<>();
+    private Map<String, BigDecimal> calculateDeductions(PayrollRun payrollRun) {
+        Map<String, BigDecimal> deductions = new HashMap<>();
 
         //Adding Tax to Deductions
-        if(payrollRun.getTaxDeduction() != null && payrollRun.getTaxDeduction().compareTo(BigDecimal.ZERO) > 0) {
-
-            deductions.add(
-                    PayslipItemDto.builder()
-                            .description("Tax")
-                            .amount(payrollRun.getTaxDeduction())
-                            .build()
-            );
-        }
+        if(payrollRun.getTaxDeduction() != null && payrollRun.getTaxDeduction().compareTo(BigDecimal.ZERO) > 0)
+            deductions.put("tax", payrollRun.getTaxDeduction().stripTrailingZeros());
 
         log.info("Deductions: {}", deductions);
         return deductions;

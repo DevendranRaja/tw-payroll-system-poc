@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -27,8 +27,8 @@ public class PayslipMetadataDTO {
     private BigDecimal netPay;
     private BigDecimal taxAmount;
     private BigDecimal benefitAmount;
-    private List<PayslipItemDto> earnings;
-    private List<PayslipItemDto> deductions;
+    private Map<String, BigDecimal> earnings;
+    private Map<String, BigDecimal> deductions;
     private String filePath;
     private LocalDateTime createdAt;
 }
