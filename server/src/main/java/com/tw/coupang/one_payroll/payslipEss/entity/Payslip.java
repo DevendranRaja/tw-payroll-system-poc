@@ -24,13 +24,13 @@ public class Payslip {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payslip_id")
-    private Long id;
+    private Long payslipId;
 
     @Column(name = "employee_id")
     private String employeeId;
 
     @Column(name = "payroll_id")
-    private Long payrollId;
+    private Integer payrollId;
 
     @Column(name = "pay_period")
     private LocalDate payPeriod;

@@ -17,6 +17,7 @@ import java.util.List;
 public class PayslipMetadataDTO {
     private String employeeId;
     private String employeeName;
+    private Integer payrollId;
     private String department;
     private String designation;
     private LocalDate payPeriod;

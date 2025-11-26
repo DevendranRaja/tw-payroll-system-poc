@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ public class PayslipMetadataBuilder {
 
     public static final String PAYSLIP_FILE_PATH_TEMPLATE = "/payslips/%s_%s.pdf";
 
-    public PayslipMetadataDTO buildPayslipMetadata(EmployeeMaster employee, PayrollRun payrollRun) {
+    public PayslipMetadataDTO buildPayslipMetadata(EmployeeMaster employee, PayrollRun payrollRun, LocalDate payPeriodEndOfMonth) {
         log.info("Building payslip metadata for employee: {}, period: {}",
                 employee.getEmployeeId(), payrollRun.getPayPeriodEnd());
         
@@ -42,7 +43,8 @@ public class PayslipMetadataBuilder {
                 .employeeName(employee.getFirstName() + " " + employee.getLastName())
                 .department(employee.getDepartment())
                 .designation(employee.getDesignation())
-                .payPeriod(payrollRun.getPayPeriodEnd())
+                .payrollId(payrollRun.getPayrollId())
+                .payPeriod(payPeriodEndOfMonth)
                 .payPeriodStart(payrollRun.getPayPeriodStart())
                 .payPeriodEnd(payrollRun.getPayPeriodEnd())
                 .grossPay(payrollRun.getGrossPay())

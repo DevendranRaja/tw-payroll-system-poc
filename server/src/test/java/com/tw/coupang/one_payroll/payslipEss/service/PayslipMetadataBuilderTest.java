@@ -19,6 +19,7 @@ public class PayslipMetadataBuilderTest {
     private PayslipMetadataBuilder metadataBuilder;
     private EmployeeMaster employee;
     private PayrollRun payroll;
+    private LocalDate payPeriodEndOfMonth;
 
     @BeforeEach
     void setUp() {
@@ -43,12 +44,14 @@ public class PayslipMetadataBuilderTest {
         payroll.setBenefitAddition(new BigDecimal("250.00"));
         payroll.setNetPay(new BigDecimal("4750.00"));
         payroll.setStatus(PayrollRun.PayrollStatus.PROCESSED);
+
+        payPeriodEndOfMonth= LocalDate.of(2025,10,31);
     }
 
     @Test
     void shouldBuildPaySlipSuccessfully() {
         // When
-        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll);
+        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
         // Then
         assertNotNull(payslipMetadata);
@@ -64,7 +67,7 @@ public class PayslipMetadataBuilderTest {
     @Test
     void shouldCalculateEarningsCorrectly()
     {
-        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll);
+        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
         assertNotNull(payslipMetadata.getEarnings());
         assertEquals(2, payslipMetadata.getEarnings().size());
@@ -83,7 +86,7 @@ public class PayslipMetadataBuilderTest {
     void shouldNotAddZeroOrNullBenefits()
     {
         payroll.setBenefitAddition(BigDecimal.ZERO);
-        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll);
+        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
         // Should only have gross pay in earnings
         assertNotNull(payslipMetadata.getEarnings());
@@ -91,7 +94,7 @@ public class PayslipMetadataBuilderTest {
         assertEquals("Gross Pay", payslipMetadata.getEarnings().get(0).getDescription());
 
         payroll.setBenefitAddition(null);
-        payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll);
+        payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
         // Should only have gross pay in earnings
         assertNotNull(payslipMetadata.getEarnings());
@@ -102,7 +105,7 @@ public class PayslipMetadataBuilderTest {
     @Test
     void shouldCalculateDeductionsCorrectly()
     {
-        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll);
+        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
         assertNotNull(payslipMetadata.getDeductions());
         assertEquals(1, payslipMetadata.getDeductions().size());
@@ -115,14 +118,14 @@ public class PayslipMetadataBuilderTest {
     void shouldNotDeductZeroOrNullTax()
     {
         payroll.setTaxDeduction(BigDecimal.ZERO);
-        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll);
+        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
         // Should only have gross pay in earnings
         assertNotNull(payslipMetadata.getDeductions());
         assertEquals(0, payslipMetadata.getDeductions().size());
 
         payroll.setTaxDeduction(null);
-        payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll);
+        payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
         // Should only have gross pay in earnings
         assertNotNull(payslipMetadata.getDeductions());
@@ -132,7 +135,7 @@ public class PayslipMetadataBuilderTest {
     @Test
     void shouldCheckIfFilePathIsGeneratedCorrectly()
     {
-        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll);
+        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
         String expectedFilePath = "/payslips/E001_OCT2025.pdf";
         String actualFilePath = payslipMetadata.getFilePath();

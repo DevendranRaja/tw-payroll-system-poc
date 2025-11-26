@@ -4,9 +4,10 @@ import com.tw.coupang.one_payroll.payslipEss.entity.Payslip;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 public interface PayslipRepository extends JpaRepository<Payslip, Long>
 {
-    Payslip findByEmployeeIdAndPayPeriod(String employeeId, LocalDate payPeriod);
+    Optional<Payslip> findByEmployeeIdAndPayPeriod(String employeeId, LocalDate payPeriod);
 }
 

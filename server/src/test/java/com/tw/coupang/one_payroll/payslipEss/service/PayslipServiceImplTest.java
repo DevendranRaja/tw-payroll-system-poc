@@ -4,21 +4,29 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
+import com.tw.coupang.one_payroll.payslipEss.dto.PayslipItemDto;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
+import com.tw.coupang.one_payroll.payslipEss.entity.Payslip;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRunRepository;
+import com.tw.coupang.one_payroll.payslipEss.repository.PayslipRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -26,8 +34,10 @@ public class PayslipServiceImplTest {
 
     private EmployeeMaster employee;
     private PayrollRun payroll;
-    String employeeId;
-    LocalDate payPeriod;
+    private PayslipMetadataDTO mockMetadata;
+    private String employeeId;
+    private String payPeriod;
+    private LocalDate payPeriodEndOfMonth;
 
     @InjectMocks
     private PayslipServiceImpl payslipService;
@@ -38,11 +48,18 @@ public class PayslipServiceImplTest {
     @Mock
     private EmployeeMasterRepository employeeMasterRepository;
 
+    @Mock
+    private PayslipMetadataBuilder metadataBuilder;
+
+    @Mock
+    private PayslipRepository payslipRepository;
+
 
     @BeforeEach
     void setUp() {
         employeeId = "E001";
-        payPeriod = LocalDate.of(2025, 10, 31);
+        payPeriod = "2025-10";
+        payPeriodEndOfMonth = LocalDate.of(2025, 10, 31);
 
         employee = new EmployeeMaster();
         employee.setEmployeeId(employeeId);
@@ -52,7 +69,6 @@ public class PayslipServiceImplTest {
         employee.setDesignation("Analyst");
         employee.setPayGroupId(1);
         employee.setStatus(EmployeeStatus.ACTIVE);
-
 
         payroll = new PayrollRun();
         payroll.setPayrollId(1);
@@ -64,18 +80,39 @@ public class PayslipServiceImplTest {
         payroll.setBenefitAddition(new BigDecimal("250.00"));
         payroll.setNetPay(new BigDecimal("4750.00"));
         payroll.setStatus(PayrollRun.PayrollStatus.PROCESSED);
-    }
 
-    @Test
-    void generatePaySlipMetaDataHappyPath() {
-        // This is a placeholder for actual test implementation.
-        // You would typically call the method from PayslipServiceImpl
-        // and assert the results here.
+        List<PayslipItemDto> earnings = List.of(
+                new PayslipItemDto("Gross Pay", new BigDecimal("5000.00")),
+                new PayslipItemDto("Benefits", new BigDecimal("250.00"))
+        );
+
+        List<PayslipItemDto> deductions = List.of(
+                new PayslipItemDto("Tax", new BigDecimal("500.00"))
+        );
+
+        mockMetadata = PayslipMetadataDTO.builder()
+                .employeeId(employeeId)
+                .employeeName("Jin Park")
+                .department("Finance")
+                .designation("Analyst")
+                .payPeriod(payPeriodEndOfMonth)
+                .payPeriodStart(LocalDate.of(2025, 10, 1))
+                .payPeriodEnd(LocalDate.of(2025, 10, 31))
+                .grossPay(new BigDecimal("5000.00"))
+                .netPay(new BigDecimal("4750.00"))
+                .taxAmount(new BigDecimal("500.00"))
+                .benefitAmount(new BigDecimal("250.00"))
+                .earnings(earnings)
+                .deductions(deductions)
+                .filePath("/payslips/E001_202510.pdf")
+                .createdAt(LocalDateTime.now())
+                .build();
+
     }
 
     @Test
     void shouldThrowExceptionWhenPayrollIsMissing() {
-        when(payrollRunRepository.findByEmployeeIdAndPayPeriodEnd(employeeId, payPeriod))
+        when(payrollRunRepository.findPayrollForEmployeeIdAndPayPeriod(employeeId, payPeriod))
                 .thenReturn(Optional.empty());
 
         when(employeeMasterRepository.findById(employeeId))
@@ -106,4 +143,69 @@ public class PayslipServiceImplTest {
                 () -> payslipService.generatePayslipMetadata(employeeId, payPeriod));
     }
 
+    @Test
+    void shouldUpdateExistingPayslipIdempotencyCheck()
+    {
+        Payslip existingPayslip = new Payslip();
+        existingPayslip.setPayslipId(1L);
+        existingPayslip.setEmployeeId("E001");
+
+        when(employeeMasterRepository.findById(employeeId))
+                .thenReturn(Optional.of(employee));
+
+        when(payrollRunRepository.findPayrollForEmployeeIdAndPayPeriod(employeeId, payPeriod))
+                .thenReturn(Optional.of(payroll));
+
+        when(metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth))
+                .thenReturn(mockMetadata);
+
+        when(payslipRepository.findByEmployeeIdAndPayPeriod(employeeId,payPeriodEndOfMonth))
+                .thenReturn(Optional.of(existingPayslip));
+
+        when(payslipRepository.save(any(Payslip.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        PayslipMetadataDTO payslipMetadata = payslipService.generatePayslipMetadata(employeeId, payPeriod);
+
+        assertNotNull(payslipMetadata);
+
+        // Verify that existing payslip is updated
+        ArgumentCaptor<Payslip> payslipCaptor = ArgumentCaptor.forClass(Payslip.class);
+        verify(payslipRepository).save(payslipCaptor.capture());
+
+        Payslip savedPayslip = payslipCaptor.getValue();
+        System.out.println("Saved Payslip: " + savedPayslip);
+        assertEquals(1L, savedPayslip.getPayslipId()); // Same ID means update
+    }
+
+    @Test
+    void shouldGenerateNewPayslipData() {
+       when(employeeMasterRepository.findById(employeeId))
+               .thenReturn(Optional.of(employee));
+
+       when(payrollRunRepository.findPayrollForEmployeeIdAndPayPeriod(employeeId, payPeriod))
+               .thenReturn(Optional.of(payroll));
+
+       when(metadataBuilder.buildPayslipMetadata(employee,payroll,payPeriodEndOfMonth))
+               .thenReturn(mockMetadata);
+
+       when(payslipRepository.findByEmployeeIdAndPayPeriod(employeeId, payPeriodEndOfMonth))
+               .thenReturn(Optional.empty());
+
+       when(payslipRepository.save(any(Payslip.class)))
+               .thenAnswer(invocation -> invocation.getArgument(0));
+
+         PayslipMetadataDTO payslipMetadata = payslipService.generatePayslipMetadata(employeeId, payPeriod);
+
+         assertNotNull(payslipMetadata);
+         assertEquals("E001", payslipMetadata.getEmployeeId());
+         assertEquals("Jin Park", payslipMetadata.getEmployeeName());
+         assertEquals(new BigDecimal("5000.00"), payslipMetadata.getGrossPay());
+
+        verify(employeeMasterRepository).findById(employeeId);
+        verify(payrollRunRepository).findPayrollForEmployeeIdAndPayPeriod(employeeId, payPeriod);
+        verify(metadataBuilder).buildPayslipMetadata(employee, payroll, payPeriodEndOfMonth);
+        verify(payslipRepository).save(any(Payslip.class));
+
+    }
 }
