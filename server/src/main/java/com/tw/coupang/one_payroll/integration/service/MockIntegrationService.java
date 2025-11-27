@@ -32,12 +32,25 @@ public class MockIntegrationService {
 
     @Transactional
     public PayrollBatchResponse processBatch(PayrollBatchRequest request) {
+        // Validation
+        validateBatchUniqueness(request.getBatchRefId());
 
-        if (batchRepo.existsByBatchRefId(request.getBatchRefId())) {
-            throw new IllegalArgumentException("Batch ID " + request.getBatchRefId() + " already exists.");
+        // Extract Initial Save
+        PayrollBatch batch = initializeBatch(request);
+
+        // Extract Processing and Final Update
+        return finalizeBatchProcessing(batch, request.getEmployeeIds());
+    }
+
+    //Handles Validation
+    private void validateBatchUniqueness(String batchRefId) {
+        if (batchRepo.existsByBatchRefId(batchRefId)) {
+            throw new IllegalArgumentException("Batch ID " + batchRefId + " already exists.");
         }
+    }
 
-        // 1. Initial Persistence (Status: PENDING)
+    //Handles the Creation of the PENDING state
+    private PayrollBatch initializeBatch(PayrollBatchRequest request) {
         PayrollBatch batch = PayrollBatch.builder()
                 .batchRefId(request.getBatchRefId())
                 .payPeriod(request.getPayPeriod())
@@ -47,41 +60,51 @@ public class MockIntegrationService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        batchRepo.save(batch);
+        return batchRepo.save(batch);
+    }
 
-        // 2. Determine Outcome (Mock Logic)
+    //Handles the Mock Logic, Updates, and Logs
+    private PayrollBatchResponse finalizeBatchProcessing(PayrollBatch batch, List<String> employeeIds) {
+        //Determine Outcome
         String finalStatus = determineMockOutcome();
+        String errorMessage = getStatusMessage(finalStatus);
 
-        String errorMessage = switch (finalStatus) {
-            case "SUCCESS" -> "Batch accepted for processing.";
-            case "RETRY" -> "Simulated Gateway Timeout (504). Please retry.";
-            case "FAILED" -> "Simulated Data Validation Error. Invalid Batch.";
-            default -> "Unknown status.";
-        };
-
-        // 3. Update Batch Status
+        //Update Batch
         batch.setStatus(finalStatus);
         batch.setUpdatedAt(LocalDateTime.now());
         batchRepo.save(batch);
 
-        // 4. Create a list of logs of all employees in the batch
-        List<PayrollBatchLog> logs = request.getEmployeeIds().stream()
-                .map(empId -> PayrollBatchLog.builder()
-                        .batchRefId(request.getBatchRefId())
-                        .employeeId(empId)
-                        .status(finalStatus)
-                        .timestamp(LocalDateTime.now())
-                        .build())
-                .collect(Collectors.toList());
+        //Save Logs
+        saveBatchLogs(batch.getBatchRefId(), employeeIds, finalStatus);
 
-        logRepo.saveAll(logs);
-
+        //Return Response
         return new PayrollBatchResponse(
                 batch.getBatchRefId(),
                 finalStatus,
                 LocalDateTime.now().toString(),
                 errorMessage
         );
+    }
+
+    private void saveBatchLogs(String batchRefId, List<String> employeeIds, String status) {
+        List<PayrollBatchLog> logs = employeeIds.stream()
+                .map(empId -> PayrollBatchLog.builder()
+                        .batchRefId(batchRefId)
+                        .employeeId(empId)
+                        .status(status)
+                        .timestamp(LocalDateTime.now())
+                        .build())
+                .collect(Collectors.toList());
+        logRepo.saveAll(logs);
+    }
+
+    private String getStatusMessage(String status) {
+        return switch (status) {
+            case "SUCCESS" -> "Batch accepted for processing.";
+            case "RETRY" -> "Simulated Gateway Timeout (504). Please retry.";
+            case "FAILED" -> "Simulated Data Validation Error. Invalid Batch.";
+            default -> "Unknown status.";
+        };
     }
 
     @Transactional

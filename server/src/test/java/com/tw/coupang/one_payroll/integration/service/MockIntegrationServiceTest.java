@@ -39,6 +39,7 @@ class MockIntegrationServiceTest {
         request.setEmployeeIds(List.of("E001"));
 
         when(batchRepo.existsByBatchRefId("BATCH-NEW")).thenReturn(false);
+        when(batchRepo.save(any(PayrollBatch.class))).thenAnswer(i -> i.getArguments()[0]);
 
         PayrollBatchResponse response = service.processBatch(request);
 
