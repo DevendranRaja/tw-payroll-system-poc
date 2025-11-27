@@ -6,6 +6,7 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundExcep
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslipEss.entity.Payslip;
+import com.tw.coupang.one_payroll.payslipEss.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRunRepository;
 import com.tw.coupang.one_payroll.payslipEss.repository.PayslipRepository;
@@ -37,6 +38,7 @@ public class PayslipServiceImplTest {
     private String employeeId;
     private String payPeriod;
     private LocalDate payPeriodEndOfMonth;
+    private Payslip expectedPaySlip;
 
     @InjectMocks
     private PayslipServiceImpl payslipService;
@@ -104,8 +106,22 @@ public class PayslipServiceImplTest {
                 .benefitAmount(new BigDecimal("250.00"))
                 .earnings(earnings)
                 .deductions(deductions)
-                .filePath("/payslips/E001_202510.pdf")
+                .filePath("/E001/OCT2025.pdf")
                 .createdAt(LocalDateTime.now())
+                .build();
+
+         expectedPaySlip = Payslip.builder()
+                .payslipId(1L)
+                .employeeId("E001")
+                .payrollId(1)
+                .payPeriod(LocalDate.of(2025, 10, 31))
+                .grossPay(new BigDecimal("5000.00"))
+                .netPay(new BigDecimal("4750.00"))
+                .tax(new BigDecimal("500.00"))
+                .benefits(new BigDecimal("250.00"))
+                .earnings(earnings)
+                .deductions(deductions)
+                .filePath("/E001/OCT2025.pdf")
                 .build();
 
     }
@@ -206,6 +222,31 @@ public class PayslipServiceImplTest {
         verify(payrollRunRepository).findPayrollForEmployeeIdAndPayPeriod(employeeId, payPeriod);
         verify(metadataBuilder).buildPayslipMetadata(employee, payroll, payPeriodEndOfMonth);
         verify(payslipRepository).save(any(Payslip.class));
+    }
 
+    @Test
+    void shouldThrowExceptionWhenPayslipIsMissing()
+    {
+        when(payslipRepository.findByEmployeeIdAndYearMonth(employeeId,payPeriod))
+                .thenReturn(Optional.empty());
+
+        assertThrows(PayslipNotFoundException.class,
+                () -> payslipService.getPayslipMetadata(employeeId,payPeriod));
+    }
+
+    @Test
+    void shouldGetPayslipDataSuccessfully()
+    {
+        when(payslipRepository.findByEmployeeIdAndYearMonth(employeeId,payPeriod))
+                .thenReturn(Optional.of(expectedPaySlip));
+
+        PayslipMetadataDTO payslipMetadata = payslipService.getPayslipMetadata(employeeId, payPeriod);
+
+        assertNotNull(payslipMetadata);
+        assertEquals(employeeId, payslipMetadata.getEmployeeId());
+        assertEquals("2025-10-31", payslipMetadata.getPayPeriod().toString());
+        assertEquals("5000", payslipMetadata.getGrossPay().stripTrailingZeros().toPlainString());
+
+        verify(payslipRepository).findByEmployeeIdAndYearMonth(employeeId, payPeriod);
     }
 }

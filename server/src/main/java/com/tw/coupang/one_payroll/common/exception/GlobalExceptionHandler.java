@@ -4,6 +4,7 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictExcep
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
+import com.tw.coupang.one_payroll.payslipEss.exception.PayslipNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -182,4 +183,17 @@ public class GlobalExceptionHandler {
                 )
         );
     }
+
+    @ExceptionHandler(PayslipNotFoundException.class)
+    public ResponseEntity<?> handlePayslipnotFound(PayslipNotFoundException ex) {
+        log.warn("Payslip not found: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                Map.of(
+                        "status", HttpStatus.NOT_FOUND.value(),
+                        "message", ex.getMessage()
+                )
+        );
+    }
+
 }

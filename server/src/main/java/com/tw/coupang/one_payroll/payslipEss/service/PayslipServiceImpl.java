@@ -6,12 +6,13 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundExcep
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslipEss.entity.Payslip;
+import com.tw.coupang.one_payroll.payslipEss.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRunRepository;
 import com.tw.coupang.one_payroll.payslipEss.repository.PayslipRepository;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -41,6 +42,8 @@ public class PayslipServiceImpl implements PayslipService
     @Transactional
     public PayslipMetadataDTO generatePayslipMetadata(String employeeId, String payPeriod)
     {
+        log.info("Generating payslip for employee: {}, period: {}", employeeId, payPeriod);
+
         EmployeeMaster employee = employeeMasterRepository.findById(employeeId)
                 .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID '" + employeeId + "' not found"));
 
@@ -90,5 +93,34 @@ public class PayslipServiceImpl implements PayslipService
         log.info("Payslip entity saved for employee: {}", payslipMetadata.getEmployeeId());
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PayslipMetadataDTO getPayslipMetadata(String employeeId, String payPeriod)
+    {
+        log.info("Fetching payslip for employee: {}, period: {}", employeeId, payPeriod);
 
+        Payslip payslip = payslipRepository.findByEmployeeIdAndYearMonth(employeeId, payPeriod)
+                .orElseThrow(() -> new PayslipNotFoundException("Payslip for employeeID '" + employeeId +
+                        "' for the period '" + payPeriod + "' not found!"));
+
+        log.info("Payslip fetched: {}", payslip);
+
+       return convertToDTO(payslip);
+    }
+
+    private PayslipMetadataDTO convertToDTO(Payslip payslip)
+    {
+        return PayslipMetadataDTO.builder()
+                .employeeId(payslip.getEmployeeId())
+                .payPeriod(payslip.getPayPeriod())
+                .grossPay(payslip.getGrossPay())
+                .netPay(payslip.getNetPay())
+                .taxAmount(payslip.getTax())
+                .benefitAmount(payslip.getBenefits())
+                .earnings(payslip.getEarnings())
+                .deductions(payslip.getDeductions())
+                .filePath(payslip.getFilePath())
+                .createdAt(payslip.getCreatedAt())
+                .build();
+    }
 }

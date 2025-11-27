@@ -4,4 +4,5 @@ import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
 
 public interface PayslipService {
     PayslipMetadataDTO generatePayslipMetadata(String employeeId, String payPeriod);
+    PayslipMetadataDTO getPayslipMetadata(String employeeId, String payPeriod);
 }

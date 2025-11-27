@@ -17,7 +17,7 @@ import java.util.Map;
 @Slf4j
 public class PayslipMetadataBuilder {
 
-    public static final String PAYSLIP_FILE_PATH_TEMPLATE = "/payslips/%s_%s.pdf";
+    public static final String PAYSLIP_FILE_PATH_TEMPLATE = "/%s/%s.pdf";
 
     public PayslipMetadataDTO buildPayslipMetadata(EmployeeMaster employee, PayrollRun payrollRun, LocalDate payPeriodEndOfMonth) {
         log.info("Building payslip metadata for employee: {}, period: {}",
@@ -34,8 +34,7 @@ public class PayslipMetadataBuilder {
         String filePath = String.format(
                 PAYSLIP_FILE_PATH_TEMPLATE,
                 employee.getEmployeeId(),
-                filePathPayPeriod.replace("-", "")
-        );
+                filePathPayPeriod);
 
         return PayslipMetadataDTO.builder()
                 .employeeId(employee.getEmployeeId())

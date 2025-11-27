@@ -132,7 +132,7 @@ public class PayslipMetadataBuilderTest {
     {
         PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
-        String expectedFilePath = "/payslips/E001_OCT2025.pdf";
+        String expectedFilePath = "/E001/OCT2025.pdf";
         String actualFilePath = payslipMetadata.getFilePath();
         assertEquals(expectedFilePath, actualFilePath);
     }
