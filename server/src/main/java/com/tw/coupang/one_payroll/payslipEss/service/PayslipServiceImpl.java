@@ -5,6 +5,7 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
+import com.tw.coupang.one_payroll.payslipEss.dto.PayslipResponse;
 import com.tw.coupang.one_payroll.payslipEss.entity.Payslip;
 import com.tw.coupang.one_payroll.payslipEss.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
@@ -52,8 +53,14 @@ public class PayslipServiceImpl implements PayslipService
         }
 
         //Get Pay Period
-        LocalDate payPeriodEndOfMonth = YearMonth.parse(payPeriod).atEndOfMonth();
-
+        LocalDate payPeriodEndOfMonth;
+        try {
+            payPeriodEndOfMonth = YearMonth.parse(payPeriod).atEndOfMonth();
+        } catch (Exception ex) {
+            throw new IllegalArgumentException(
+                    "Invalid pay period: '" + payPeriod + "'. Expected format is YYYY-MM."
+            );
+        }
         PayrollRun payroll = payrollRunRepository
                 .findPayrollForEmployeeIdAndPayPeriod(employeeId, payPeriod)
                 .orElseThrow(() -> new IllegalStateException("Payroll not ready"));
@@ -95,7 +102,7 @@ public class PayslipServiceImpl implements PayslipService
 
     @Override
     @Transactional(readOnly = true)
-    public PayslipMetadataDTO getPayslipMetadata(String employeeId, String payPeriod)
+    public PayslipResponse getPayslipMetadata(String employeeId, String payPeriod)
     {
         log.info("Fetching payslip for employee: {}, period: {}", employeeId, payPeriod);
 
@@ -108,18 +115,16 @@ public class PayslipServiceImpl implements PayslipService
        return convertToDTO(payslip);
     }
 
-    private PayslipMetadataDTO convertToDTO(Payslip payslip)
+    private PayslipResponse convertToDTO(Payslip payslip)
     {
-        return PayslipMetadataDTO.builder()
+        return PayslipResponse.builder()
                 .employeeId(payslip.getEmployeeId())
-                .payPeriod(payslip.getPayPeriod())
+                .period(payslip.getPayPeriod().toString())
                 .grossPay(payslip.getGrossPay())
                 .netPay(payslip.getNetPay())
                 .taxAmount(payslip.getTax())
-                .benefitAmount(payslip.getBenefits())
                 .earnings(payslip.getEarnings())
                 .deductions(payslip.getDeductions())
-                .filePath(payslip.getFilePath())
                 .createdAt(payslip.getCreatedAt())
                 .build();
     }

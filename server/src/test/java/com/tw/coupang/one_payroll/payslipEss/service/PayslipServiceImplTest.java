@@ -5,6 +5,7 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
+import com.tw.coupang.one_payroll.payslipEss.dto.PayslipResponse;
 import com.tw.coupang.one_payroll.payslipEss.entity.Payslip;
 import com.tw.coupang.one_payroll.payslipEss.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
@@ -240,12 +241,12 @@ public class PayslipServiceImplTest {
         when(payslipRepository.findByEmployeeIdAndYearMonth(employeeId,payPeriod))
                 .thenReturn(Optional.of(expectedPaySlip));
 
-        PayslipMetadataDTO payslipMetadata = payslipService.getPayslipMetadata(employeeId, payPeriod);
+        PayslipResponse payslipResponse = payslipService.getPayslipMetadata(employeeId, payPeriod);
 
-        assertNotNull(payslipMetadata);
-        assertEquals(employeeId, payslipMetadata.getEmployeeId());
-        assertEquals("2025-10-31", payslipMetadata.getPayPeriod().toString());
-        assertEquals(new BigDecimal("5000.00"), payslipMetadata.getGrossPay());
+        assertNotNull(payslipResponse);
+        assertEquals(employeeId, payslipResponse.getEmployeeId());
+        assertEquals("2025-10-31", payslipResponse.getPeriod());
+        assertEquals(new BigDecimal("5000.00"), payslipResponse.getGrossPay());
 
         verify(payslipRepository).findByEmployeeIdAndYearMonth(employeeId, payPeriod);
     }
