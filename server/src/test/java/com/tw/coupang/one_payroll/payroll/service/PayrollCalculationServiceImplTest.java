@@ -9,6 +9,7 @@ import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
+import com.tw.coupang.one_payroll.payroll.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
@@ -102,8 +103,8 @@ class PayrollCalculationServiceImplTest {
         doThrow(new InvalidPayPeriodException("Invalid pay period"))
                 .when(payrollCalculationValidator)
                 .validatePayPeriodAgainstPayGroup(
-                        request.getPeriodStart(),
-                        request.getPeriodEnd(),
+                        request.getPayPeriod().getStartDate(),
+                        request.getPayPeriod().getEndDate(),
                         payGroup);
 
         assertThrows(InvalidPayPeriodException.class, () -> service.calculate(request));
@@ -111,8 +112,8 @@ class PayrollCalculationServiceImplTest {
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
         verify(payGroupValidator).validatePayGroupExists(2);
         verify(payrollCalculationValidator).validatePayPeriodAgainstPayGroup(
-                request.getPeriodStart(),
-                request.getPeriodEnd(),
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate(),
                 payGroup);
     }
 
@@ -126,8 +127,8 @@ class PayrollCalculationServiceImplTest {
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
 
         doNothing().when(payrollCalculationValidator).validatePayPeriodAgainstPayGroup(
-                request.getPeriodStart(),
-                request.getPeriodEnd(),
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate(),
                 payGroup);
 
         ApiResponse response = service.calculate(request);
@@ -140,17 +141,20 @@ class PayrollCalculationServiceImplTest {
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
         verify(payGroupValidator).validatePayGroupExists(2);
         verify(payrollCalculationValidator).validatePayPeriodAgainstPayGroup(
-                request.getPeriodStart(),
-                request.getPeriodEnd(),
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate(),
                 payGroup);
     }
 
     private PayrollCalculationRequest buildRequest(String employeeId) {
         return PayrollCalculationRequest.builder()
                 .employeeId(employeeId)
-                .periodStart(LocalDate.of(2025, 11, 1))
-                .periodEnd(LocalDate.of(2025, 11, 30))
-                .hoursWorked(160)
+                .payPeriod(
+                        PayPeriod.builder()
+                                .startDate(LocalDate.of(2025, 11, 1))
+                                .endDate(LocalDate.of(2025, 11, 30))
+                                .build()
+                )
                 .build();
     }
 

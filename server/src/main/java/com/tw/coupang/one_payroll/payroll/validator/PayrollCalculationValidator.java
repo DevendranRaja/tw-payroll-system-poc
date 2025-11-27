@@ -12,19 +12,19 @@ import java.time.temporal.ChronoUnit;
 @Component
 public class PayrollCalculationValidator {
 
-    public void validatePayPeriodAgainstPayGroup(LocalDate periodStart, LocalDate periodEnd, PayGroup payGroup) {
+    public void validatePayPeriodAgainstPayGroup(LocalDate startDate, LocalDate endDate, PayGroup payGroup) {
         try {
             switch (payGroup.getPaymentCycle()) {
-                case MONTHLY -> validateMonthlyCycle(periodStart, periodEnd);
-                case WEEKLY -> validateWeeklyCycle(periodStart, periodEnd);
-                case BIWEEKLY -> validateBiWeeklyCycle(periodStart, periodEnd);
+                case MONTHLY -> validateMonthlyCycle(startDate, endDate);
+                case WEEKLY -> validateWeeklyCycle(startDate, endDate);
+                case BIWEEKLY -> validateBiWeeklyCycle(startDate, endDate);
                 default -> throw new InvalidPayPeriodException("Unsupported pay cycle: " + payGroup.getPaymentCycle());
             }
             log.info("Pay period validated successfully for Employee's PayGroup: {}, cycle: {}, period: {} to {}",
-                    payGroup.getGroupName(), payGroup.getPaymentCycle(), periodStart, periodEnd);
+                    payGroup.getGroupName(), payGroup.getPaymentCycle(), startDate, endDate);
         } catch (InvalidPayPeriodException e) {
             log.error("Invalid pay period for Employee's PayGroup: {}, period: {} to {}, reason: {}",
-                    payGroup.getGroupName(), periodStart, periodEnd, e.getMessage());
+                    payGroup.getGroupName(), startDate, endDate, e.getMessage());
             throw e;
         }
     }

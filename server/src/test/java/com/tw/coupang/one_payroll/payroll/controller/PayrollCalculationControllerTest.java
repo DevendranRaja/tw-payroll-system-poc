@@ -1,5 +1,6 @@
 package com.tw.coupang.one_payroll.payroll.controller;
 
+import com.tw.coupang.one_payroll.payroll.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payroll.service.PayrollCalculationService;
@@ -31,9 +32,12 @@ public class PayrollCalculationControllerTest {
     void calculatePayrollWithValidRequestShouldReturnOkResponse() {
         PayrollCalculationRequest request = PayrollCalculationRequest.builder()
                 .employeeId("EMP123")
-                .periodStart(LocalDate.of(2025, 1, 1))
-                .periodEnd(LocalDate.of(2025, 1, 31))
-                .hoursWorked(160)
+                .payPeriod(
+                        PayPeriod.builder()
+                                .startDate(LocalDate.of(2025, 1, 1))
+                                .endDate(LocalDate.of(2025, 1, 31))
+                                .build()
+                )
                 .build();
 
         when(payrollCalculationService.calculate(request))

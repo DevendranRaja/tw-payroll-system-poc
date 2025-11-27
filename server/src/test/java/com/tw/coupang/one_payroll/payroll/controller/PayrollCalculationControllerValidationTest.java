@@ -30,9 +30,10 @@ class PayrollCalculationControllerValidationTest {
         String invalidRequest = """
             {
               "employeeId": "EMP001",
-              "periodStart": "2025-11-15",
-              "periodEnd": "2025-11-10",
-              "hoursWorked": 40
+              "payPeriod": {
+                "startDate": "2025-11-15",
+                "endDate": "2025-11-10"
+              }
             }
         """;
 
@@ -42,7 +43,7 @@ class PayrollCalculationControllerValidationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.message").value("Validation failed for one or more fields."))
-                .andExpect(jsonPath("$.details.periodEnd").value("periodEnd must be after periodStart"));
+                .andExpect(jsonPath("$.details['payPeriod.endDate']").value("endDate must be after startDate"));
     }
 
     @Test
@@ -50,9 +51,10 @@ class PayrollCalculationControllerValidationTest {
         String invalidRequest = """
             {
               "employeeId": "EMP001",
-              "periodStart": "2025-11-25",
-              "periodEnd": "2025-12-01",
-              "hoursWorked": 40
+              "payPeriod": {
+                "startDate": "2025-11-25",
+                "endDate": "2025-12-01"
+              }
             }
         """;
 
@@ -62,7 +64,7 @@ class PayrollCalculationControllerValidationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.message").value("Validation failed for one or more fields."))
-                .andExpect(jsonPath("$.details.periodStart").value("period must be within a single calendar cycle (same month)"));
+                .andExpect(jsonPath("$.details['payPeriod.startDate']").value("period must be within a single calendar cycle (same month)"));
     }
 
     @Test
@@ -70,9 +72,10 @@ class PayrollCalculationControllerValidationTest {
         String validRequest = """
             {
               "employeeId": "EMP001",
-              "periodStart": "2025-11-01",
-              "periodEnd": "2025-11-30",
-              "hoursWorked": 160
+              "payPeriod": {
+                "startDate": "2025-11-01",
+                "endDate": "2025-11-30"
+              }
             }
         """;
 
@@ -92,9 +95,10 @@ class PayrollCalculationControllerValidationTest {
     void calculatePayrollWhenMissingEmployeeIdThenReturnsBadRequest() throws Exception {
         String invalidRequest = """
             {
-              "periodStart": "2025-11-01",
-              "periodEnd": "2025-11-30",
-              "hoursWorked": 160
+              "payPeriod": {
+                "startDate": "2025-11-01",
+                "endDate": "2025-11-30"
+              }
             }
         """;
 
@@ -107,13 +111,10 @@ class PayrollCalculationControllerValidationTest {
     }
 
     @Test
-    void calculatePayrollWhenHoursWorkedNegativeThenReturnsBadRequest() throws Exception {
+    void calculatePayrollWhenMissingPayPeriodThenReturnsBadRequest() throws Exception {
         String invalidRequest = """
             {
-              "employeeId": "EMP001",
-              "periodStart": "2025-11-01",
-              "periodEnd": "2025-11-30",
-              "hoursWorked": -5
+              "employeeId": "EMP001"
             }
         """;
 
@@ -122,7 +123,7 @@ class PayrollCalculationControllerValidationTest {
                         .content(invalidRequest))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.details.hoursWorked").exists());
+                .andExpect(jsonPath("$.details.payPeriod").exists());
     }
 
     @Test
@@ -130,9 +131,10 @@ class PayrollCalculationControllerValidationTest {
         String validRequest = """
             {
               "employeeId": "EMP999",
-              "periodStart": "2025-11-01",
-              "periodEnd": "2025-11-30",
-              "hoursWorked": 160
+              "payPeriod": {
+                "startDate": "2025-11-01",
+                "endDate": "2025-11-30"
+              }
             }
         """;
 
@@ -151,9 +153,10 @@ class PayrollCalculationControllerValidationTest {
         String invalidRequest = """
             {
               "employeeId": "EMP001",
-              "periodStart": "2025-11-01",
-              "periodEnd": "2025-12-31",
-              "hoursWorked": 160
+              "payPeriod": {
+                "startDate": "2025-11-01",
+                "endDate": "2025-11-31"
+              }
             }
         """;
 
@@ -162,9 +165,8 @@ class PayrollCalculationControllerValidationTest {
                         .content(invalidRequest))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.message").value("Validation failed for one or more fields."))
-                .andExpect(jsonPath("$.details.periodStart")
-                        .value("period must be within a single calendar cycle (same month)"));
+                .andExpect(jsonPath("$.message").value("Invalid request format."))
+                .andExpect(jsonPath("$.details").value("Invalid date 'NOVEMBER 31'"));
     }
 
     @Test
@@ -172,9 +174,10 @@ class PayrollCalculationControllerValidationTest {
         String validRequest = """
             {
               "employeeId": "EMP001",
-              "periodStart": "2025-11-01",
-              "periodEnd": "2025-11-30",
-              "hoursWorked": 160
+              "payPeriod": {
+                "periodStart": "2025-11-01",
+                "periodEnd": "2025-11-30"
+              }
             }
         """;
 

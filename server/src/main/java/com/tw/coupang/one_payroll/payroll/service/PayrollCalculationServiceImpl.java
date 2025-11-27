@@ -12,6 +12,8 @@ import com.tw.coupang.one_payroll.payroll.validator.PayrollCalculationValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+
 @Slf4j
 @Service
 public class PayrollCalculationServiceImpl implements PayrollCalculationService {
@@ -28,25 +30,30 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
 
     @Override
     public ApiResponse calculate(PayrollCalculationRequest request) {
-        log.info("Initiating payroll calculation for employeeId={}", request.getEmployeeId());
+        String employeeId = request.getEmployeeId();
+        log.info("Initiating payroll calculation for employeeId={}", employeeId);
 
-        EmployeeMaster employee = employeeMasterService.getEmployeeById(request.getEmployeeId());
+        EmployeeMaster employee = employeeMasterService.getEmployeeById(employeeId);
 
         if(employee.getStatus() != EmployeeStatus.ACTIVE) {
-            log.warn("Inactive employee attempted payroll calculation. employeeId={}", request.getEmployeeId());
-            throw new EmployeeInactiveException("Employee with ID '" + request.getEmployeeId() + "' is not active");
+            log.warn("Inactive employee attempted payroll calculation. employeeId={}", employeeId);
+            throw new EmployeeInactiveException("Employee with ID '" + employeeId + "' is not active");
         }
 
-        PayGroup payGroup = payGroupValidator.validatePayGroupExists(employee.getPayGroupId());
+        Integer payGroupId = employee.getPayGroupId();
 
-        log.info("Validated employee and pay group for employeeId={}, payGroupId={}", request.getEmployeeId(), employee.getPayGroupId());
+        PayGroup payGroup = payGroupValidator.validatePayGroupExists(payGroupId);
+        LocalDate startDate = request.getPayPeriod().getStartDate();
+        LocalDate endDate = request.getPayPeriod().getEndDate();
 
-        payrollCalculationValidator.validatePayPeriodAgainstPayGroup(request.getPeriodStart(), request.getPeriodEnd(), payGroup);
+        log.info("Validated employee and pay group for employeeId={}, payGroupId={}", employeeId, payGroupId);
 
-        log.info("Pay period validated for employeeId={} ({} → {})", request.getEmployeeId(), request.getPeriodStart(), request.getPeriodEnd());
+        payrollCalculationValidator.validatePayPeriodAgainstPayGroup(startDate, endDate, payGroup);
+
+        log.info("Pay period validated for employeeId={} ({} → {})", employeeId, startDate, endDate);
 
         // TODO: Make a call to Payroll Calculation Engine here and get the response
-        log.debug("Calling Payroll Calculation Engine for employeeId={}", request.getEmployeeId());
+        log.debug("Calling Payroll Calculation Engine for employeeId={}", employeeId);
 
         return ApiResponse.success("PAYROLL_CALCULATION_SUCCESS", "Payroll calculation completed successfully", null);
     }

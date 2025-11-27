@@ -16,9 +16,13 @@ public class PayPeriodValidator implements ConstraintValidator<ValidPayPeriod, P
     @Override
     public boolean isValid(PayrollCalculationRequest request, ConstraintValidatorContext context) {
         if (request == null) return true;
+        if (request.getPayPeriod() == null) {
+            addViolation(context, "payPeriod", "payPeriod must not be null");
+            return false;
+        }
 
-        LocalDate start = request.getPeriodStart();
-        LocalDate end = request.getPeriodEnd();
+        LocalDate start = request.getPayPeriod().getStartDate();
+        LocalDate end = request.getPayPeriod().getEndDate();
 
         if (start == null || end == null) return true;
 
@@ -26,13 +30,13 @@ public class PayPeriodValidator implements ConstraintValidator<ValidPayPeriod, P
 
         if (!isEndAfterStart(start, end)) {
             log.warn("Invalid pay period: end is not after start (start={}, end={})", start, end);
-            addViolation(context, "periodEnd", "periodEnd must be after periodStart");
+            addViolation(context, "endDate", "endDate must be after startDate");
             return false;
         }
 
         if (!isSameMonth(start, end)) {
             log.warn("Invalid pay period: start and end not within same month (start={}, end={})", start, end);
-            addViolation(context, "periodStart", "period must be within a single calendar cycle (same month)");
+            addViolation(context, "startDate", "period must be within a single calendar cycle (same month)");
             return false;
         }
 
@@ -50,6 +54,7 @@ public class PayPeriodValidator implements ConstraintValidator<ValidPayPeriod, P
     private void addViolation(ConstraintValidatorContext context, String field, String message) {
         context.disableDefaultConstraintViolation();
         context.buildConstraintViolationWithTemplate(message)
+                .addPropertyNode("payPeriod")
                 .addPropertyNode(field)
                 .addConstraintViolation();
     }

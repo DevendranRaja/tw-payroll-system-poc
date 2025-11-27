@@ -14,7 +14,7 @@ import java.lang.annotation.Target;
 @Constraint(validatedBy = PayPeriodValidator.class)
 @Documented
 public @interface ValidPayPeriod {
-    String message() default "Invalid pay period: periodEnd must not be before periodStart";
+    String message() default "Invalid pay period: endDate must not be before startDate";
     Class<?>[] groups() default {};
     Class<? extends Payload>[] payload() default {};
 }

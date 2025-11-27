@@ -1,5 +1,6 @@
 package com.tw.coupang.one_payroll.payroll.validator;
 
+import com.tw.coupang.one_payroll.payroll.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import jakarta.validation.ConstraintValidatorContext;
 import org.junit.jupiter.api.Test;
@@ -35,9 +36,12 @@ class PayPeriodValidatorTest {
     void validWhenEndAfterStartAndSameMonth() {
         PayrollCalculationRequest req = PayrollCalculationRequest.builder()
                 .employeeId("EMP100")
-                .periodStart(LocalDate.of(2025, 12, 10))
-                .periodEnd(LocalDate.of(2025, 12, 20))
-                .hoursWorked(40)
+                .payPeriod(
+                        PayPeriod.builder()
+                                .startDate(LocalDate.of(2025, 12, 10))
+                                .endDate(LocalDate.of(2025, 12, 20))
+                                .build()
+                )
                 .build();
 
         assertTrue(validator.isValid(req, context));
@@ -49,15 +53,18 @@ class PayPeriodValidatorTest {
 
         PayrollCalculationRequest req = PayrollCalculationRequest.builder()
                 .employeeId("EMP200")
-                .periodStart(LocalDate.of(2025, 12, 10))
-                .periodEnd(LocalDate.of(2025, 12, 10))
-                .hoursWorked(40)
+                .payPeriod(
+                        PayPeriod.builder()
+                                .startDate(LocalDate.of(2025, 12, 10))
+                                .endDate(LocalDate.of(2025, 12, 10))
+                                .build()
+                )
                 .build();
 
         assertFalse(validator.isValid(req, context));
 
         verify(context).disableDefaultConstraintViolation();
-        verify(context).buildConstraintViolationWithTemplate("periodEnd must be after periodStart");
+        verify(context).buildConstraintViolationWithTemplate("endDate must be after startDate");
     }
 
     @Test
@@ -66,15 +73,18 @@ class PayPeriodValidatorTest {
 
         PayrollCalculationRequest req = PayrollCalculationRequest.builder()
                 .employeeId("EMP300")
-                .periodStart(LocalDate.of(2025, 12, 10))
-                .periodEnd(LocalDate.of(2025, 12, 5))
-                .hoursWorked(40)
+                .payPeriod(
+                        PayPeriod.builder()
+                                .startDate(LocalDate.of(2025, 12, 10))
+                                .endDate(LocalDate.of(2025, 12, 5))
+                                .build()
+                )
                 .build();
 
         assertFalse(validator.isValid(req, context));
 
         verify(context).disableDefaultConstraintViolation();
-        verify(context).buildConstraintViolationWithTemplate("periodEnd must be after periodStart");
+        verify(context).buildConstraintViolationWithTemplate("endDate must be after startDate");
     }
 
     @Test
@@ -83,9 +93,12 @@ class PayPeriodValidatorTest {
 
         PayrollCalculationRequest req = PayrollCalculationRequest.builder()
                 .employeeId("EMP400")
-                .periodStart(LocalDate.of(2025, 12, 28))
-                .periodEnd(LocalDate.of(2026, 1, 3))
-                .hoursWorked(40)
+                .payPeriod(
+                        PayPeriod.builder()
+                                .startDate(LocalDate.of(2025, 12, 28))
+                                .endDate(LocalDate.of(2026, 1, 3))
+                                .build()
+                )
                 .build();
 
         assertFalse(validator.isValid(req, context));
@@ -102,8 +115,11 @@ class PayPeriodValidatorTest {
     @Test
     void validWhenPeriodStartIsNull() {
         PayrollCalculationRequest request = PayrollCalculationRequest.builder()
-                .periodEnd(LocalDate.now())
-                .hoursWorked(10)
+                .payPeriod(
+                        PayPeriod.builder()
+                                .endDate(LocalDate.now())
+                                .build()
+                )
                 .build();
 
         assertTrue(validator.isValid(request, context));
@@ -112,8 +128,11 @@ class PayPeriodValidatorTest {
     @Test
     void validWhenPeriodEndIsNull() {
         PayrollCalculationRequest request = PayrollCalculationRequest.builder()
-                .periodStart(LocalDate.now())
-                .hoursWorked(10)
+                .payPeriod(
+                        PayPeriod.builder()
+                                .startDate(LocalDate.now())
+                                .build()
+                )
                 .build();
 
         assertTrue(validator.isValid(request, context));
@@ -122,6 +141,7 @@ class PayPeriodValidatorTest {
     private void mockViolationFlow() {
         when(context.buildConstraintViolationWithTemplate(anyString())).thenReturn(violationBuilder);
         when(violationBuilder.addPropertyNode(anyString())).thenReturn(nodeBuilder);
+        when(nodeBuilder.addPropertyNode(anyString())).thenReturn(nodeBuilder);
         when(nodeBuilder.addConstraintViolation()).thenReturn(context);
     }
 }
