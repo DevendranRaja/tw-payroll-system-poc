@@ -196,4 +196,25 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<?> handleIllegalState(IllegalStateException ex) {
+        log.warn("Illegal state encountered: {}", ex.getMessage());
+
+        if ("Payroll not ready".equals(ex.getMessage())) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
+                    Map.of(
+                            "status", HttpStatus.BAD_REQUEST.value(),
+                            "message", "Payroll is not ready yet for the requested employee and period."
+                    )
+            );
+        }
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
+                Map.of(
+                        "status", HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                        "message", ex.getMessage()
+                )
+        );
+    }
+
 }
