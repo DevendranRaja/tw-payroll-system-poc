@@ -64,15 +64,15 @@ public class PayslipMetadataBuilderTest {
     }
 
     @Test
-    void shouldCalculateEarningsCorrectly()
+    void shouldTestEarningsMapHasCorrectValue()
     {
         PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
         Map<String, BigDecimal> earnings = payslipMetadata.getEarnings();
         assertNotNull(earnings);
         assertEquals(2, earnings.size());
-        assertEquals("5000", earnings.get("grossPay").stripTrailingZeros().toPlainString());
-        assertEquals("250", earnings.get("benefits").stripTrailingZeros().toPlainString());
+        assertEquals(new BigDecimal("5000.00"), earnings.get("grossPay"));
+        assertEquals(new BigDecimal("250.00"), earnings.get("benefits"));
     }
 
     @Test
@@ -85,7 +85,7 @@ public class PayslipMetadataBuilderTest {
         // Should only have gross pay in earnings
         assertNotNull(earnings);
         assertEquals(1, earnings.size());
-        assertEquals("5000", earnings.get("grossPay").stripTrailingZeros().toPlainString());
+        assertEquals(new BigDecimal("5000.00"), earnings.get("grossPay"));
 
         payroll.setBenefitAddition(null);
         payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
@@ -94,11 +94,22 @@ public class PayslipMetadataBuilderTest {
         // Should only have gross pay in earnings
         assertNotNull(earnings);
         assertEquals(1, earnings.size());
-        assertEquals("5000", earnings.get("grossPay").stripTrailingZeros().toPlainString());
+        assertEquals(new BigDecimal("5000.00"), earnings.get("grossPay"));
     }
 
     @Test
-    void shouldCalculateDeductionsCorrectly()
+    void shouldCalculateTotalEarningsCorrectly()
+    {
+        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
+
+        BigDecimal expectedTotalEarnings = new BigDecimal("5250.00");
+
+        assertNotNull(expectedTotalEarnings);
+        assertEquals(expectedTotalEarnings, payslipMetadata.getTotalEarnings());
+    }
+
+    @Test
+    void shouldTestDeductionsMapHasCorrectValue()
     {
         PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
 
@@ -106,7 +117,7 @@ public class PayslipMetadataBuilderTest {
 
         assertNotNull(deductions);
         assertEquals(1, deductions.size());
-        assertEquals("500", deductions.get("tax").stripTrailingZeros().toPlainString());
+        assertEquals(new BigDecimal("500.00"), deductions.get("tax"));
     }
 
     @Test
@@ -125,6 +136,17 @@ public class PayslipMetadataBuilderTest {
 
         assertNotNull(deductions);
         assertEquals(0, deductions.size());
+    }
+
+    @Test
+    void shouldCalculateTotalDeductionsCorrectly()
+    {
+        PayslipMetadataDTO payslipMetadata = metadataBuilder.buildPayslipMetadata(employee, payroll,payPeriodEndOfMonth);
+
+        BigDecimal expectedTotalDeductions = new BigDecimal("500.00");
+
+        assertNotNull(expectedTotalDeductions);
+        assertEquals(expectedTotalDeductions, payslipMetadata.getTotalDeductions());
     }
 
     @Test

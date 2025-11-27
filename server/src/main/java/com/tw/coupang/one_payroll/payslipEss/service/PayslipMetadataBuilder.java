@@ -24,7 +24,12 @@ public class PayslipMetadataBuilder {
                 employee.getEmployeeId(), payrollRun.getPayPeriodEnd());
 
         Map<String, BigDecimal> earnings = calculateEarnings(payrollRun);
+        BigDecimal totalEarnings = earnings.values().stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         Map<String, BigDecimal> deductions = calculateDeductions(payrollRun);
+        BigDecimal totalDeductions = deductions.values().stream()
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         // Format pay period for file path
         String filePathPayPeriod = payrollRun.getPayPeriodEnd()
@@ -50,6 +55,8 @@ public class PayslipMetadataBuilder {
                 .taxAmount(payrollRun.getTaxDeduction())
                 .benefitAmount(payrollRun.getBenefitAddition())
                 .earnings(earnings)
+                .totalEarnings(totalEarnings)
+                .totalDeductions(totalDeductions)
                 .deductions(deductions)
                 .filePath(filePath)
                 .createdAt(LocalDateTime.now())
@@ -62,11 +69,11 @@ public class PayslipMetadataBuilder {
 
         //Adding Gross Pay to Earnings
         if(payrollRun.getGrossPay() != null)
-            earnings.put("grossPay", payrollRun.getGrossPay().stripTrailingZeros());
+            earnings.put("grossPay", payrollRun.getGrossPay());
 
         //Adding Benefits to Earnings
         if (payrollRun.getBenefitAddition() != null && payrollRun.getBenefitAddition().compareTo(BigDecimal.ZERO) > 0)
-            earnings.put("benefits", payrollRun.getBenefitAddition().stripTrailingZeros());
+            earnings.put("benefits", payrollRun.getBenefitAddition());
 
         log.info("Earnings: {}", earnings);
         return earnings;
@@ -78,7 +85,7 @@ public class PayslipMetadataBuilder {
 
         //Adding Tax to Deductions
         if(payrollRun.getTaxDeduction() != null && payrollRun.getTaxDeduction().compareTo(BigDecimal.ZERO) > 0)
-            deductions.put("tax", payrollRun.getTaxDeduction().stripTrailingZeros());
+            deductions.put("tax", payrollRun.getTaxDeduction());
 
         log.info("Deductions: {}", deductions);
         return deductions;

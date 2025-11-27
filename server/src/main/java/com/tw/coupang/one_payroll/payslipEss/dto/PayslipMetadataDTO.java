@@ -29,6 +29,8 @@ public class PayslipMetadataDTO {
     private BigDecimal benefitAmount;
     private Map<String, BigDecimal> earnings;
     private Map<String, BigDecimal> deductions;
+    private BigDecimal totalEarnings;
+    private BigDecimal totalDeductions;
     private String filePath;
     private LocalDateTime createdAt;
 }

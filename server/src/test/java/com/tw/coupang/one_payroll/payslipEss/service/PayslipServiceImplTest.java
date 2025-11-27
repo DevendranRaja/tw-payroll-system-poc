@@ -216,7 +216,7 @@ public class PayslipServiceImplTest {
          assertNotNull(payslipMetadata);
          assertEquals("E001", payslipMetadata.getEmployeeId());
          assertEquals("Jin Park", payslipMetadata.getEmployeeName());
-         assertEquals(new BigDecimal("5000.00"), payslipMetadata.getGrossPay());
+        assertEquals(new BigDecimal("5000.00"), payslipMetadata.getGrossPay());
 
         verify(employeeMasterRepository).findById(employeeId);
         verify(payrollRunRepository).findPayrollForEmployeeIdAndPayPeriod(employeeId, payPeriod);
@@ -245,7 +245,7 @@ public class PayslipServiceImplTest {
         assertNotNull(payslipMetadata);
         assertEquals(employeeId, payslipMetadata.getEmployeeId());
         assertEquals("2025-10-31", payslipMetadata.getPayPeriod().toString());
-        assertEquals("5000", payslipMetadata.getGrossPay().stripTrailingZeros().toPlainString());
+        assertEquals(new BigDecimal("5000.00"), payslipMetadata.getGrossPay());
 
         verify(payslipRepository).findByEmployeeIdAndYearMonth(employeeId, payPeriod);
     }
