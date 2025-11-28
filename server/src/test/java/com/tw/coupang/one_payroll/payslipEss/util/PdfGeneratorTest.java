@@ -1,5 +1,6 @@
 package com.tw.coupang.one_payroll.payslipEss.util;
 
+import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -19,6 +20,9 @@ class PdfGeneratorTest {
     @Mock
     private TemplateEngine templateEngine;
 
+    @Mock
+    private PdfConfig pdfConfig;
+
     @InjectMocks
     private PdfGenerator pdfGenerator;
 
@@ -36,12 +40,16 @@ class PdfGeneratorTest {
         String mockHtml = "<html><body>Payslip</body></html>";
         when(templateEngine.process(eq("payslip"), any(Context.class))).thenReturn(mockHtml);
 
+        when(pdfConfig.applyBaseConfig(any(PdfRendererBuilder.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
         byte[] result = pdfGenerator.generatePayslipPdf(model);
 
         assertNotNull(result);
         assertTrue(result.length > 0);
 
         verify(templateEngine, times(1)).process(eq("payslip"), any(Context.class));
+        verify(pdfConfig, times(1)).applyBaseConfig(any(PdfRendererBuilder.class));
     }
 
     @Test
