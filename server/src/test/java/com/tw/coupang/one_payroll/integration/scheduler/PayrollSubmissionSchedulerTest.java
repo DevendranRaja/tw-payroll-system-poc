@@ -49,7 +49,7 @@ class PayrollSubmissionSchedulerTest {
 
         ReflectionTestUtils.setField(scheduler, "mockApiUrl", "http://localhost:8080/test-url");
 
-        when(payrollRunRepository.findTop100ByStatus(PayrollStatus.PROCESSED))
+        when(payrollRunRepository.findTop5ByStatus(PayrollStatus.PROCESSED))
                 .thenReturn(List.of(run));
 
         PayrollBatchResponse mockResponse = new PayrollBatchResponse("BATCH-123", "SUCCESS", "time", "Batch processed successfully.");
@@ -71,7 +71,7 @@ class PayrollSubmissionSchedulerTest {
                 .status(PayrollStatus.PROCESSED)
                 .build();
 
-        when(payrollRunRepository.findTop100ByStatus(PayrollStatus.PROCESSED))
+        when(payrollRunRepository.findTop5ByStatus(PayrollStatus.PROCESSED))
                 .thenReturn(List.of(run));
 
         when(restTemplate.postForObject(anyString(), any(PayrollBatchRequest.class), eq(PayrollBatchResponse.class)))

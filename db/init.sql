@@ -139,6 +139,8 @@ CREATE TABLE payroll_batch (
     pay_period VARCHAR(7) NOT NULL,
     total_amount DECIMAL(15,2),
     status VARCHAR(20) NOT NULL,
+    log_message VARCHAR(255),
+    employee_count INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

@@ -11,5 +11,5 @@ import java.util.List;
 public interface PayrollRunRepository extends JpaRepository<PayrollRun, Integer> {
 
     // Fetch the next 100 records that need to be sent
-    List<PayrollRun> findTop100ByStatus(PayrollStatus status);
+    List<PayrollRun> findTop5ByStatus(PayrollStatus status);
 }
