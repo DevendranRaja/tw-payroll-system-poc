@@ -1,13 +1,16 @@
 package com.tw.coupang.one_payroll.error.entity;
 
+
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+
 
 @Entity
 @Table(name = "error_log")
