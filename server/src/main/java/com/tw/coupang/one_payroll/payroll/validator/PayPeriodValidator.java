@@ -17,14 +17,17 @@ public class PayPeriodValidator implements ConstraintValidator<ValidPayPeriod, P
     public boolean isValid(PayrollCalculationRequest request, ConstraintValidatorContext context) {
         if (request == null) return true;
         if (request.getPayPeriod() == null) {
-            addViolation(context, "payPeriod", "payPeriod must not be null");
-            return false;
+            log.info("Invalid PayrollCalculationRequest: payPeriod is null");
+            return true;
         }
 
         LocalDate start = request.getPayPeriod().getStartDate();
         LocalDate end = request.getPayPeriod().getEndDate();
 
-        if (start == null || end == null) return true;
+        if (start == null || end == null) {
+            log.info("Invalid PayrollCalculationRequest: startDate or endDate is null (start={}, end={})", start, end);
+            return true;
+        }
 
         log.debug("Validating pay period: start={}, end={}", start, end);
 

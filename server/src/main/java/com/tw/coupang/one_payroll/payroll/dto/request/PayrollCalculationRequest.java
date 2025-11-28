@@ -1,6 +1,7 @@
 package com.tw.coupang.one_payroll.payroll.dto.request;
 
 import com.tw.coupang.one_payroll.payroll.validator.ValidPayPeriod;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -19,5 +20,6 @@ public class PayrollCalculationRequest {
     private String employeeId;
 
     @NotNull(message = "payPeriod is required")
+    @Valid
     private PayPeriod payPeriod;
 }

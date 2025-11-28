@@ -22,7 +22,7 @@ class PayrollCalculationValidatorTest {
     private PayrollCalculationValidator validator;
 
     @Test
-    void validatePayPeriodEndBeforeStartThrowsException() {
+    void validatePayPeriodEndDateBeforeStartDateThrowsException() {
         LocalDate start = LocalDate.of(2025, 3, 10);
         LocalDate end = LocalDate.of(2025, 3, 9);
         PayGroup pg = createPayGroupWithMonthlyCycle();

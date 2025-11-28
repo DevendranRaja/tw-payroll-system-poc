@@ -126,7 +126,7 @@ class PayPeriodValidatorTest {
     }
 
     @Test
-    void validWhenPeriodEndIsNull() {
+    void validWhenPayPeriodEndDateIsNull() {
         PayrollCalculationRequest request = PayrollCalculationRequest.builder()
                 .payPeriod(
                         PayPeriod.builder()

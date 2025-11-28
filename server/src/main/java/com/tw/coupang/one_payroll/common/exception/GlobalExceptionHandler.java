@@ -1,6 +1,7 @@
 package com.tw.coupang.one_payroll.common.exception;
 
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
+import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeInactiveException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
@@ -65,18 +66,44 @@ public class GlobalExceptionHandler {
 
         log.warn("Invalid JSON or enum value: {}", details);
 
-        String message = "Invalid request format.";
-        if (details != null) {
-            if (details.contains("not one of the values accepted")) {
-                message = "Invalid value provided for an enum field.";
-            } else if (details.contains("Invalid `null` value")) {
-                message = "One or more required fields cannot be null.";
+        if (details.contains("not one of the values accepted")) {
+            ApiResponse response = ApiResponse.failure(
+                    "VALIDATION_ERROR",
+                    "Invalid value provided for an enum field.",
+                    details
+            );
+            return ResponseEntity.badRequest().body(response);
+        }
+
+        if (details != null && details.contains("Invalid `null` value")) {
+            String fieldName = null;
+
+            if (details.contains("property")) {
+                int start = details.indexOf("property \"") + 10;
+                int end = details.indexOf("\"", start);
+                fieldName = details.substring(start, end);
             }
+
+            String userMessage = (fieldName != null)
+                    ? "Field '" + fieldName + "' cannot be empty. Please provide a value."
+                    : "One or more required fields cannot be empty.";
+
+            String detailMsg = (fieldName != null)
+                    ? fieldName + " received empty"
+                    : "Null value encountered in request body";
+
+            ApiResponse response = ApiResponse.failure(
+                    "VALIDATION_ERROR",
+                    userMessage,
+                    detailMsg
+            );
+
+            return ResponseEntity.badRequest().body(response);
         }
 
         ApiResponse response = ApiResponse.failure(
                 "VALIDATION_ERROR",
-                message,
+                "Invalid request format.",
                 details
         );
 
@@ -137,6 +164,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
+    @ExceptionHandler(EmployeeInactiveException.class)
+    public ResponseEntity<ApiResponse> handleInactiveEmployee(EmployeeInactiveException ex) {
+        log.warn("Inactive employee: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "EMPLOYEE_INACTIVE",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleGeneric(Exception ex) {
         log.error("Unexpected error", ex);
@@ -144,7 +185,7 @@ public class GlobalExceptionHandler {
         ApiResponse response = ApiResponse.failure(
                 "INTERNAL_SERVER_ERROR",
                 "An unexpected error occurred. Please try again later.",
-                ex
+                null
         );
 
         return ResponseEntity.internalServerError().body(response);

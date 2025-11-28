@@ -26,7 +26,7 @@ class PayrollCalculationControllerValidationTest {
     private PayrollCalculationService payrollCalculationService;
 
     @Test
-    void calculatePayrollWhenPeriodEndBeforeStartThenReturnsBadRequest() throws Exception {
+    void calculatePayrollWhenPayPeriodEndDateBeforeStartDateThenReturnsBadRequest() throws Exception {
         String invalidRequest = """
             {
               "employeeId": "EMP001",
@@ -175,8 +175,8 @@ class PayrollCalculationControllerValidationTest {
             {
               "employeeId": "EMP001",
               "payPeriod": {
-                "periodStart": "2025-11-01",
-                "periodEnd": "2025-11-30"
+                "startDate": "2025-11-01",
+                "endDate": "2025-11-30"
               }
             }
         """;
