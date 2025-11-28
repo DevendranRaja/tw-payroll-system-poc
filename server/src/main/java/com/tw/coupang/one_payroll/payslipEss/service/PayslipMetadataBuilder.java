@@ -1,6 +1,7 @@
 package com.tw.coupang.one_payroll.payslipEss.service;
 
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.common.constants.PayrollConstants;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
 import lombok.extern.slf4j.Slf4j;
@@ -69,11 +70,11 @@ public class PayslipMetadataBuilder {
 
         //Adding Gross Pay to Earnings
         if(payrollRun.getGrossPay() != null)
-            earnings.put("grossPay", payrollRun.getGrossPay());
+            earnings.put(PayrollConstants.GROSS_PAY, payrollRun.getGrossPay());
 
         //Adding Benefits to Earnings
         if (payrollRun.getBenefitAddition() != null && payrollRun.getBenefitAddition().compareTo(BigDecimal.ZERO) > 0)
-            earnings.put("benefits", payrollRun.getBenefitAddition());
+            earnings.put(PayrollConstants.BENEFITS, payrollRun.getBenefitAddition());
 
         log.info("Earnings: {}", earnings);
         return earnings;
@@ -85,7 +86,7 @@ public class PayslipMetadataBuilder {
 
         //Adding Tax to Deductions
         if(payrollRun.getTaxDeduction() != null && payrollRun.getTaxDeduction().compareTo(BigDecimal.ZERO) > 0)
-            deductions.put("tax", payrollRun.getTaxDeduction());
+            deductions.put(PayrollConstants.TAX, payrollRun.getTaxDeduction());
 
         log.info("Deductions: {}", deductions);
         return deductions;
