@@ -33,6 +33,7 @@ public class ErrorLog
     private String errorMessage;
 
     @Column(name = "error_time", insertable = false, updatable = false)
+    @CreationTimestamp
     private LocalDateTime errorTime;
 
     @Column(name = "resolved", insertable = false)
