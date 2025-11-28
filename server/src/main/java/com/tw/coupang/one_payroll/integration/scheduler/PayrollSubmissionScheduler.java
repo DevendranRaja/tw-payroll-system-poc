@@ -15,7 +15,6 @@ import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -81,7 +80,7 @@ public class PayrollSubmissionScheduler {
         // Map Employee IDs
         List<String> employeeIds = runs.stream()
                 .map(PayrollRun::getEmployeeId)
-                .collect(Collectors.toList());
+                .toList();
         request.setEmployeeIds(employeeIds);
 
         // Sum Total Amount
