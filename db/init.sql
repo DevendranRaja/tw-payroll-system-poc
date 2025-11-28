@@ -80,6 +80,7 @@ CREATE TABLE payroll_run (
     status payroll_status DEFAULT 'PROCESSED',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (employee_id) REFERENCES employee_master(employee_id)
+    CONSTRAINT uq_payroll_run_emp_period UNIQUE (employee_id, pay_period_start, pay_period_end)
 );
 
 -------------------------------------------------------
