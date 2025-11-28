@@ -1,0 +1,79 @@
+name: CI - Build & Test Payroll System
+
+on:
+  push:
+    branches: [ "main", "master", "develop" ]
+  pull_request:
+    branches: [ "main", "master", "develop" ]
+
+jobs:
+  build:
+    name: Build & Test Backend
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: server
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build Project (Without Tests)
+        run: ./gradlew clean build -x test
+
+      - name: Run Tests
+        run: ./gradlew test
+
+      - name: Upload Test Reports
+        uses: actions/upload-artifact@v4
+        with:
+            name: test-report
+            path: server/build/reports/tests/test/
+
+      - name: Run Checkstyle
+        run: ./gradlew checkstyleMain checkstyleTest
+
+      - name: Upload Checkstyle Report
+        uses: actions/upload-artifact@v4
+        with:
+            name: checkstyle-report
+            path: server/build/reports/checkstyle/
+
+      # Optional - SonarQube Cloud Scan
+      - name: SonarQube Scan
+        if: env.SONAR_TOKEN != ''
+        env:
+          SONAR_TOKEN: b975ff5e1749469ad5771b9d4c230fc7cdf410f1
+        run: |
+          ./gradlew sonar \
+            -Dsonar.projectKey=tw-payroll-system \
+            -Dsonar.organization=devendranraja \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=b975ff5e1749469ad5771b9d4c230fc7cdf410f1
+
+      # OPTIONAL: Build Docker Image
+      - name: Build Docker image
+        if: github.ref == 'refs/heads/main'
+        run: |
+          docker build -t payroll-system:latest .
+
