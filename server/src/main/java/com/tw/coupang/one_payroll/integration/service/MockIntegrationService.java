@@ -72,6 +72,12 @@ public class MockIntegrationService {
         //Update Batch
         batch.setStatus(finalStatus);
         batch.setUpdatedAt(LocalDateTime.now());
+        batch.setLogMessage(errorMessage);
+        if(!employeeIds.isEmpty()) {
+            batch.setEmployeeCount(employeeIds.size());
+        } else {
+            batch.setEmployeeCount(0);
+        }
         batchRepo.save(batch);
 
         //Save Logs

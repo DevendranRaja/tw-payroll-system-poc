@@ -40,7 +40,7 @@ public class PayrollSubmissionScheduler {
         log.info("Checking for pending payroll records...");
 
         // 1. Fetch Chunk as bulk rows of 100
-        List<PayrollRun> pendingRuns = payrollRunRepository.findTop100ByStatus(PayrollStatus.PROCESSED);
+        List<PayrollRun> pendingRuns = payrollRunRepository.findTop5ByStatus(PayrollStatus.PROCESSED);
 
         if (pendingRuns.isEmpty()) {
             log.info("No pending payroll records found.");
