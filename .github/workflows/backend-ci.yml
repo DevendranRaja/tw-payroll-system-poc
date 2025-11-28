@@ -65,9 +65,9 @@ jobs:
         env:
           SONAR_TOKEN: b975ff5e1749469ad5771b9d4c230fc7cdf410f1
         run: |
-          ./gradlew sonarqube \
+          ./gradlew sonar \
             -Dsonar.projectKey=tw-payroll-system \
-            -Dsonar.organization=devendran \
+            -Dsonar.organization=devendranraja \
             -Dsonar.host.url=https://sonarcloud.io \
             -Dsonar.login=b975ff5e1749469ad5771b9d4c230fc7cdf410f1
 
