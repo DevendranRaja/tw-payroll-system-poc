@@ -13,8 +13,13 @@ spring:
     show-sql: true
     properties:
       hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
 server:
   servlet:
     context-path: /tw-payroll-system/api
+
+integration:
+  payroll:
+    submit-url: http://localhost:8080/tw-payroll-system/api/integration/payroll/submit
