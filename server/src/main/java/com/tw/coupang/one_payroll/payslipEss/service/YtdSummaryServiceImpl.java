@@ -49,50 +49,59 @@ public class YtdSummaryServiceImpl implements YtdSummaryService
 
         List<Payslip> payslips = payslipRepository.findByEmployeeIdAndYear(employeeId, year);
 
+        if (payslips.isEmpty()) {
+            log.info("No payslips found for employee: {} in year: {}", employeeId, year);
+            return new YtdSummaryForPdfDto(
+                    employee.getEmployeeId(),
+                    employee.getFirstName() + " " + employee.getLastName(),
+                    employee.getDepartment(),
+                    employee.getDesignation(),
+                    year,
+                    Map.of(),
+                    YtdSummaryResponse.zero()
+            );
+        }
+
         log.info("Total number of payslips found: {}", payslips.size());
 
-//        if (payslips.isEmpty()) {
-//            log.info("No payslips found for employee: {} in year: {}", employeeId, year);
-//            return YtdSummaryResponse.zero();
-//        }
-
-//        if (payslips.isEmpty()) {
-//            log.info("No payslips found for employee: {} in year: {}", employeeId, year);
-//            return new YtdSummaryWithBreakdown(
-//                    employeeId,
-//                    year,
-//                    List.of(),
-//                    YtdTotals.zero()
-//            );
-//        }
-
+        YtdSummaryResponse ytdTotals = calculateYtdTotals(payslips);
 
         Map<String, MonthlyPayslipSummaryDto> monthlyBreakdown = buildMonthlySummaryMap(payslips);
 
-        System.out.println("payslipsByMonth: " + monthlyBreakdown);
-
-        YtdSummaryResponse ytdTotals = calculateYtdTotals(
-                monthlyBreakdown.values().stream().toList());
-
         return new YtdSummaryForPdfDto(
-                employeeId,
-                "name",
-                "department",
-                "designation",
+                employee.getEmployeeId(),
+                employee.getFirstName() + " " + employee.getLastName(),
+                employee.getDepartment(),
+                employee.getDesignation(),
                 year,
                 monthlyBreakdown,
                 ytdTotals);
 
     }
 
-    private Map<String, MonthlyPayslipSummaryDto> buildMonthlySummaryMap(List<Payslip> monthPayslips)
+    @Override
+    @Transactional(readOnly = true)
+    public YtdSummaryResponse getYtdSummaryDetails(String employeeId, int year)
     {
-        return monthPayslips.stream()
+        log.info("Fetching YTD summary for employee: {}, year: {}", employeeId, year);
+
+        List<Payslip> payslips = payslipRepository.findByEmployeeIdAndYear(employeeId, year);
+
+        log.info("Number of payslips fetched: {}", payslips.size());
+
+        if (payslips.isEmpty())
+            return YtdSummaryResponse.zero();
+        else
+            return calculateYtdTotals(payslips);
+    }
+
+    private Map<String, MonthlyPayslipSummaryDto> buildMonthlySummaryMap(List<Payslip> payslips) {
+        return payslips.stream()
                 .map(this::toMonthlyPayslipSummaryDto)
                 .collect(Collectors.toMap(
                         MonthlyPayslipSummaryDto::monthName,
-                        Function.identity(),
-                        (existing, replacement) -> existing));
+                        Function.identity()
+                ));
     }
 
     private MonthlyPayslipSummaryDto toMonthlyPayslipSummaryDto(Payslip payslip)
@@ -110,34 +119,34 @@ public class YtdSummaryServiceImpl implements YtdSummaryService
                 payslip.getTax());
     }
 
-    private YtdSummaryResponse calculateYtdTotals(List<MonthlyPayslipSummaryDto> monthlyBreakdown)
+    private YtdSummaryResponse calculateYtdTotals(List<Payslip> monthlyPayslips)
     {
-        log.info("Calculating YTD totals from monthly breakdown with {} months", monthlyBreakdown.size());
+        log.info("Calculating YTD totals from monthly breakdown with {} months", monthlyPayslips.size());
 
-        BigDecimal totalGross = monthlyBreakdown.stream()
-                .map(MonthlyPayslipSummaryDto::grossPay)
+        BigDecimal totalGross = monthlyPayslips.stream()
+                .map(Payslip::getGrossPay)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal totalNet = monthlyBreakdown.stream()
-                .map(MonthlyPayslipSummaryDto::netPay)
+        BigDecimal totalNet = monthlyPayslips.stream()
+                .map(Payslip::getNetPay)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal totalTax = monthlyBreakdown.stream()
-                .map(MonthlyPayslipSummaryDto::deductions)
+        BigDecimal totalDeductions = monthlyPayslips.stream()
+                .map(Payslip::getTax)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal totalBenefit = monthlyBreakdown.stream()
-                .map(MonthlyPayslipSummaryDto::benefit)
+        BigDecimal totalBenefit = monthlyPayslips.stream()
+                .map(Payslip::getBenefits)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
 
         log.info("YTD Summary calculated - Gross: {}, Net: {}, Tax: {}, Benefit: {}",
-                totalGross, totalNet, totalTax, totalBenefit);
+                totalGross, totalNet, totalDeductions, totalBenefit);
 
         return new YtdSummaryResponse(
-                (totalGross),
-                (totalNet),
-                (totalTax),
-                (totalBenefit));
+                totalGross,
+                totalNet,
+                totalDeductions,
+                totalBenefit);
     }
 }

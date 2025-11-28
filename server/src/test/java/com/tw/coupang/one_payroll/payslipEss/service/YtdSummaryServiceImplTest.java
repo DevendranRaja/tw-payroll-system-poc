@@ -19,10 +19,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -109,20 +111,23 @@ public class YtdSummaryServiceImplTest
 
     }
 
-//    @Test
-//    void shouldReturnEmployeeDetailsCorrectly()
-//    {
-//        when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
-//                .thenReturn(mockPayslips);
-//
-//        YtdSummaryForPdfDto ytdSummary = ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year);
-//
-//        assertNotNull(ytdSummary);
-//        assertEquals("E001", ytdSummary.employeeId());
-//        assertEquals("Jin Park", ytdSummary.employeeName());
-//        assertEquals("Finance", ytdSummary.department());
-//        assertEquals("Analyst", ytdSummary.designation());
-//    }
+    @Test
+    void shouldReturnEmployeeDetailsCorrectly()
+    {
+        when(employeeMasterRepository.findById(employeeId))
+                .thenReturn(Optional.of(employee));
+
+        when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
+                .thenReturn(mockPayslips);
+
+        YtdSummaryForPdfDto ytdSummary = ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year);
+
+        assertNotNull(ytdSummary);
+        assertEquals("E001", ytdSummary.employeeId());
+        assertEquals("Jin Park", ytdSummary.employeeName());
+        assertEquals("Finance", ytdSummary.department());
+        assertEquals("Analyst", ytdSummary.designation());
+    }
 
 
     @Test
@@ -177,6 +182,43 @@ public class YtdSummaryServiceImplTest
         assertEquals(new BigDecimal("14900.00"), ytdTotals.totalNet());
         assertEquals(new BigDecimal("1300.00"), ytdTotals.totalDeductions());
         assertEquals(new BigDecimal("300.00"), ytdTotals.totalBenefit());
+
+        verify(employeeMasterRepository).findById(employeeId);
+        verify(payslipRepository).findByEmployeeIdAndYear(employeeId, year);
+    }
+
+    @Test
+    void shouldHandleWhenNoPayslipsPresent()
+    {
+        when(employeeMasterRepository.findById(employeeId))
+                .thenReturn(Optional.of(employee));
+
+        when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
+                .thenReturn(Collections.emptyList());
+
+        YtdSummaryForPdfDto ytdSummary = ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year);
+
+        assertNotNull(ytdSummary);
+        assertEquals("E001", ytdSummary.employeeId());
+        assertTrue(ytdSummary.monthlyBreakdown().isEmpty());
+        assertEquals(YtdSummaryResponse.zero(), ytdSummary.ytdTotals());
+    }
+
+    @Test
+    void shouldGetYtdSummaryDetailsSuccessfully()
+    {
+        when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
+                .thenReturn(mockPayslips);
+
+        YtdSummaryResponse ytdSummary = ytdSummaryService.getYtdSummaryDetails(employeeId, year);
+
+        assertNotNull(ytdSummary);
+        assertEquals(new BigDecimal("16500.00"), ytdSummary.totalGross());
+        assertEquals(new BigDecimal("14900.00"), ytdSummary.totalNet());
+        assertEquals(new BigDecimal("1300.00"), ytdSummary.totalDeductions());
+        assertEquals(new BigDecimal("300.00"), ytdSummary.totalBenefit());
+
+        verify(payslipRepository).findByEmployeeIdAndYear(employeeId, year);
     }
 
 }
