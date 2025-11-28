@@ -16,19 +16,28 @@ import java.util.Map;
 public class PdfGenerator {
 
     private final TemplateEngine templateEngine;
+    private final PdfConfig pdfConfig;
 
     public byte[] generatePayslipPdf(Map<String, Object> model) {
+        return generatePdfFromTemplate(model, "payslip");
+    }
+
+    public byte[] generateYtdPdf(Map<String, Object> model) {
+        return generatePdfFromTemplate(model, "ytd");
+    }
+
+    private byte[] generatePdfFromTemplate(Map<String, Object> model, String templateName) {
         try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
             Context context = new Context();
             context.setVariables(model);
 
-            String html = templateEngine.process("payslip", context);
-
-            log.info("Final Thymeleaf HTML:\n{}", html);
+            String html = templateEngine.process(templateName, context);
 
             PdfRendererBuilder builder = new PdfRendererBuilder();
-            builder.useFastMode();
+
+            pdfConfig.applyBaseConfig(builder);
+
             builder.withHtmlContent(html, null);
             builder.toStream(outputStream);
             builder.run();
@@ -36,7 +45,7 @@ public class PdfGenerator {
             return outputStream.toByteArray();
 
         } catch (Exception e) {
-            log.error("PDF generation failed", e);
+            log.error("PDF generation failed for '{}': {}", templateName, e.getMessage(), e);
             return new byte[0];
         }
     }
