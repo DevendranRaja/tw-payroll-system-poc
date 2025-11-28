@@ -30,7 +30,7 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
 
     @Override
     public ApiResponse calculate(PayrollCalculationRequest request) {
-        String employeeId = request.getEmployeeId();
+        final String employeeId = request.getEmployeeId();
         log.info("Initiating payroll calculation for employeeId={}", employeeId);
 
         EmployeeMaster employee = employeeMasterService.getEmployeeById(employeeId);
@@ -40,11 +40,11 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
             throw new EmployeeInactiveException("Employee with ID '" + employeeId + "' is not active");
         }
 
-        Integer payGroupId = employee.getPayGroupId();
+        final Integer payGroupId = employee.getPayGroupId();
 
         PayGroup payGroup = payGroupValidator.validatePayGroupExists(payGroupId);
-        LocalDate startDate = request.getPayPeriod().getStartDate();
-        LocalDate endDate = request.getPayPeriod().getEndDate();
+        final LocalDate startDate = request.getPayPeriod().getStartDate();
+        final LocalDate endDate = request.getPayPeriod().getEndDate();
 
         log.info("Validated employee and pay group for employeeId={}, payGroupId={}", employeeId, payGroupId);
 

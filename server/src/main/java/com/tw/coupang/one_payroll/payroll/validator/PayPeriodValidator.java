@@ -21,8 +21,8 @@ public class PayPeriodValidator implements ConstraintValidator<ValidPayPeriod, P
             return true;
         }
 
-        LocalDate start = request.getPayPeriod().getStartDate();
-        LocalDate end = request.getPayPeriod().getEndDate();
+        final LocalDate start = request.getPayPeriod().getStartDate();
+        final LocalDate end = request.getPayPeriod().getEndDate();
 
         if (start == null || end == null) {
             log.info("Invalid PayrollCalculationRequest: startDate or endDate is null (start={}, end={})", start, end);
