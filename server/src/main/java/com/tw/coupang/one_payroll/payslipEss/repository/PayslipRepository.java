@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 public interface PayslipRepository extends JpaRepository<Payslip, Long>
@@ -17,5 +18,13 @@ public interface PayslipRepository extends JpaRepository<Payslip, Long>
     Optional<Payslip> findByEmployeeIdAndYearMonth(
             @Param("employeeId") String employeeId,
             @Param("yearMonth") String yearMonth
+    );
+
+    @Query(value = "SELECT * FROM public.payslip p WHERE p.employee_id = :employeeId " +
+            "AND EXTRACT(YEAR FROM p.pay_period) = :year " +
+            "ORDER BY p.pay_period ASC", nativeQuery = true)
+    List<Payslip> findByEmployeeIdAndYear(
+            @Param("employeeId") String employeeId,
+            @Param("year") int year
     );
 }
