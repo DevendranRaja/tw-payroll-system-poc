@@ -18,5 +18,6 @@ public class PayrollBatchLog {
     private String batchRefId;
     private String employeeId;
     private String status;
+    @Column(name = "timestamp", insertable = false, updatable = false)
     private LocalDateTime timestamp;
 }

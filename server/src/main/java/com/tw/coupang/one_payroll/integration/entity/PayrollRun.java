@@ -50,15 +50,15 @@ public class PayrollRun {
     @Column(name = "status")
     private PayrollStatus status;
 
-    @Column(name = "created_at", updatable = false)
+    @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // Automatically set timestamp before persisting
+    // Automatically set timestamp before persisting - Not required as it's handled by DB
     @PrePersist
     protected void onCreate() {
-        if (createdAt == null) {
+        /*if (createdAt == null) {
             createdAt = LocalDateTime.now();
-        }
+        }*/
         if (status == null) {
             status = PayrollStatus.PROCESSED; // Default per schema
         }
