@@ -18,3 +18,7 @@ spring:
 server:
   servlet:
     context-path: /tw-payroll-system/api
+
+integration:
+  payroll:
+    submit-url: http://localhost:8080/tw-payroll-system/api/integration/payroll/submit
