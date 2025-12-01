@@ -4,6 +4,7 @@ plugins {
 	id 'io.spring.dependency-management' version '1.1.7'
 	id 'checkstyle'
 	id "org.sonarqube" version "4.4.1.3373"
+	id 'jacoco'
 }
 
 group = 'com.tw.coupang'
@@ -16,6 +17,10 @@ java {
 	}
 }
 
+jacoco {
+	toolVersion = "0.8.14"
+}
+
 configurations {
 	compileOnly {
 		extendsFrom annotationProcessor
@@ -24,6 +29,10 @@ configurations {
 
 repositories {
 	mavenCentral()
+}
+
+jacoco {
+	toolVersion = "0.8.14"
 }
 
 dependencies {
@@ -44,10 +53,6 @@ dependencies {
 	testImplementation 'org.junit.jupiter:junit-jupiter'
 }
 
-tasks.named('test') {
-	useJUnitPlatform()
-}
-
 checkstyle {
 	toolVersion = "10.12.0"
 	configFile = file("$rootDir/checkstyle.xml")
@@ -64,5 +69,53 @@ sonarqube {
 		property "sonar.projectName", "tw-payroll-system"
 		property "sonar.host.url", "http://localhost:9000"
 		property "sonar.gradle.skipCompile", "true"
+		property "sonar.coverage.jacoco.xmlReportPaths", "build/reports/jacoco/test/jacocoTestReport.xml"
+		property "sonar.coverage.exclusions", """
+            **/exception/**,
+            **/dto/**,
+            **/entity/**,
+            **/enums/**,
+            **/repository/**,
+            **/request/**,
+            **/response/**
+        """
 	}
 }
+
+test {
+	useJUnitPlatform()
+	finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+	dependsOn test
+	reports {
+		xml.required = true
+		html.required = true
+	}
+	afterEvaluate {
+		classDirectories.setFrom(files(classDirectories.files.collect {
+			fileTree(dir: it, exclude: [
+					'**/exception/**',
+					'**/dto/**',
+					'**/entity/**',
+					'**/enums/**',
+					'**/repository/**',
+					'**/request/**',
+					'**/response/**'
+			])
+		}))
+	}
+}
+
+jacocoTestCoverageVerification {
+	violationRules {
+		rule {
+			limit {
+				minimum = 0.80
+			}
+		}
+	}
+}
+
+test.finalizedBy jacocoTestCoverageVerification

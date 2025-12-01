@@ -2,9 +2,10 @@ package com.tw.coupang.one_payroll.common.exception;
 
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.common.dto.ApiErrorResponse;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
-import com.tw.coupang.one_payroll.payslipEss.exception.PayslipNotFoundException;
+import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -185,36 +186,24 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(PayslipNotFoundException.class)
-    public ResponseEntity<?> handlePayslipnotFound(PayslipNotFoundException ex) {
+    public ResponseEntity<ApiErrorResponse> handlePayslipNotFound(PayslipNotFoundException ex) {
         log.warn("Payslip not found: {}", ex.getMessage());
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                Map.of(
-                        "status", HttpStatus.NOT_FOUND.value(),
-                        "message", ex.getMessage()
-                )
-        );
+        ApiErrorResponse response = ApiErrorResponse.failure("INVALID_PAYSLIP", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(IllegalStateException.class)
-    public ResponseEntity<?> handleIllegalState(IllegalStateException ex) {
+    public ResponseEntity<ApiErrorResponse> handleIllegalState(IllegalStateException ex) {
         log.warn("Illegal state encountered: {}", ex.getMessage());
 
         if ("Payroll not ready".equals(ex.getMessage())) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(
-                    Map.of(
-                            "status", HttpStatus.BAD_REQUEST.value(),
-                            "message", "Payroll is not ready yet for the requested employee and period."
-                    )
-            );
+            ApiErrorResponse response = ApiErrorResponse.failure("INVALID_REQUEST", "Payroll is not ready yet for the requested employee and period.", ex);
+            return ResponseEntity.badRequest().body(response);
+        } else {
+            ApiErrorResponse response = ApiErrorResponse.failure("INTERNAL_ERROR", ex.getMessage(), ex);
+            return ResponseEntity.badRequest().body(response);
         }
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(
-                Map.of(
-                        "status", HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                        "message", ex.getMessage()
-                )
-        );
     }
-
 }
