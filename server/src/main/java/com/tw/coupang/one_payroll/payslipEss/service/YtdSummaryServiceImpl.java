@@ -85,6 +85,8 @@ public class YtdSummaryServiceImpl implements YtdSummaryService
     {
         log.info("Fetching YTD summary for employee: {}, year: {}", employeeId, year);
 
+        employeeMasterRepository.findById(employeeId)
+                .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID '" + employeeId + "' not found"));
         List<Payslip> payslips = payslipRepository.findByEmployeeIdAndYear(employeeId, year);
 
         log.info("Number of payslips fetched: {}", payslips.size());

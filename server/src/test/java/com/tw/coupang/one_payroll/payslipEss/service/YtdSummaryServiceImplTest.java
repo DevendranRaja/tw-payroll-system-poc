@@ -207,6 +207,9 @@ public class YtdSummaryServiceImplTest
     @Test
     void shouldGetYtdSummaryDetailsSuccessfully()
     {
+        when(employeeMasterRepository.findById(employeeId))
+                .thenReturn(Optional.of(employee));
+
         when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
                 .thenReturn(mockPayslips);
 
