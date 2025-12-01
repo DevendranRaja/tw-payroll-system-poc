@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -228,7 +229,7 @@ class EmployeeMasterControllerTest {
         ResponseEntity<?> response = controller.getEmployeesByDepartment(dept, false);
 
         assertEquals(200, response.getStatusCode().value());
-        assertTrue(((java.util.List) response.getBody()).size() == 2);
+        assertEquals(2, ((List) response.getBody()).size());
     }
 
     @Test

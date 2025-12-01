@@ -71,7 +71,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
     @Transactional(readOnly = true)
     public EmployeeMaster getEmployeeById(String employeeId) {
         return repository.findById(employeeId)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID '" + employeeId + "' not found"));
+                .orElseThrow(() -> new EmployeeNotFoundException(EMPLOYEE_NOT_FOUND_PREFIX + employeeId + EMPLOYEE_NOT_FOUND_SUFFIX));
     }
 
     @Override
@@ -87,7 +87,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
     @Transactional
     public void deleteEmployee(String employeeId) {
         EmployeeMaster employee = repository.findById(employeeId)
-                .orElseThrow(() -> new EmployeeNotFoundException("Employee with ID '" + employeeId + "' not found"));
+                .orElseThrow(() -> new EmployeeNotFoundException(EMPLOYEE_NOT_FOUND_PREFIX + employeeId + EMPLOYEE_NOT_FOUND_SUFFIX));
         employee.setStatus(EmployeeStatus.INACTIVE);
         repository.save(employee);
     }
