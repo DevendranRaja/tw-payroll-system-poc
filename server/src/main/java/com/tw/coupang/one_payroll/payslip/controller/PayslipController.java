@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/payslip-ess")
 @RequiredArgsConstructor
 @Slf4j
-public class PaySlipController {
+public class PayslipController {
 
     private final PayslipService payslipService;
     private final PdfService pdfService;

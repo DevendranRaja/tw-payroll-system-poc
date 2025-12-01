@@ -41,8 +41,8 @@ class PayslipControllerTest {
     @BeforeEach
     void setUp() {
         mocks = MockitoAnnotations.openMocks(this);
-        PaySlipController controller =
-                new PaySlipController(payslipService, pdfService, ytdSummaryService);
+        PayslipController controller =
+                new PayslipController(payslipService, pdfService, ytdSummaryService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
