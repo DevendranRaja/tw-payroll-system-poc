@@ -1,8 +1,8 @@
 package com.tw.coupang.one_payroll.common.exception;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeInactiveException;
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveException;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
@@ -24,7 +24,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private final String VALIDATION_ERROR_CODE = "VALIDATION_ERROR";
+    private static final String VALIDATION_ERROR_CODE = "VALIDATION_ERROR";
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse> handleInvalidBody(MethodArgumentNotValidException ex) {

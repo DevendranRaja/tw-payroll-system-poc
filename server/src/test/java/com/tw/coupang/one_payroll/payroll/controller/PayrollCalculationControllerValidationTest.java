@@ -1,6 +1,6 @@
 package com.tw.coupang.one_payroll.payroll.controller;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payroll.service.PayrollCalculationService;
 import org.junit.jupiter.api.Test;
