@@ -1,8 +1,8 @@
-package com.tw.coupang.one_payroll.EmployeeMaster.Service;
+package com.tw.coupang.one_payroll.employee_master.Service;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Dto.CreateEmployeeRequest;
-import com.tw.coupang.one_payroll.EmployeeMaster.Dto.UpdateEmployeeRequest;
-import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.employee_master.Dto.CreateEmployeeRequest;
+import com.tw.coupang.one_payroll.employee_master.Dto.UpdateEmployeeRequest;
+import com.tw.coupang.one_payroll.employee_master.Entity.EmployeeMaster;
 
 import java.util.List;
 

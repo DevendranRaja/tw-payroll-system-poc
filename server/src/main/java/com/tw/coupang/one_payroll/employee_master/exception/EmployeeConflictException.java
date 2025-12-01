@@ -1,4 +1,4 @@
-package com.tw.coupang.one_payroll.EmployeeMaster.Exception;
+package com.tw.coupang.one_payroll.employee_master.Exception;
 
 public class EmployeeConflictException extends RuntimeException {
     public EmployeeConflictException(String message) {

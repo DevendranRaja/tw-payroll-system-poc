@@ -24,6 +24,8 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private final String VALIDATION_ERROR_CODE = "VALIDATION_ERROR";
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse> handleInvalidBody(MethodArgumentNotValidException ex) {
         log.warn("Validation failed: {}", ex.getBindingResult().getFieldErrors());
@@ -34,7 +36,7 @@ public class GlobalExceptionHandler {
         }
 
         ApiResponse response = ApiResponse.failure(
-                "VALIDATION_ERROR",
+                VALIDATION_ERROR_CODE,
                 "Validation failed for one or more fields.",
                 validationErrors
         );
@@ -52,7 +54,7 @@ public class GlobalExceptionHandler {
         );
 
         ApiResponse response = ApiResponse.failure(
-                "VALIDATION_ERROR",
+                VALIDATION_ERROR_CODE,
                 "Validation failed for one or more fields.",
                 errors
         );
@@ -68,7 +70,7 @@ public class GlobalExceptionHandler {
 
         if (details.contains("not one of the values accepted")) {
             ApiResponse response = ApiResponse.failure(
-                    "VALIDATION_ERROR",
+                    VALIDATION_ERROR_CODE,
                     "Invalid value provided for an enum field.",
                     details
             );
@@ -93,7 +95,7 @@ public class GlobalExceptionHandler {
                     : "Null value encountered in request body";
 
             ApiResponse response = ApiResponse.failure(
-                    "VALIDATION_ERROR",
+                    VALIDATION_ERROR_CODE,
                     userMessage,
                     detailMsg
             );
@@ -102,7 +104,7 @@ public class GlobalExceptionHandler {
         }
 
         ApiResponse response = ApiResponse.failure(
-                "VALIDATION_ERROR",
+                VALIDATION_ERROR_CODE,
                 "Invalid request format.",
                 details
         );
