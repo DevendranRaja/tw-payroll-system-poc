@@ -20,6 +20,5 @@ public class PayslipResponse {
     private Map<String, BigDecimal> deductions;
     private BigDecimal grossPay;
     private BigDecimal netPay;
-    private BigDecimal taxAmount;
     private LocalDateTime createdAt;
 }

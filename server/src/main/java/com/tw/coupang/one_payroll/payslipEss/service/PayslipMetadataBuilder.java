@@ -2,8 +2,8 @@ package com.tw.coupang.one_payroll.payslipEss.service;
 
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.common.constants.PayrollConstants;
+import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
-import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -53,7 +53,6 @@ public class PayslipMetadataBuilder {
                 .payPeriodEnd(payrollRun.getPayPeriodEnd())
                 .grossPay(payrollRun.getGrossPay())
                 .netPay(payrollRun.getNetPay())
-                .taxAmount(payrollRun.getTaxDeduction())
                 .benefitAmount(payrollRun.getBenefitAddition())
                 .earnings(earnings)
                 .totalEarnings(totalEarnings)

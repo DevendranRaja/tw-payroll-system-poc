@@ -4,12 +4,12 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
+import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipResponse;
 import com.tw.coupang.one_payroll.payslipEss.entity.Payslip;
 import com.tw.coupang.one_payroll.payslipEss.exception.PayslipNotFoundException;
-import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
-import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRunRepository;
+import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRunMockRepository;
 import com.tw.coupang.one_payroll.payslipEss.repository.PayslipRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,13 +22,13 @@ import java.time.YearMonth;
 @Service
 public class PayslipServiceImpl implements PayslipService
 {
-    private final PayrollRunRepository payrollRunRepository;
+    private final PayrollRunMockRepository payrollRunRepository;
     private final EmployeeMasterRepository employeeMasterRepository;
     private final PayslipMetadataBuilder metadataBuilder;
     private final PayslipRepository payslipRepository;
 
     public PayslipServiceImpl(
-            PayrollRunRepository payrollRunRepository,
+            PayrollRunMockRepository payrollRunRepository,
             EmployeeMasterRepository employeeMasterRepository,
             PayslipMetadataBuilder metadataBuilder,
             PayslipRepository payslipRepository)
@@ -89,7 +89,6 @@ public class PayslipServiceImpl implements PayslipService
         payslip.setPayPeriod(payslipMetadata.getPayPeriod());
         payslip.setGrossPay(payslipMetadata.getGrossPay());
         payslip.setNetPay(payslipMetadata.getNetPay());
-        payslip.setTax(payslipMetadata.getTaxAmount());
         payslip.setBenefits(payslipMetadata.getBenefitAmount());
         payslip.setEarnings(payslipMetadata.getEarnings());
         payslip.setDeductions(payslipMetadata.getDeductions());
@@ -122,7 +121,6 @@ public class PayslipServiceImpl implements PayslipService
                 .period(payslip.getPayPeriod().toString())
                 .grossPay(payslip.getGrossPay())
                 .netPay(payslip.getNetPay())
-                .taxAmount(payslip.getTax())
                 .earnings(payslip.getEarnings())
                 .deductions(payslip.getDeductions())
                 .createdAt(payslip.getCreatedAt())

@@ -42,9 +42,6 @@ public class Payslip {
     @Column(name = "net_pay")
     private BigDecimal netPay;
 
-    @Column(name = "tax")
-    private BigDecimal tax;
-
     @Column(name = "benefits")
     private BigDecimal benefits;
 

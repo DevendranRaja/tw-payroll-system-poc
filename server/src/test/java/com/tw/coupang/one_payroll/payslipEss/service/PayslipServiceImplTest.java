@@ -4,12 +4,13 @@ import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
+import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
+import com.tw.coupang.one_payroll.integration.enums.PayrollStatus;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipResponse;
 import com.tw.coupang.one_payroll.payslipEss.entity.Payslip;
 import com.tw.coupang.one_payroll.payslipEss.exception.PayslipNotFoundException;
-import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
-import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRunRepository;
+import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRunMockRepository;
 import com.tw.coupang.one_payroll.payslipEss.repository.PayslipRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ public class PayslipServiceImplTest {
     private PayslipServiceImpl payslipService;
 
     @Mock
-    private PayrollRunRepository payrollRunRepository;
+    private PayrollRunMockRepository payrollRunRepository;
 
     @Mock
     private EmployeeMasterRepository employeeMasterRepository;
@@ -81,7 +82,7 @@ public class PayslipServiceImplTest {
         payroll.setTaxDeduction(new BigDecimal("500.00"));
         payroll.setBenefitAddition(new BigDecimal("250.00"));
         payroll.setNetPay(new BigDecimal("4750.00"));
-        payroll.setStatus(PayrollRun.PayrollStatus.PROCESSED);
+        payroll.setStatus(PayrollStatus.PROCESSED);
 
         Map<String, BigDecimal> earnings = Map.of(
                 "grossPay", new BigDecimal("5000.00"),
@@ -103,7 +104,6 @@ public class PayslipServiceImplTest {
                 .payPeriodEnd(LocalDate.of(2025, 10, 31))
                 .grossPay(new BigDecimal("5000.00"))
                 .netPay(new BigDecimal("4750.00"))
-                .taxAmount(new BigDecimal("500.00"))
                 .benefitAmount(new BigDecimal("250.00"))
                 .earnings(earnings)
                 .deductions(deductions)
@@ -118,7 +118,6 @@ public class PayslipServiceImplTest {
                 .payPeriod(LocalDate.of(2025, 10, 31))
                 .grossPay(new BigDecimal("5000.00"))
                 .netPay(new BigDecimal("4750.00"))
-                .tax(new BigDecimal("500.00"))
                 .benefits(new BigDecimal("250.00"))
                 .earnings(earnings)
                 .deductions(deductions)

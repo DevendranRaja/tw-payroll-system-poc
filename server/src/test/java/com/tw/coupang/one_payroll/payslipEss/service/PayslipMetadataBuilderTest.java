@@ -2,8 +2,9 @@ package com.tw.coupang.one_payroll.payslipEss.service;
 
 import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
+import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
+import com.tw.coupang.one_payroll.integration.enums.PayrollStatus;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
-import com.tw.coupang.one_payroll.payslipEss.payrollmock.PayrollRun;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -42,7 +43,7 @@ public class PayslipMetadataBuilderTest {
         payroll.setTaxDeduction(new BigDecimal("500.00"));
         payroll.setBenefitAddition(new BigDecimal("250.00"));
         payroll.setNetPay(new BigDecimal("4750.00"));
-        payroll.setStatus(PayrollRun.PayrollStatus.PROCESSED);
+        payroll.setStatus(PayrollStatus.PROCESSED);
 
         payPeriodEndOfMonth= LocalDate.of(2025,10,31);
     }

@@ -56,7 +56,6 @@ class PaySlipControllerTest {
                 .deductions(Collections.singletonMap("Tax", BigDecimal.valueOf(500)))
                 .grossPay(BigDecimal.valueOf(5000))
                 .netPay(BigDecimal.valueOf(4500))
-                .taxAmount(BigDecimal.valueOf(500))
                 .createdAt(LocalDateTime.now())
                 .build();
 

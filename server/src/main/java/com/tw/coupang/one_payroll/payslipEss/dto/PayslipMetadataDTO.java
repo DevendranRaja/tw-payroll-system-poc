@@ -25,7 +25,6 @@ public class PayslipMetadataDTO {
     private LocalDate payPeriodEnd;
     private BigDecimal grossPay;
     private BigDecimal netPay;
-    private BigDecimal taxAmount;
     private BigDecimal benefitAmount;
     private Map<String, BigDecimal> earnings;
     private Map<String, BigDecimal> deductions;
