@@ -1,6 +1,9 @@
 package com.tw.coupang.one_payroll.payslipEss.service;
 
 import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.payslipEss.dto.MonthlyPayslipSummaryDto;
+import com.tw.coupang.one_payroll.payslipEss.dto.YtdSummaryForPdfDto;
+import com.tw.coupang.one_payroll.payslipEss.dto.YtdSummaryResponse;
 import com.tw.coupang.one_payroll.payslipEss.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslipEss.util.PdfGenerator;
 import org.junit.jupiter.api.AfterEach;
@@ -11,6 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,6 +28,9 @@ class PdfServiceTest {
 
     @Mock
     private PayslipService payslipService;
+
+    @Mock
+    private YtdSummaryService ytdSummaryService;
 
     @InjectMocks
     private PdfService pdfService;
@@ -110,5 +118,81 @@ class PdfServiceTest {
         assertTrue(ex.getMessage().contains("Invalid pay period"));
         verify(payslipService, times(1)).generatePayslipMetadata(employeeId, period);
         verify(pdfGenerator, never()).generatePayslipPdf(anyMap());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void generateYtdPdfSuccess() {
+        String employeeId = "E001";
+        int year = 2025;
+
+        Map<String, MonthlyPayslipSummaryDto> monthlyBreakdown = new HashMap<>();
+        monthlyBreakdown.put("JANUARY", new MonthlyPayslipSummaryDto(
+                "JANUARY", 1, year,
+                BigDecimal.valueOf(1000),
+                BigDecimal.valueOf(800),
+                BigDecimal.valueOf(150),
+                BigDecimal.valueOf(50)
+        ));
+
+        YtdSummaryResponse ytdTotals = new YtdSummaryResponse(
+                BigDecimal.valueOf(16500),
+                BigDecimal.valueOf(14900),
+                BigDecimal.valueOf(1300),
+                BigDecimal.valueOf(300)
+        );
+
+        YtdSummaryForPdfDto ytdSummary = new YtdSummaryForPdfDto(
+                employeeId,
+                "John Doe",
+                "Engineering",
+                "Developer",
+                year,
+                monthlyBreakdown,
+                ytdTotals
+        );
+
+        byte[] pdfData = new byte[]{5, 6, 7, 8};
+
+        when(ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year)).thenReturn(ytdSummary);
+        when(pdfGenerator.generateYtdPdf(anyMap())).thenReturn(pdfData);
+
+        byte[] result = pdfService.generateYtdPdf(employeeId, year);
+
+        assertArrayEquals(pdfData, result);
+
+        ArgumentCaptor<Map<String, Object>> captor = ArgumentCaptor.forClass(Map.class);
+        verify(pdfGenerator).generateYtdPdf(captor.capture());
+
+        Map<String, Object> capturedModel = captor.getValue();
+        assertEquals(ytdSummary, capturedModel.get("ytd"));
+        assertNotNull(capturedModel.get("monthlyList"));
+
+        verify(ytdSummaryService, times(1)).getYtdSummaryWithBreakdown(employeeId, year);
+        verify(pdfGenerator, times(1)).generateYtdPdf(anyMap());
+    }
+
+    @Test
+    void generateYtdPdfHandlesMissingMonths() {
+        String employeeId = "E002";
+        int year = 2025;
+        YtdSummaryForPdfDto ytdSummary = new YtdSummaryForPdfDto(
+                employeeId,
+                "Jane Doe",
+                "Finance",
+                "Analyst",
+                year,
+                null, // monthlyBreakdown is null
+                new YtdSummaryResponse(
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO
+                )
+        );
+
+        when(ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year)).thenReturn(ytdSummary);
+        when(pdfGenerator.generateYtdPdf(anyMap())).thenReturn(new byte[]{9, 10, 11});
+
+        byte[] result = pdfService.generateYtdPdf(employeeId, year);
+        assertNotNull(result);
+        verify(pdfGenerator, times(1)).generateYtdPdf(anyMap());
     }
 }
