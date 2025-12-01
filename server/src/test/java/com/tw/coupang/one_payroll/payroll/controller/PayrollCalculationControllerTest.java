@@ -69,7 +69,7 @@ public class PayrollCalculationControllerTest {
         //then
         assertNotNull(actual);
         assertEquals(HttpStatus.OK, actual.getStatusCode());
-        final var listOfPayrollRuns = (List<PayrollRun>) actual.getBody().getDetails();
+        final var listOfPayrollRuns = (List<PayrollRunResponse>) actual.getBody().getDetails();
         assertEquals(1, listOfPayrollRuns.size());
         assertEquals(payrollRun, listOfPayrollRuns.get(0));
     }
@@ -91,7 +91,7 @@ public class PayrollCalculationControllerTest {
         //then
         assertNotNull(actual);
         assertEquals(HttpStatus.OK, actual.getStatusCode());
-        final var listOfPayrollRuns = (List<PayrollRun>) actual.getBody().getDetails();
+        final var listOfPayrollRuns = (List<PayrollRunResponse>) actual.getBody().getDetails();
         assertEquals(1, listOfPayrollRuns.size());
         assertEquals(payrollRun, listOfPayrollRuns.get(0));
     }
