@@ -16,6 +16,6 @@ public class PayrollBatchStatusResponse {
     private String overallStatus;
     private Integer numberOfEmployees;
     private LocalDateTime processedAt;
-    private String logsMessage;
+    private String logMessage;
 }
 

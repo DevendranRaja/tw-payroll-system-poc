@@ -46,7 +46,7 @@ class PayrollBatchStatusControllerTest {
                 .overallStatus("SUCCESS")
                 .numberOfEmployees(100)
                 .processedAt(LocalDateTime.now())
-                .logsMessage("Batch processed successfully")
+                .logMessage("Batch processed successfully")
                 .build();
     }
 
@@ -90,7 +90,7 @@ class PayrollBatchStatusControllerTest {
     void testGetBatchStatusWithPendingStatusShouldReturn200() throws Exception {
 
         testResponse.setOverallStatus("PENDING");
-        testResponse.setLogsMessage("Awaiting processing");
+        testResponse.setLogMessage("Awaiting processing");
         when(payrollBatchStatusService.getBatchStatus("BATCH-20251128-001"))
                 .thenReturn(testResponse);
 
@@ -106,7 +106,7 @@ class PayrollBatchStatusControllerTest {
     void testGetBatchStatusWithFailedStatusShouldReturn200() throws Exception {
 
         testResponse.setOverallStatus("FAILED");
-        testResponse.setLogsMessage("Processing failed due to validation error");
+        testResponse.setLogMessage("Processing failed due to validation error");
         when(payrollBatchStatusService.getBatchStatus("BATCH-20251128-001"))
                 .thenReturn(testResponse);
 
@@ -137,7 +137,7 @@ class PayrollBatchStatusControllerTest {
     @DisplayName("Should handle batch with null logMessage")
     void testGetBatchStatusWithNullLogMessageShouldReturn200() throws Exception {
 
-        testResponse.setLogsMessage(null);
+        testResponse.setLogMessage(null);
         when(payrollBatchStatusService.getBatchStatus("BATCH-20251128-001"))
                 .thenReturn(testResponse);
 

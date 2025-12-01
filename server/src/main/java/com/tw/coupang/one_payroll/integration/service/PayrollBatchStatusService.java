@@ -31,7 +31,7 @@ public class PayrollBatchStatusService {
                 .overallStatus(batch.getStatus())
                 .numberOfEmployees(batch.getEmployeeCount())
                 .processedAt(batch.getUpdatedAt())
-                .logsMessage(batch.getLogMessage())
+                .logMessage(batch.getLogMessage())
                 .build();
     }
 }

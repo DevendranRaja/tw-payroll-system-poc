@@ -55,7 +55,7 @@ class PayrollBatchStatusServiceTest {
         assertEquals("BATCH-20251128-001", response.getBatchId());
         assertEquals("SUCCESS", response.getOverallStatus());
         assertEquals(100, response.getNumberOfEmployees());
-        assertEquals("Batch processed successfully", response.getLogsMessage());
+        assertEquals("Batch processed successfully", response.getLogMessage());
         assertNotNull(response.getProcessedAt());
 
         verify(payrollBatchRepository, times(1)).findByBatchRefId(batchId);
@@ -88,7 +88,7 @@ class PayrollBatchStatusServiceTest {
 
         assertEquals("PENDING", response.getOverallStatus());
         assertEquals(50, response.getNumberOfEmployees());
-        assertEquals("Awaiting processing", response.getLogsMessage());
+        assertEquals("Awaiting processing", response.getLogMessage());
     }
 
     @Test
@@ -100,7 +100,7 @@ class PayrollBatchStatusServiceTest {
 
         PayrollBatchStatusResponse response = payrollBatchStatusService.getBatchStatus("BATCH-20251128-001");
 
-        assertNull(response.getLogsMessage());
+        assertNull(response.getLogMessage());
     }
 
     @Test
