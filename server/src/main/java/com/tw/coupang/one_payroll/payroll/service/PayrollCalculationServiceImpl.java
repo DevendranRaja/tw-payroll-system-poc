@@ -7,11 +7,10 @@ import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
-import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
-import com.tw.coupang.one_payroll.payroll.validator.PayrollCalculationValidator;
 import com.tw.coupang.one_payroll.payroll.dto.response.PayrollRunResponse;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
+import com.tw.coupang.one_payroll.payroll.validator.PayrollCalculationValidator;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,7 +26,6 @@ import static java.math.RoundingMode.HALF_UP;
 @Service
 @AllArgsConstructor
 @Slf4j
-@Service
 public class PayrollCalculationServiceImpl implements PayrollCalculationService {
 
     private final EmployeeMasterService employeeMasterService;
@@ -60,8 +58,8 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
 
         final var payrollRun = PayrollRun.builder();
         payrollRun.employeeId(employee.getEmployeeId())
-                .payPeriodStart(request.getPayPeriodStart())
-                .payPeriodEnd(request.getPayPeriodEnd());
+                .payPeriodStart(request.getPayPeriod().getStartDate())
+                .payPeriodEnd(request.getPayPeriod().getEndDate());
 
         //TODO: Use hours worked and pay group payment cycle to calculate gross pay
         payrollGrossToNetPayCalculation(BigDecimal.valueOf(50000), payGroup, payrollRun);
@@ -70,7 +68,7 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
         //TODO: Send payrollRun data to Payslip, deductions, benefits tables.
 
         log.info("Payroll calculation completed for Employee ID: {}, Pay Period: {} to {}",
-                request.getEmployeeId(), request.getPayPeriodStart(), request.getPayPeriodEnd());
+                request.getEmployeeId(), request.getPayPeriod().getStartDate(), request.getPayPeriod().getEndDate());
 
         return PayrollRunResponse.builder()
                 .employeeId(payrollRunFinal.getEmployeeId())

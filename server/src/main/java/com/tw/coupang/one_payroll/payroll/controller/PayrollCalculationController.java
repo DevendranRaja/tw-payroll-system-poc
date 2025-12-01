@@ -53,9 +53,5 @@ public class PayrollCalculationController {
         List<PayrollRunResponse> payrollRuns = payrollCalculationService.getPayroll(employeeId, periodStart, periodEnd);
         return ResponseEntity.ok(ApiResponse.success(
                 "PAYROLL_FETCH_SUCCESS", "Payroll records fetched successfully", payrollRuns));
-
-        log.info("Successfully calculated payroll for employeeId={}", request.getEmployeeId());
-
-        return ResponseEntity.ok(response);
     }
 }

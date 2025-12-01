@@ -4,7 +4,6 @@ import com.tw.coupang.one_payroll.payroll.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payroll.dto.response.PayrollRunResponse;
-import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payroll.service.PayrollCalculationService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,7 +18,8 @@ import java.util.List;
 
 import static java.math.BigDecimal.valueOf;
 import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -44,7 +44,8 @@ class PayrollCalculationControllerTest {
                 .build();
 
         PayrollRunResponse payrollRunResponse = PayrollRunResponse.builder().employeeId(request.getEmployeeId())
-                .payPeriodStart(request.getPayPeriodStart()).payPeriodEnd(request.getPayPeriodEnd()).build();
+                .payPeriodStart(request.getPayPeriod().getStartDate())
+                .payPeriodEnd(request.getPayPeriod().getEndDate()).build();
         when(payrollCalculationService.calculate(request)).thenReturn(payrollRunResponse);
 
         ResponseEntity<ApiResponse> actual = payrollCalculationController.calculatePayroll(request);
