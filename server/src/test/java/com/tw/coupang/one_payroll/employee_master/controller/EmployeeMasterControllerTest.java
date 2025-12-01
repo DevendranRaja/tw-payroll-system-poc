@@ -1,12 +1,12 @@
-package com.tw.coupang.one_payroll.employee_master.Controller;
+package com.tw.coupang.one_payroll.employee_master.controller;
 
-import com.tw.coupang.one_payroll.employee_master.Dto.CreateEmployeeRequest;
-import com.tw.coupang.one_payroll.employee_master.Dto.UpdateEmployeeRequest;
-import com.tw.coupang.one_payroll.employee_master.Entity.EmployeeMaster;
-import com.tw.coupang.one_payroll.employee_master.Enum.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.dto.CreateEmployeeRequest;
+import com.tw.coupang.one_payroll.employee_master.dto.UpdateEmployeeRequest;
+import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
-import com.tw.coupang.one_payroll.employee_master.Service.EmployeeMasterService;
+import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

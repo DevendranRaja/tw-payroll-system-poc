@@ -1,4 +1,4 @@
-package com.tw.coupang.one_payroll.employee_master.Dto;
+package com.tw.coupang.one_payroll.employee_master.dto;
 
 import java.time.LocalDate;
 

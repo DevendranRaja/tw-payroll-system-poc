@@ -1,9 +1,9 @@
 package com.tw.coupang.one_payroll.payroll.service;
 
-import com.tw.coupang.one_payroll.employee_master.Entity.EmployeeMaster;
-import com.tw.coupang.one_payroll.employee_master.Enum.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveException;
-import com.tw.coupang.one_payroll.employee_master.Service.EmployeeMasterService;
+import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
@@ -52,7 +52,6 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
 
         log.info("Pay period validated for employeeId={} ({} → {})", employeeId, startDate, endDate);
 
-        // TODO (CP-16): Make a call to Payroll Calculation Engine here and get the response
         log.debug("Calling Payroll Calculation Engine for employeeId={}", employeeId);
 
         return ApiResponse.success("PAYROLL_CALCULATION_SUCCESS", "Payroll calculation completed successfully", null);

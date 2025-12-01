@@ -1,10 +1,10 @@
 package com.tw.coupang.one_payroll.payroll.service;
 
-import com.tw.coupang.one_payroll.employee_master.Entity.EmployeeMaster;
-import com.tw.coupang.one_payroll.employee_master.Enum.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
-import com.tw.coupang.one_payroll.employee_master.Service.EmployeeMasterService;
+import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
