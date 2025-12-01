@@ -1,9 +1,12 @@
 package com.tw.coupang.one_payroll.common.exception;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveException;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
+import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
+import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -21,8 +24,10 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String VALIDATION_ERROR_CODE = "VALIDATION_ERROR";
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleInvalidBody(MethodArgumentNotValidException ex) {
+    public ResponseEntity<ApiResponse> handleInvalidBody(MethodArgumentNotValidException ex) {
         log.warn("Validation failed: {}", ex.getBindingResult().getFieldErrors());
 
         Map<String, String> validationErrors = new HashMap<>();
@@ -30,17 +35,17 @@ public class GlobalExceptionHandler {
             validationErrors.put(error.getField(), error.getDefaultMessage());
         }
 
-        return ResponseEntity.badRequest().body(
-                Map.of(
-                        "status", HttpStatus.BAD_REQUEST.value(),
-                        "message", "Validation failed for one or more fields.",
-                        "errors", validationErrors
-                )
+        ApiResponse response = ApiResponse.failure(
+                VALIDATION_ERROR_CODE,
+                "Validation failed for one or more fields.",
+                validationErrors
         );
+
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    public ResponseEntity<?> handleConstraintValidation(ConstraintViolationException ex) {
+    public ResponseEntity<ApiResponse> handleConstraintValidation(ConstraintViolationException ex) {
         log.warn("Constraint violation: {}", ex.getMessage());
 
         Map<String, String> errors = new HashMap<>();
@@ -48,29 +53,28 @@ public class GlobalExceptionHandler {
                 errors.put(cv.getPropertyPath().toString(), cv.getMessage())
         );
 
-        return ResponseEntity.badRequest().body(
-                Map.of(
-                        "status", HttpStatus.BAD_REQUEST.value(),
-                        "message", "Validation failed for one or more fields.",
-                        "errors", errors
-                )
+        ApiResponse response = ApiResponse.failure(
+                VALIDATION_ERROR_CODE,
+                "Validation failed for one or more fields.",
+                errors
         );
+
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<?> handleInvalidJson(HttpMessageNotReadableException ex) {
+    public ResponseEntity<ApiResponse> handleInvalidJson(HttpMessageNotReadableException ex) {
         String details = ex.getMostSpecificCause().getMessage();
 
         log.warn("Invalid JSON or enum value: {}", details);
 
         if (details.contains("not one of the values accepted")) {
-            return ResponseEntity.badRequest().body(
-                    Map.of(
-                            "status", HttpStatus.BAD_REQUEST.value(),
-                            "message", "Invalid value provided for an enum field.",
-                            "details", details
-                    )
+            ApiResponse response = ApiResponse.failure(
+                    VALIDATION_ERROR_CODE,
+                    "Invalid value provided for an enum field.",
+                    details
             );
+            return ResponseEntity.badRequest().body(response);
         }
 
         if (details != null && details.contains("Invalid `null` value")) {
@@ -90,96 +94,102 @@ public class GlobalExceptionHandler {
                     ? fieldName + " received empty"
                     : "Null value encountered in request body";
 
-            return ResponseEntity.badRequest().body(
-                    Map.of(
-                            "status", HttpStatus.BAD_REQUEST.value(),
-                            "message", userMessage,
-                            "details", detailMsg
-                    )
+            ApiResponse response = ApiResponse.failure(
+                    VALIDATION_ERROR_CODE,
+                    userMessage,
+                    detailMsg
             );
+
+            return ResponseEntity.badRequest().body(response);
         }
 
-        return ResponseEntity.badRequest().body(
-                Map.of(
-                        "status", HttpStatus.BAD_REQUEST.value(),
-                        "message", "Invalid request format.",
-                        "details", details
-                )
+        ApiResponse response = ApiResponse.failure(
+                VALIDATION_ERROR_CODE,
+                "Invalid request format.",
+                details
         );
+
+        return ResponseEntity.badRequest().body(response);
     }
 
     @ExceptionHandler(EmployeeConflictException.class)
-    public ResponseEntity<?> handleEmployeeConflict(EmployeeConflictException ex) {
+    public ResponseEntity<ApiResponse> handleEmployeeConflict(EmployeeConflictException ex) {
         log.warn("Employee conflict: {}", ex.getMessage());
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(
-                Map.of(
-                        "status", HttpStatus.CONFLICT.value(),
-                        "message", ex.getMessage()
-                )
-        );
+        ApiResponse response = ApiResponse.failure("EMPLOYEE_CONFLICT", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(EmployeeNotFoundException.class)
-    public ResponseEntity<?> handleEmployeeNotFound(EmployeeNotFoundException ex) {
+    public ResponseEntity<ApiResponse> handleEmployeeNotFound(EmployeeNotFoundException ex) {
         log.warn("Employee not found: {}", ex.getMessage());
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                Map.of(
-                        "status", HttpStatus.NOT_FOUND.value(),
-                        "message", ex.getMessage()
-                )
-        );
+        ApiResponse response = ApiResponse.failure("EMPLOYEE_NOT_FOUND", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(DuplicatePayGroupException.class)
-    public ResponseEntity<?> handleDuplicate(DuplicatePayGroupException ex) {
+    public ResponseEntity<ApiResponse> handleDuplicate(DuplicatePayGroupException ex) {
         log.warn("Duplicate pay group error: {}", ex.getMessage());
 
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(
-                Map.of(
-                        "status", HttpStatus.CONFLICT.value(),
-                        "message", ex.getMessage()
-                )
-        );
+        ApiResponse response = ApiResponse.failure("DUPLICATE_PAYGROUP", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 
     @ExceptionHandler(PayGroupNotFoundException.class)
-    public ResponseEntity<?> handlePayGroupNotFound(PayGroupNotFoundException ex) {
+    public ResponseEntity<ApiResponse> handlePayGroupNotFound(PayGroupNotFoundException ex) {
         log.warn("Pay group not found: {}", ex.getMessage());
 
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                Map.of(
-                        "status", HttpStatus.NOT_FOUND.value(),
-                        "message", ex.getMessage()
-                )
-        );
+        ApiResponse response = ApiResponse.failure("INVALID_PAYGROUP", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex) {
+    public ResponseEntity<ApiResponse> handleIllegalArgument(IllegalArgumentException ex) {
         String msg = ex.getMessage() != null ? ex.getMessage() : "Invalid request";
         log.warn("IllegalArgumentException: {}", msg);
 
-        if (msg.toLowerCase().contains("not found")) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
-                    Map.of("status", HttpStatus.NOT_FOUND.value(), "message", msg)
-            );
-        }
-
-        return ResponseEntity.badRequest().body(
-                Map.of("status", HttpStatus.BAD_REQUEST.value(), "message", msg)
-        );
+        ApiResponse response = ApiResponse.failure("INVALID_REQUEST", msg, ex);
+        return ResponseEntity.badRequest().body(response);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleGeneric(Exception ex) {
-        log.error("Unexpected error", ex);
-        return ResponseEntity.internalServerError().body(
-                Map.of(
-                        "status", HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                        "message", "An unexpected error occurred. Please try again later."
-                )
+    @ExceptionHandler(InvalidPayPeriodException.class)
+    public ResponseEntity<ApiResponse> handleInvalidPayPeriod(InvalidPayPeriodException ex) {
+        log.warn("Invalid pay period: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "INVALID_PAY_PERIOD",
+                ex.getMessage(),
+                null
         );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(EmployeeInactiveException.class)
+    public ResponseEntity<ApiResponse> handleInactiveEmployee(EmployeeInactiveException ex) {
+        log.warn("Inactive employee: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "EMPLOYEE_INACTIVE",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse> handleGeneric(Exception ex) {
+        log.error("Unexpected error", ex);
+
+        ApiResponse response = ApiResponse.failure(
+                "INTERNAL_SERVER_ERROR",
+                "An unexpected error occurred. Please try again later.",
+                null
+        );
+
+        return ResponseEntity.internalServerError().body(response);
     }
 }

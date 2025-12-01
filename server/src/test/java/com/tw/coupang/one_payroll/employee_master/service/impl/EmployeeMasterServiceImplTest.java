@@ -1,12 +1,12 @@
-package com.tw.coupang.one_payroll.EmployeeMaster.Service.impl;
+package com.tw.coupang.one_payroll.employee_master.service.impl;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Dto.CreateEmployeeRequest;
-import com.tw.coupang.one_payroll.EmployeeMaster.Dto.UpdateEmployeeRequest;
-import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
-import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
-import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
+import com.tw.coupang.one_payroll.employee_master.dto.CreateEmployeeRequest;
+import com.tw.coupang.one_payroll.employee_master.dto.UpdateEmployeeRequest;
+import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.employee_master.repository.EmployeeMasterRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

@@ -1,12 +1,14 @@
 package com.tw.coupang.one_payroll.payroll.service;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
-import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeInactiveException;
-import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
+import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveException;
+import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
+import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
+import com.tw.coupang.one_payroll.payroll.validator.PayrollCalculationValidator;
 import com.tw.coupang.one_payroll.payroll.dto.response.PayrollRunResponse;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
@@ -25,24 +27,36 @@ import static java.math.RoundingMode.HALF_UP;
 @Service
 @AllArgsConstructor
 @Slf4j
+@Service
 public class PayrollCalculationServiceImpl implements PayrollCalculationService {
 
     private final EmployeeMasterService employeeMasterService;
     private final PayGroupValidator payGroupValidator;
     private final PayrollRunRepository payrollRunRepository;
-
+    private final PayrollCalculationValidator payrollCalculationValidator;
 
     @Override
     public PayrollRunResponse calculate(PayrollCalculationRequest request) {
-        EmployeeMaster employee = employeeMasterService.getEmployeeById(request.getEmployeeId());
+        final String employeeId = request.getEmployeeId();
+        log.info("Initiating payroll calculation for employeeId={}", employeeId);
 
-        if(employee.getStatus() != EmployeeStatus.ACTIVE)
-            throw new EmployeeInactiveException("Employee with ID '" + request.getEmployeeId() + "' is not active");
+        EmployeeMaster employee = employeeMasterService.getEmployeeById(employeeId);
 
-        final var payGroup = payGroupValidator.validatePayGroupExists(employee.getPayGroupId());
+        if(employee.getStatus() != EmployeeStatus.ACTIVE) {
+            log.warn("Inactive employee attempted payroll calculation. employeeId={}", employeeId);
+            throw new EmployeeInactiveException("Employee with ID '" + employeeId + "' is not active");
+        }
 
-        log.info("Payroll calculation request received for Employee ID: {}, Pay Group: {}", request.getEmployeeId(),
-                payGroup.getGroupName());
+        final Integer payGroupId = employee.getPayGroupId();
+        final var payGroup = payGroupValidator.validatePayGroupExists(payGroupId);
+        final LocalDate startDate = request.getPayPeriod().getStartDate();
+        final LocalDate endDate = request.getPayPeriod().getEndDate();
+
+        log.info("Validated employee and pay group for employeeId={}, payGroupId={}", employeeId, payGroupId);
+
+        payrollCalculationValidator.validatePayPeriodAgainstPayGroup(startDate, endDate, payGroup);
+
+        log.info("Pay period validated for employeeId={} ({} → {})", employeeId, startDate, endDate);
 
         final var payrollRun = PayrollRun.builder();
         payrollRun.employeeId(employee.getEmployeeId())

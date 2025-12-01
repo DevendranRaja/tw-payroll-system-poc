@@ -1,4 +1,4 @@
-package com.tw.coupang.one_payroll.EmployeeMaster.Entity;
+package com.tw.coupang.one_payroll.employee_master.entity;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

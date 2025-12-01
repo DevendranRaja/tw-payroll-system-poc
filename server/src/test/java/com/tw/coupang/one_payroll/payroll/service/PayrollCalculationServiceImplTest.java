@@ -1,15 +1,19 @@
 package com.tw.coupang.one_payroll.payroll.service;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
-import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeInactiveException;
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
-import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
+import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveException;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
+import com.tw.coupang.one_payroll.payroll.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
+import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
+import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
+import com.tw.coupang.one_payroll.payroll.validator.PayrollCalculationValidator;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
 import org.junit.jupiter.api.Test;
@@ -31,6 +35,15 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PayrollCalculationServiceImplTest {
@@ -47,6 +60,9 @@ class PayrollCalculationServiceImplTest {
     @Mock
     private PayGroupValidator payGroupValidator;
 
+    @Mock
+    private PayrollCalculationValidator payrollCalculationValidator;
+
     @Test
     void shouldThrowEmployeeNotFoundWhenEmployeeMissing() {
         PayrollCalculationRequest request = buildRequest("EMP123");
@@ -57,7 +73,7 @@ class PayrollCalculationServiceImplTest {
         assertThrows(EmployeeNotFoundException.class, () -> service.calculate(request));
 
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
-        verifyNoInteractions(payGroupValidator);
+        verifyNoInteractions(payGroupValidator, payrollCalculationValidator);
     }
 
     @Test
@@ -72,7 +88,7 @@ class PayrollCalculationServiceImplTest {
         assertThrows(EmployeeInactiveException.class, () -> service.calculate(request));
 
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
-        verifyNoInteractions(payGroupValidator);
+        verifyNoInteractions(payGroupValidator, payrollCalculationValidator);
     }
 
     @Test
@@ -89,6 +105,33 @@ class PayrollCalculationServiceImplTest {
 
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
         verify(payGroupValidator).validatePayGroupExists(2);
+        verifyNoInteractions(payrollCalculationValidator);
+    }
+
+    @Test
+    void shouldThrowInvalidPayPeriodWhenValidatorFails() {
+        PayrollCalculationRequest request = buildRequest("EMP456");
+        EmployeeMaster employee = buildEmployeeObjectWithActiveStatus();
+        PayGroup payGroup = buildPayGroup();
+
+        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
+
+        doThrow(new InvalidPayPeriodException("Invalid pay period"))
+                .when(payrollCalculationValidator)
+                .validatePayPeriodAgainstPayGroup(
+                        request.getPayPeriod().getStartDate(),
+                        request.getPayPeriod().getEndDate(),
+                        payGroup);
+
+        assertThrows(InvalidPayPeriodException.class, () -> service.calculate(request));
+
+        verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
+        verify(payGroupValidator).validatePayGroupExists(2);
+        verify(payrollCalculationValidator).validatePayPeriodAgainstPayGroup(
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate(),
+                payGroup);
     }
 
     @Test
@@ -100,18 +143,27 @@ class PayrollCalculationServiceImplTest {
         when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
 
+        doNothing().when(payrollCalculationValidator).validatePayPeriodAgainstPayGroup(
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate(),
+                payGroup);
+
         final var actual = service.calculate(request);
 
         assertEquals(request.getEmployeeId(), actual.employeeId());
         assertEquals(payGroup.getId(), actual.payGroupId());
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
         verify(payGroupValidator).validatePayGroupExists(2);
+        verify(payrollCalculationValidator).validatePayPeriodAgainstPayGroup(
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate(),
+                payGroup);
         final ArgumentCaptor<PayrollRun> captor = ArgumentCaptor.forClass(PayrollRun.class);
         verify(payrollRunRepository).save(captor.capture());
         assertEquals(employee.getEmployeeId(), captor.getValue().getEmployeeId());
         assertEquals(PROCESSED, captor.getValue().getStatus());
-        assertEquals(request.getPayPeriodStart(), captor.getValue().getPayPeriodStart());
-        assertEquals(request.getPayPeriodEnd(), captor.getValue().getPayPeriodEnd());
+        assertEquals(request.getPayPeriod().getStartDate(), captor.getValue().getPayPeriodStart());
+        assertEquals(request.getPayPeriod().getEndDate(), captor.getValue().getPayPeriodEnd());
     }
 
     @Test
@@ -256,8 +308,12 @@ class PayrollCalculationServiceImplTest {
     private PayrollCalculationRequest buildRequest(String employeeId) {
         return PayrollCalculationRequest.builder()
                 .employeeId(employeeId)
-                .payPeriodStart(LocalDate.of(2025, 11, 1))
-                .payPeriodEnd(LocalDate.of(2025, 11, 30))
+                .payPeriod(
+                        PayPeriod.builder()
+                                .startDate(LocalDate.of(2025, 11, 1))
+                                .endDate(LocalDate.of(2025, 11, 30))
+                                .build()
+                )
                 .build();
     }
 

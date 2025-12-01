@@ -1,7 +1,7 @@
-package com.tw.coupang.one_payroll.EmployeeMaster.Repository;
+package com.tw.coupang.one_payroll.employee_master.repository;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
-import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

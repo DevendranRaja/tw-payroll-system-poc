@@ -1,5 +1,6 @@
 package com.tw.coupang.one_payroll.payroll.controller;
 
+import com.tw.coupang.one_payroll.payroll.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payroll.dto.response.PayrollRunResponse;
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class PayrollCalculationControllerTest {
+class PayrollCalculationControllerTest {
 
     @InjectMocks
     private PayrollCalculationController payrollCalculationController;
@@ -34,8 +35,12 @@ public class PayrollCalculationControllerTest {
     void calculatePayrollWithValidRequestShouldReturnOkResponse() {
         PayrollCalculationRequest request = PayrollCalculationRequest.builder()
                 .employeeId("EMP123")
-                .payPeriodStart(LocalDate.of(2025, 1, 1))
-                .payPeriodEnd(LocalDate.of(2025, 1, 31))
+                .payPeriod(
+                        PayPeriod.builder()
+                                .startDate(LocalDate.of(2025, 1, 1))
+                                .endDate(LocalDate.of(2025, 1, 31))
+                                .build()
+                )
                 .build();
 
         PayrollRunResponse payrollRunResponse = PayrollRunResponse.builder().employeeId(request.getEmployeeId())

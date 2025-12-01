@@ -5,6 +5,7 @@ import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payroll.dto.response.PayrollRunResponse;
 import com.tw.coupang.one_payroll.payroll.service.PayrollCalculationService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.List;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
+@Slf4j
 @RestController
 @RequestMapping("/payroll")
 public class PayrollCalculationController {
@@ -26,6 +28,7 @@ public class PayrollCalculationController {
 
     @PostMapping("/calculate")
     public ResponseEntity<ApiResponse> calculatePayroll(@Valid @RequestBody PayrollCalculationRequest request) {
+        log.info("Received payroll calculation request for employeeId={}", request.getEmployeeId());
         final var payrollResponse = payrollCalculationService.calculate(request);
         return ResponseEntity.ok(ApiResponse.success(
                 "PAYROLL_CALCULATION_SUCCESS", "Payroll calculation completed successfully", payrollResponse));
@@ -51,5 +54,8 @@ public class PayrollCalculationController {
         return ResponseEntity.ok(ApiResponse.success(
                 "PAYROLL_FETCH_SUCCESS", "Payroll records fetched successfully", payrollRuns));
 
+        log.info("Successfully calculated payroll for employeeId={}", request.getEmployeeId());
+
+        return ResponseEntity.ok(response);
     }
 }

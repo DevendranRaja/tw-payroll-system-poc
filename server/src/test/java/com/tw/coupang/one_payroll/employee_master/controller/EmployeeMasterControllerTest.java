@@ -1,12 +1,12 @@
-package com.tw.coupang.one_payroll.EmployeeMaster.Controller;
+package com.tw.coupang.one_payroll.employee_master.controller;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Dto.CreateEmployeeRequest;
-import com.tw.coupang.one_payroll.EmployeeMaster.Dto.UpdateEmployeeRequest;
-import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
-import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeConflictException;
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
-import com.tw.coupang.one_payroll.EmployeeMaster.Service.EmployeeMasterService;
+import com.tw.coupang.one_payroll.employee_master.dto.CreateEmployeeRequest;
+import com.tw.coupang.one_payroll.employee_master.dto.UpdateEmployeeRequest;
+import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -228,7 +229,7 @@ class EmployeeMasterControllerTest {
         ResponseEntity<?> response = controller.getEmployeesByDepartment(dept, false);
 
         assertEquals(200, response.getStatusCode().value());
-        assertTrue(((java.util.List) response.getBody()).size() == 2);
+        assertEquals(2, ((List) response.getBody()).size());
     }
 
     @Test

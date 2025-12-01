@@ -56,12 +56,13 @@ class PayGroupControllerValidationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.errors.groupName").exists())
-                .andExpect(jsonPath("$.errors.paymentCycle").exists())
-                .andExpect(jsonPath("$.errors.baseTaxRate").exists())
-                .andExpect(jsonPath("$.errors.benefitRate").exists())
-                .andExpect(jsonPath("$.errors.deductionRate").exists());;
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.details.groupName").exists())
+                .andExpect(jsonPath("$.details.paymentCycle").exists())
+                .andExpect(jsonPath("$.details.baseTaxRate").exists())
+                .andExpect(jsonPath("$.details.benefitRate").exists())
+                .andExpect(jsonPath("$.details.deductionRate").exists());
     }
 
     @Test
@@ -76,11 +77,12 @@ class PayGroupControllerValidationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.errors.paymentCycle").exists())
-                .andExpect(jsonPath("$.errors.baseTaxRate").exists())
-                .andExpect(jsonPath("$.errors.benefitRate").exists())
-                .andExpect(jsonPath("$.errors.deductionRate").exists());
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.details.paymentCycle").exists())
+                .andExpect(jsonPath("$.details.baseTaxRate").exists())
+                .andExpect(jsonPath("$.details.benefitRate").exists())
+                .andExpect(jsonPath("$.details.deductionRate").exists());
     }
 
     @Test
@@ -99,8 +101,9 @@ class PayGroupControllerValidationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.errors.baseTaxRate").value("baseTaxRate must be >= 0.0"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.details.baseTaxRate").value("baseTaxRate must be >= 0.0"));
     }
 
     @Test
@@ -232,8 +235,9 @@ class PayGroupControllerValidationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidJson))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status").value(400))
-                .andExpect(jsonPath("$.errors.baseTaxRate").value("baseTaxRate must be >= 0.0"));
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.details.baseTaxRate").value("baseTaxRate must be >= 0.0"));
     }
 
     @Test
