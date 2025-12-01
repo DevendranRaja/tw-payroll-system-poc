@@ -5,16 +5,26 @@ import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.repository.PayGroupRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 class PayGroupValidatorTest {
 
-    private final PayGroupRepository repository = mock(PayGroupRepository.class);
-    private final PayGroupValidator validator = new PayGroupValidator(repository);
+    @InjectMocks
+    private PayGroupValidator validator;
+
+    @Mock
+    private PayGroupRepository repository;
 
     @Test
     void validateDuplicateNameWhenNameExistsShouldThrowException() {
