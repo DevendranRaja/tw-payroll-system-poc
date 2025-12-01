@@ -2,10 +2,10 @@ package com.tw.coupang.one_payroll.integration.scheduler;
 
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchRequest;
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchResponse;
-import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
-import com.tw.coupang.one_payroll.integration.enums.PayrollStatus;
-import com.tw.coupang.one_payroll.integration.repository.PayrollRunRepository;
 import com.tw.coupang.one_payroll.integration.service.MockIntegrationService;
+import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
+import com.tw.coupang.one_payroll.payroll.enums.PayrollStatus;
+import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

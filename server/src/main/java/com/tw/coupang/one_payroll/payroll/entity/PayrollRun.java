@@ -5,10 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
@@ -25,6 +22,7 @@ import static java.math.RoundingMode.HALF_UP;
 @NoArgsConstructor
 @Builder
 @Getter
+@Setter
 @Entity
 @Table(
         name = "payroll_run",
@@ -38,7 +36,7 @@ public class PayrollRun {
     @Id
     @GeneratedValue(strategy =IDENTITY)
     @Column(name = "payroll_id", nullable = false, updatable = false)
-    private Long payrollId;
+    private Integer payrollId;
 
     @NotBlank(message = "Employee ID cannot be empty")
     @Column(name = "employee_id", nullable = false, length = 10)
