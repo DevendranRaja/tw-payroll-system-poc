@@ -164,7 +164,7 @@ CREATE TABLE timesheet_summary (
     id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 
     employee_id VARCHAR(10) NOT NULL,
-    pay_period_id INT NOT NULL,  -- references payroll_run
+    pay_period_id INT NOT NULL,
 
     no_of_days_worked INT CHECK (no_of_days_worked >= 0),
     hours_worked DECIMAL(6,2) CHECK (hours_worked >= 0),
@@ -174,7 +174,9 @@ CREATE TABLE timesheet_summary (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
     FOREIGN KEY (employee_id) REFERENCES employee_master(employee_id),
-    FOREIGN KEY (pay_period_id) REFERENCES payroll_run(payroll_id)
+    FOREIGN KEY (pay_period_id) REFERENCES pay_period(pay_period_id),
+
+    UNIQUE (employee_id, pay_period_id)
 );
 
 -- Trigger for updated_at auto update
