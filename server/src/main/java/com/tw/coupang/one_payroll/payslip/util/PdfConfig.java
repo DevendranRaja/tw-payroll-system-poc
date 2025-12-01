@@ -4,6 +4,7 @@ import com.openhtmltopdf.extend.FSCacheEx;
 import com.openhtmltopdf.extend.FSCacheValue;
 import com.openhtmltopdf.outputdevice.helper.BaseRendererBuilder;
 import com.openhtmltopdf.pdfboxout.PdfRendererBuilder;
+import com.tw.coupang.one_payroll.payslip.exception.CacheLoadException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -56,17 +57,13 @@ public class PdfConfig {
 
         @Override
         public V get(K key, Callable<? extends V> valueLoader) {
-            try {
-                return store.computeIfAbsent(key, k -> {
-                    try {
-                        return valueLoader.call();
-                    } catch (Exception e) {
-                        throw new RuntimeException(e);
-                    }
-                });
-            } catch (RuntimeException ex) {
-                throw ex;
-            }
+            return store.computeIfAbsent(key, k -> {
+                try {
+                    return valueLoader.call();
+                } catch (Exception e) {
+                    throw new CacheLoadException("Failed to load cache value for key: " + key, e);
+                }
+            });
         }
     }
 }

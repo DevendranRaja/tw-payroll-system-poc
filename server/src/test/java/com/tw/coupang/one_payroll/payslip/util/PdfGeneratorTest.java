@@ -32,7 +32,7 @@ class PdfGeneratorTest {
     }
 
     @Test
-    void testGeneratePayslipPdfReturnsNonEmptyByteArray() throws Exception {
+    void testGeneratePayslipPdfReturnsNonEmptyByteArray() {
         Map<String, Object> model = new HashMap<>();
         model.put("employee", "E001");
         model.put("period", "2025-11");
@@ -53,7 +53,7 @@ class PdfGeneratorTest {
     }
 
     @Test
-    void testGeneratePayslipPdfHandlesExceptionGracefully() throws Exception {
+    void testGeneratePayslipPdfHandlesExceptionGracefully() {
         Map<String, Object> model = new HashMap<>();
         model.put("employee", "E002");
 

@@ -3,6 +3,8 @@ package com.tw.coupang.one_payroll.payslip.util;
 import java.text.DecimalFormat;
 
 public class NumberToWords {
+    private NumberToWords() {
+    }
 
     private static final String[] TENS_NAMES = {
             "", " ten", " twenty", " thirty", " forty", " fifty",
