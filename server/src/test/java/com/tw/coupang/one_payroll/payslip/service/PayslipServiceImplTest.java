@@ -4,13 +4,13 @@ import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.employee_master.repository.EmployeeMasterRepository;
-import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
-import com.tw.coupang.one_payroll.integration.enums.PayrollStatus;
+import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
+import com.tw.coupang.one_payroll.payroll.enums.PayrollStatus;
+import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
 import com.tw.coupang.one_payroll.payslip.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslip.dto.PayslipResponse;
 import com.tw.coupang.one_payroll.payslip.entity.Payslip;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
-import com.tw.coupang.one_payroll.payslip.payrollmock.PayrollRunMockRepository;
 import com.tw.coupang.one_payroll.payslip.repository.PayslipRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -46,7 +46,7 @@ class PayslipServiceImplTest {
     private PayslipServiceImpl payslipService;
 
     @Mock
-    private PayrollRunMockRepository payrollRunRepository;
+    private PayrollRunRepository payrollRunRepository;
 
     @Mock
     private EmployeeMasterRepository employeeMasterRepository;

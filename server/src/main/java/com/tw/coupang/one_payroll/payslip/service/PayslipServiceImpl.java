@@ -4,12 +4,12 @@ import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.employee_master.repository.EmployeeMasterRepository;
-import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
+import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
+import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
 import com.tw.coupang.one_payroll.payslip.dto.PayslipMetadataDTO;
 import com.tw.coupang.one_payroll.payslip.dto.PayslipResponse;
 import com.tw.coupang.one_payroll.payslip.entity.Payslip;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
-import com.tw.coupang.one_payroll.payslip.payrollmock.PayrollRunMockRepository;
 import com.tw.coupang.one_payroll.payslip.repository.PayslipRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,13 +22,13 @@ import java.time.YearMonth;
 @Service
 public class PayslipServiceImpl implements PayslipService
 {
-    private final PayrollRunMockRepository payrollRunRepository;
+    private final PayrollRunRepository payrollRunRepository;
     private final EmployeeMasterRepository employeeMasterRepository;
     private final PayslipMetadataBuilder metadataBuilder;
     private final PayslipRepository payslipRepository;
 
     public PayslipServiceImpl(
-            PayrollRunMockRepository payrollRunRepository,
+            PayrollRunRepository payrollRunRepository,
             EmployeeMasterRepository employeeMasterRepository,
             PayslipMetadataBuilder metadataBuilder,
             PayslipRepository payslipRepository)

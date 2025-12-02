@@ -11,11 +11,13 @@ import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
-import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
+import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
+import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
 import com.tw.coupang.one_payroll.payroll.validator.PayrollCalculationValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -24,15 +26,14 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.when;
+import static com.tw.coupang.one_payroll.payroll.enums.PayrollStatus.FAILED;
+import static com.tw.coupang.one_payroll.payroll.enums.PayrollStatus.PROCESSED;
+import static java.math.BigDecimal.ZERO;
+import static java.math.BigDecimal.valueOf;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PayrollCalculationServiceImplTest {
@@ -42,6 +43,9 @@ class PayrollCalculationServiceImplTest {
 
     @Mock
     private EmployeeMasterService employeeMasterService;
+
+    @Mock
+    private PayrollRunRepository payrollRunRepository;
 
     @Mock
     private PayGroupValidator payGroupValidator;
@@ -65,9 +69,11 @@ class PayrollCalculationServiceImplTest {
     @Test
     void shouldThrowEmployeeInactiveWhenEmployeeIsInactive() {
         PayrollCalculationRequest request = buildRequest("EMP123");
+
         EmployeeMaster employee = buildEmployeeObjectWithInactiveStatus();
 
-        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
+        when(employeeMasterService.getEmployeeById(request.getEmployeeId()))
+                .thenReturn(employee);
 
         assertThrows(EmployeeInactiveException.class, () -> service.calculate(request));
 
@@ -78,6 +84,7 @@ class PayrollCalculationServiceImplTest {
     @Test
     void shouldThrowPayGroupNotFoundWhenMissing() {
         PayrollCalculationRequest request = buildRequest("EMP456");
+
         EmployeeMaster employee = buildEmployeeObjectWithActiveStatus();
 
         when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
@@ -131,19 +138,161 @@ class PayrollCalculationServiceImplTest {
                 request.getPayPeriod().getEndDate(),
                 payGroup);
 
-        ApiResponse response = service.calculate(request);
+        final var actual = service.calculate(request);
 
-        assertEquals("PAYROLL_CALCULATION_SUCCESS", response.getCode());
-        assertEquals("Payroll calculation completed successfully", response.getMessage());
-        assertNull(response.getDetails());
-        assertNotNull(response.getTimestamp());
-
+        assertEquals(request.getEmployeeId(), actual.employeeId());
+        assertEquals(payGroup.getId(), actual.payGroupId());
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
         verify(payGroupValidator).validatePayGroupExists(2);
         verify(payrollCalculationValidator).validatePayPeriodAgainstPayGroup(
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup);
+        final ArgumentCaptor<PayrollRun> captor = ArgumentCaptor.forClass(PayrollRun.class);
+        verify(payrollRunRepository).save(captor.capture());
+        assertEquals(employee.getEmployeeId(), captor.getValue().getEmployeeId());
+        assertEquals(PROCESSED, captor.getValue().getStatus());
+        assertEquals(request.getPayPeriod().getStartDate(), captor.getValue().getPayPeriodStart());
+        assertEquals(request.getPayPeriod().getEndDate(), captor.getValue().getPayPeriodEnd());
+    }
+
+    @Test
+    void testPayrollGrossToNetPayCalculation() {
+        // given
+        final var payGroup = PayGroup.builder().id(1)
+                .groupName("Engineering")
+                .paymentCycle(PaymentCycle.MONTHLY)
+                .baseTaxRate(BigDecimal.TEN)
+                .benefitRate(valueOf(5.0))
+                .deductionRate(valueOf(2.0))
+                .createdAt(LocalDateTime.now())
+                .build();
+        final var payrollRun = PayrollRun.builder();
+
+        // when
+        final var netPay = service.payrollGrossToNetPayCalculation(valueOf(5000.00), payGroup, payrollRun);
+
+        // then
+        assertNotNull(netPay);
+        assertEquals(4650.00, netPay.doubleValue());
+    }
+
+    @Test
+    void testZeroGrossPayReturnsZeroNet() {
+        // given
+        final var payGroup = PayGroup.builder().id(1)
+                .groupName("Engineering")
+                .paymentCycle(PaymentCycle.MONTHLY)
+                .baseTaxRate(BigDecimal.TEN)
+                .benefitRate(valueOf(5.0))
+                .deductionRate(valueOf(2.0))
+                .createdAt(LocalDateTime.now())
+                .build();
+        final var payrollRun = PayrollRun.builder();
+
+        // when
+        final var netPay = service.payrollGrossToNetPayCalculation(BigDecimal.ZERO, payGroup, payrollRun);
+
+        //then
+        assertEquals(BigDecimal.ZERO.setScale(2), netPay);
+    }
+
+    @Test
+    void testNullRatesTreatedAsZero() {
+        // given
+        final var payGroup = PayGroup.builder().id(1)
+                .groupName("Engineering")
+                .paymentCycle(PaymentCycle.MONTHLY)
+                .baseTaxRate(null)
+                .benefitRate(null)
+                .deductionRate(null)
+                .createdAt(LocalDateTime.now())
+                .build();
+        final var payrollRun = PayrollRun.builder();
+
+        // when
+        final var netPay = service.payrollGrossToNetPayCalculation(valueOf(20000.00), payGroup, payrollRun);
+
+        // then
+        assertEquals(20000.00, netPay.doubleValue());
+    }
+
+    @Test
+    void testHundredPercentTaxZeroNet() {
+        // given
+        final var payGroup = PayGroup.builder().id(1)
+                .groupName("Engineering")
+                .paymentCycle(PaymentCycle.MONTHLY)
+                .baseTaxRate(valueOf(100.0))
+                .benefitRate(valueOf(0.0))
+                .deductionRate(valueOf(0.0))
+                .createdAt(LocalDateTime.now())
+                .build();
+        final var payrollRun = PayrollRun.builder();
+
+        // when
+        final var netPay = service.payrollGrossToNetPayCalculation(valueOf(30000.00), payGroup, payrollRun);
+
+        // then
+        assertEquals(0.00, netPay.doubleValue());
+    }
+
+    @Test
+    void testBenefitGreaterThanTaxDoesNotExceedGross() {
+        // given
+        final var payGroup = PayGroup.builder().id(1)
+                .groupName("Engineering")
+                .paymentCycle(PaymentCycle.WEEKLY)
+                .baseTaxRate(valueOf(5.0))
+                .benefitRate(valueOf(10.0))
+                .deductionRate(ZERO)
+                .createdAt(LocalDateTime.now())
+                .build();
+        final var payrollRun = PayrollRun.builder();
+
+        // when
+        final var netPay = service.payrollGrossToNetPayCalculation(valueOf(10000.00), payGroup, payrollRun);
+
+        // then
+        assertEquals(10500.00, netPay.doubleValue());
+    }
+
+    @Test
+    void testGetPayrollShouldReturnAllPayrollRun() {
+        // given
+        String employeeId = "EMP123";
+        LocalDate periodStart = LocalDate.of(2025, 1, 1);
+        LocalDate periodEnd = LocalDate.of(2025, 1, 31);
+        when(payrollRunRepository.findByEmployeeIdOrPayPeriodStartAndPayPeriodEnd(employeeId, periodStart, periodEnd))
+                .thenReturn(singletonList(buildPayrollRunWithEmployeeIdAndPeriod(employeeId, periodStart, periodEnd)));
+
+        // when
+        final var payrollRunResponses = service.getPayroll(employeeId, periodStart, periodEnd);
+
+        // then
+        assertNotNull(payrollRunResponses);
+        assertEquals(1, payrollRunResponses.size());
+        assertEquals(employeeId, payrollRunResponses.get(0).employeeId());
+        assertEquals(periodStart, payrollRunResponses.get(0).payPeriodStart());
+        assertEquals(periodEnd, payrollRunResponses.get(0).payPeriodEnd());
+        assertEquals(45000.00, payrollRunResponses.get(0).netPay().doubleValue());
+    }
+
+    @Test
+    void testGetPayrollShouldReturnEmptyPayrollRunIfDataNotFound() {
+        // given
+        String employeeId = "EMP123";
+        LocalDate periodStart = LocalDate.of(2025, 1, 1);
+        LocalDate periodEnd = LocalDate.of(2025, 1, 31);
+        when(payrollRunRepository.findByEmployeeIdOrPayPeriodStartAndPayPeriodEnd(employeeId, periodStart, periodEnd))
+                .thenReturn(emptyList());
+
+        // when
+        final var payrollRunResponses = service.getPayroll(employeeId, periodStart, periodEnd);
+
+        // then
+        assertNotNull(payrollRunResponses);
+        assertTrue(payrollRunResponses.isEmpty());
     }
 
     private PayrollCalculationRequest buildRequest(String employeeId) {
@@ -198,6 +347,22 @@ class PayrollCalculationServiceImplTest {
                 .baseTaxRate(BigDecimal.TEN)
                 .benefitRate(BigDecimal.valueOf(5))
                 .deductionRate(BigDecimal.ONE)
+                .createdAt(LocalDateTime.now())
+                .build();
+    }
+
+    private PayrollRun buildPayrollRunWithEmployeeIdAndPeriod(final String employeeId,
+                                                              final LocalDate periodStart,
+                                                              final LocalDate periodEnd) {
+        return PayrollRun.builder()
+                .employeeId(employeeId)
+                .payPeriodStart(periodStart)
+                .payPeriodEnd(periodEnd)
+                .grossPay(BigDecimal.valueOf(50000))
+                .netPay(BigDecimal.valueOf(45000))
+                .taxDeduction(BigDecimal.valueOf(5000))
+                .benefitAddition(BigDecimal.valueOf(2000))
+                .status(FAILED)
                 .createdAt(LocalDateTime.now())
                 .build();
     }

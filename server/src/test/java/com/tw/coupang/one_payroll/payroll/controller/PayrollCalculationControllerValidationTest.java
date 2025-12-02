@@ -1,7 +1,7 @@
 package com.tw.coupang.one_payroll.payroll.controller;
 
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
-import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
+import com.tw.coupang.one_payroll.payroll.dto.response.PayrollRunResponse;
 import com.tw.coupang.one_payroll.payroll.service.PayrollCalculationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +9,8 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.time.LocalDate;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -79,9 +81,13 @@ class PayrollCalculationControllerValidationTest {
             }
         """;
 
-        when(payrollCalculationService.calculate(any())).thenReturn(
-                ApiResponse.success("PAYROLL_CALCULATION_SUCCESS", "Payroll calculation completed successfully", null)
-        );
+        PayrollRunResponse payrollRunResponse = PayrollRunResponse.builder()
+                .employeeId("EMP001")
+                .payPeriodStart(LocalDate.of(2025, 1, 1))
+                .payPeriodEnd(LocalDate.of(2025, 1, 31))
+                .build();
+
+        when(payrollCalculationService.calculate(any())).thenReturn(payrollRunResponse);
 
         mockMvc.perform(post("/payroll/calculate")
                         .contentType(MediaType.APPLICATION_JSON)
