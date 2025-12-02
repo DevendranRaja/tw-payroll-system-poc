@@ -108,8 +108,10 @@ CREATE TABLE payslip (
     pay_period DATE NOT NULL,
     gross_pay DECIMAL(10,2),
     net_pay DECIMAL(10,2),
-    tax DECIMAL(10,2),
+    --tax DECIMAL(10,2),
     benefits DECIMAL(10,2),
+    earnings_json JSONB,
+    deductions_json JSONB,
     file_path VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (employee_id) REFERENCES employee_master(employee_id),
@@ -140,8 +142,10 @@ CREATE TABLE payroll_batch (
     pay_period VARCHAR(7) NOT NULL,
     total_amount DECIMAL(15,2),
     status VARCHAR(20) NOT NULL,
+    log_message VARCHAR(255),
+    employee_count INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Add index for batch_ref_id
@@ -156,6 +160,39 @@ CREATE TABLE payroll_batch_log (
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (batch_ref_id) REFERENCES payroll_batch(batch_ref_id)
 );
+
+-------------------------------------------------------
+-- timesheet_summary
+-------------------------------------------------------
+
+CREATE TABLE timesheet_summary (
+    id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    employee_id VARCHAR(10) NOT NULL,
+    pay_period_id INT NOT NULL,
+
+    no_of_days_worked INT CHECK (no_of_days_worked >= 0),
+    hours_worked DECIMAL(6,2) CHECK (hours_worked >= 0),
+    holiday_hours DECIMAL(6,2) DEFAULT 0 CHECK (holiday_hours >= 0),
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    FOREIGN KEY (employee_id) REFERENCES employee_master(employee_id),
+    FOREIGN KEY (pay_period_id) REFERENCES pay_period(pay_period_id),
+
+    UNIQUE (employee_id, pay_period_id)
+);
+
+-- Trigger for updated_at auto update
+CREATE TRIGGER trg_timesheet_summary_update
+BEFORE UPDATE ON timesheet_summary
+FOR EACH ROW
+EXECUTE FUNCTION update_timestamp();
+
+-- Index for faster lookup
+CREATE INDEX idx_timesheet_employee ON timesheet_summary(employee_id);
+CREATE INDEX idx_timesheet_period ON timesheet_summary(pay_period_id);
 
 -------------------------------------------------------
 -- INSERT DATA
@@ -195,12 +232,12 @@ INSERT INTO payroll_run (
 ('E010', '2025-10-01', '2025-10-31', 9000.00, 1080.00, 720.00, 8640.00);
 
 INSERT INTO payslip (
-    employee_id, payroll_id, pay_period, gross_pay, net_pay, tax, benefits, file_path
+    employee_id, payroll_id, pay_period, gross_pay, net_pay, tax, benefits, earnings_json, deductions_json, file_path
 ) VALUES
-('E001', 1, '2025-10-31', 5000.00, 4750.00, 500.00, 250.00, '/payslips/E001_OCT2025.pdf'),
-('E002', 2, '2025-10-31', 7000.00, 6650.00, 700.00, 350.00, '/payslips/E002_OCT2025.pdf'),
-('E003', 3, '2025-10-31', 6000.00, 5700.00, 600.00, 300.00, '/payslips/E003_OCT2025.pdf'),
-('E004', 4, '2025-10-31', 5800.00, 5510.00, 580.00, 290.00, '/payslips/E004_OCT2025.pdf');
+('E001', 1, '2025-10-31', 5000.00, 4750.00, 250.00,'{"grossPay": 5000.00, "benefits": 250.00}','{"tax": 500.00}','/payslips/E001_OCT2025.pdf'),
+('E002', 2, '2025-10-31', 7000.00, 6650.00, 350.00,'{"grossPay": 7000.00, "benefits": 350.00}','{"tax": 700.00}','/payslips/E002_OCT2025.pdf'),
+('E003', 3, '2025-10-31', 6000.00, 5700.00, 300.00,'{"grossPay": 6000.00, "benefits": 300.00}','{"tax": 600.00}','/payslips/E003_OCT2025.pdf'),
+('E004', 4, '2025-10-31', 5800.00, 5510.00, 290.00,'{"grossPay": 5800.00, "benefits": 290.00}','{"tax": 580.00}','/payslips/E004_OCT2025.pdf');
 
 INSERT INTO bank_integration_log (
     payroll_id, employee_id, batch_id, status, retry_count, message
@@ -216,3 +253,17 @@ VALUES
 ('Payroll Calculation', 'E003', 'Negative working hours detected'),
 ('Payroll Calculation', 'E007', 'Invalid pay group ID reference'),
 ('Bank Integration', 'E005', 'Bank account verification failed');
+
+INSERT INTO timesheet_summary
+(employee_id, pay_period_id, no_of_days_worked, hours_worked, holiday_hours)
+VALUES
+('E001', 1, 22, 176.00, 8.00),
+('E002', 2, 20, 160.00, 0.00),
+('E003', 3, 21, 168.00, 4.00),
+('E004', 4, 22, 176.00, 8.00),
+('E005', 5, 20, 160.00, 0.00),
+('E006', 6, 5, 40.00, 0.00),
+('E007', 7, 4, 32.00, 0.00),
+('E008', 8, 22, 176.00, 8.00),
+('E009', 9, 21, 168.00, 4.00),
+('E010', 10, 20, 160.00, 0.00);

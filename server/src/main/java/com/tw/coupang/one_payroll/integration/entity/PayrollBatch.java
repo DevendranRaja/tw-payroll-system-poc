@@ -22,6 +22,10 @@ public class PayrollBatch {
     private String payPeriod;
     private BigDecimal totalAmount;
     private String status; // PENDING, SUCCESS, RETRY, FAILED
+    @Column(name = "log_message")
+    private String logMessage;
+    @Column(name = "employee_count")
+    private Integer employeeCount;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

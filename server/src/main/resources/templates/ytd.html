@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>YTD Summary</title>
+
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 13px; margin: 25px; }
+        .header { text-align: center; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #000; padding: 6px; text-align: left; }
+        th { background: #f0f0f0; }
+        .section-title { margin-top: 25px; font-weight: bold; font-size: 15px; }
+    </style>
+</head>
+
+<body>
+
+<div class="header">
+    <h2>Year-To-Date Summary</h2>
+    <p th:text="'Pay Period: ' + ${ytd.year}"></p>
+</div>
+
+<h3 class="section-title">Employee Details</h3>
+<table>
+    <tr>
+        <th>Employee ID</th>
+        <td th:text="${ytd.employeeId}"></td>
+
+        <th>Employee Name</th>
+        <td th:text="${ytd.employeeName}"></td>
+    </tr>
+    <tr>
+        <th>Department</th>
+        <td th:text="${ytd.department}"></td>
+
+        <th>Designation</th>
+        <td th:text="${ytd.designation}"></td>
+    </tr>
+</table>
+<h3 class="section-title">Monthly Breakdown</h3>
+
+<table>
+    <thead>
+    <tr>
+        <th>Month</th>
+        <th>Gross Pay</th>
+        <th>Net Pay</th>
+        <th>Benefits</th>
+        <th>Deductions</th>
+    </tr>
+    </thead>
+
+    <tbody th:each="m : ${monthlyList}">
+    <tr>
+        <td th:text="${m.monthName}"></td>
+        <td th:text="${m.grossPay}"></td>
+        <td th:text="${m.netPay}"></td>
+        <td th:text="${m.benefit}"></td>
+        <td th:text="${m.deductions}"></td>
+    </tr>
+    </tbody>
+
+    <!-- Horizontal YTD totals row -->
+    <tfoot>
+    <tr>
+        <th>Total</th>
+        <th th:text="${ytd.ytdTotals.totalGross}"></th>
+        <th th:text="${ytd.ytdTotals.totalNet}"></th>
+        <th th:text="${ytd.ytdTotals.totalBenefit}"></th>
+        <th th:text="${ytd.ytdTotals.totalDeductions}"></th>
+    </tr>
+    </tfoot>
+</table>
+</body>
+</html>

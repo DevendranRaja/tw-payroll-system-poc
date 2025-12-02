@@ -1,10 +1,13 @@
 package com.tw.coupang.one_payroll.common.exception;
 
+import com.tw.coupang.one_payroll.common.dto.ApiErrorResponse;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.integration.exception.BatchNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
+import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
 import jakarta.validation.ConstraintViolationException;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,6 +64,19 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(BatchNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleBatchNotFound(BatchNotFoundException ex) {
+        log.warn("BatchNotFoundException caught: {}", ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("error", "Not Found");
+        response.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -191,5 +208,30 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.internalServerError().body(response);
+    }
+
+    @ExceptionHandler(PayslipNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handlePayslipNotFound(PayslipNotFoundException ex) {
+        log.warn("Payslip not found: {}", ex.getMessage());
+
+        ApiErrorResponse response = ApiErrorResponse.failure("INVALID_PAYSLIP", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiErrorResponse> handleIllegalState(IllegalStateException ex) {
+        log.warn("Illegal state encountered: {}", ex.getMessage());
+
+        if ("Payroll not ready".equals(ex.getMessage())) {
+            ApiErrorResponse response = ApiErrorResponse.failure(
+                    "INVALID_REQUEST", "Payroll is not ready yet for the requested employee and period.",
+                    Map.of("reason", "PAYROLL_NOT_READY"));
+            return ResponseEntity.badRequest().body(response);
+        } else {
+            ApiErrorResponse response = ApiErrorResponse.failure("INTERNAL_ERROR", ex.getMessage(),
+                    Map.of("reason", "ILLEGAL_STATE"));
+            return ResponseEntity.badRequest().body(response);
+        }
+
     }
 }
