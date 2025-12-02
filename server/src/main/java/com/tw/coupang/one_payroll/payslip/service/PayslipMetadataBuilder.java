@@ -1,7 +1,7 @@
 package com.tw.coupang.one_payroll.payslip.service;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.common.constants.PayrollConstants;
+import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payslip.dto.PayslipMetadataDTO;
 import lombok.extern.slf4j.Slf4j;

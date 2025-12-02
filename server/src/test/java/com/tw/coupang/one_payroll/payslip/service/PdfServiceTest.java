@@ -1,6 +1,6 @@
 package com.tw.coupang.one_payroll.payslip.service;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.payslip.dto.MonthlyPayslipSummaryDto;
 import com.tw.coupang.one_payroll.payslip.dto.YtdSummaryForPdfDto;
 import com.tw.coupang.one_payroll.payslip.dto.YtdSummaryResponse;

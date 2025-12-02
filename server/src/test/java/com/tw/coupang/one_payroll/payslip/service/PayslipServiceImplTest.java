@@ -1,9 +1,9 @@
 package com.tw.coupang.one_payroll.payslip.service;
 
-import com.tw.coupang.one_payroll.EmployeeMaster.Entity.EmployeeMaster;
-import com.tw.coupang.one_payroll.EmployeeMaster.Enum.EmployeeStatus;
-import com.tw.coupang.one_payroll.EmployeeMaster.Exception.EmployeeNotFoundException;
-import com.tw.coupang.one_payroll.EmployeeMaster.Repository.EmployeeMasterRepository;
+import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
+import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.employee_master.repository.EmployeeMasterRepository;
 import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
 import com.tw.coupang.one_payroll.integration.enums.PayrollStatus;
 import com.tw.coupang.one_payroll.payslip.dto.PayslipMetadataDTO;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-public class PayslipServiceImplTest {
+class PayslipServiceImplTest {
 
     private EmployeeMaster employee;
     private PayrollRun payroll;
