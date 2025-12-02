@@ -107,8 +107,10 @@ CREATE TABLE payslip (
     pay_period DATE NOT NULL,
     gross_pay DECIMAL(10,2),
     net_pay DECIMAL(10,2),
-    tax DECIMAL(10,2),
+    --tax DECIMAL(10,2),
     benefits DECIMAL(10,2),
+    earnings_json JSONB,
+    deductions_json JSONB,
     file_path VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (employee_id) REFERENCES employee_master(employee_id),
@@ -227,12 +229,12 @@ INSERT INTO payroll_run (
 ('E010', '2025-10-01', '2025-10-31', 9000.00, 1080.00, 720.00, 8640.00);
 
 INSERT INTO payslip (
-    employee_id, payroll_id, pay_period, gross_pay, net_pay, tax, benefits, file_path
+    employee_id, payroll_id, pay_period, gross_pay, net_pay, tax, benefits, earnings_json, deductions_json, file_path
 ) VALUES
-('E001', 1, '2025-10-31', 5000.00, 4750.00, 500.00, 250.00, '/payslips/E001_OCT2025.pdf'),
-('E002', 2, '2025-10-31', 7000.00, 6650.00, 700.00, 350.00, '/payslips/E002_OCT2025.pdf'),
-('E003', 3, '2025-10-31', 6000.00, 5700.00, 600.00, 300.00, '/payslips/E003_OCT2025.pdf'),
-('E004', 4, '2025-10-31', 5800.00, 5510.00, 580.00, 290.00, '/payslips/E004_OCT2025.pdf');
+('E001', 1, '2025-10-31', 5000.00, 4750.00, 250.00,'{"grossPay": 5000.00, "benefits": 250.00}','{"tax": 500.00}','/payslips/E001_OCT2025.pdf'),
+('E002', 2, '2025-10-31', 7000.00, 6650.00, 350.00,'{"grossPay": 7000.00, "benefits": 350.00}','{"tax": 700.00}','/payslips/E002_OCT2025.pdf'),
+('E003', 3, '2025-10-31', 6000.00, 5700.00, 300.00,'{"grossPay": 6000.00, "benefits": 300.00}','{"tax": 600.00}','/payslips/E003_OCT2025.pdf'),
+('E004', 4, '2025-10-31', 5800.00, 5510.00, 290.00,'{"grossPay": 5800.00, "benefits": 290.00}','{"tax": 580.00}','/payslips/E004_OCT2025.pdf');
 
 INSERT INTO bank_integration_log (
     payroll_id, employee_id, batch_id, status, retry_count, message
