@@ -61,7 +61,7 @@ class PayrollBatchStatusControllerTest {
                 .andExpect(jsonPath("$.batchId", is("BATCH-20251128-001")))
                 .andExpect(jsonPath("$.overallStatus", is("SUCCESS")))
                 .andExpect(jsonPath("$.numberOfEmployees", is(100)))
-                .andExpect(jsonPath("$.logsMessage", is("Batch processed successfully")))
+                .andExpect(jsonPath("$.logMessage", is("Batch processed successfully")))
                 .andExpect(jsonPath("$.processedAt", notNullValue()));
 
         verify(payrollBatchStatusService, times(1)).getBatchStatus(batchId);
@@ -98,7 +98,7 @@ class PayrollBatchStatusControllerTest {
         mockMvc.perform(get("/integration/payroll/status/{batchId}", "BATCH-20251128-001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.overallStatus", is("PENDING")))
-                .andExpect(jsonPath("$.logsMessage", is("Awaiting processing")));
+                .andExpect(jsonPath("$.logMessage", is("Awaiting processing")));
     }
 
     @Test
@@ -114,7 +114,7 @@ class PayrollBatchStatusControllerTest {
         mockMvc.perform(get("/integration/payroll/status/{batchId}", "BATCH-20251128-001"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.overallStatus", is("FAILED")))
-                .andExpect(jsonPath("$.logsMessage", containsString("failed")));
+                .andExpect(jsonPath("$.logMessage", containsString("failed")));
     }
 
     @Test
@@ -143,7 +143,7 @@ class PayrollBatchStatusControllerTest {
 
         mockMvc.perform(get("/integration/payroll/status/{batchId}", "BATCH-20251128-001"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.logsMessage", nullValue()));
+                .andExpect(jsonPath("$.logMessage", nullValue()));
     }
 
     @Test
