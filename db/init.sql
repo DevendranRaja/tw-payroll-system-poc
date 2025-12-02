@@ -144,7 +144,7 @@ CREATE TABLE payroll_batch (
     log_message VARCHAR(255),
     employee_count INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Add index for batch_ref_id
