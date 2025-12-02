@@ -198,10 +198,13 @@ public class GlobalExceptionHandler {
         log.warn("Illegal state encountered: {}", ex.getMessage());
 
         if ("Payroll not ready".equals(ex.getMessage())) {
-            ApiErrorResponse response = ApiErrorResponse.failure("INVALID_REQUEST", "Payroll is not ready yet for the requested employee and period.", ex);
+            ApiErrorResponse response = ApiErrorResponse.failure(
+                    "INVALID_REQUEST", "Payroll is not ready yet for the requested employee and period.",
+                    Map.of("reason", "PAYROLL_NOT_READY"));
             return ResponseEntity.badRequest().body(response);
         } else {
-            ApiErrorResponse response = ApiErrorResponse.failure("INTERNAL_ERROR", ex.getMessage(), ex);
+            ApiErrorResponse response = ApiErrorResponse.failure("INTERNAL_ERROR", ex.getMessage(),
+                    Map.of("reason", "ILLEGAL_STATE"));
             return ResponseEntity.badRequest().body(response);
         }
 
