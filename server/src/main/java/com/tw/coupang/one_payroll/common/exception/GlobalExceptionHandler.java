@@ -4,6 +4,7 @@ import com.tw.coupang.one_payroll.common.dto.ApiErrorResponse;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
+import com.tw.coupang.one_payroll.integration.exception.BatchNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -62,6 +64,19 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(BatchNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleBatchNotFound(BatchNotFoundException ex) {
+        log.warn("BatchNotFoundException caught: {}", ex.getMessage());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("timestamp", LocalDateTime.now());
+        response.put("status", HttpStatus.NOT_FOUND.value());
+        response.put("error", "Not Found");
+        response.put("message", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
