@@ -1,6 +1,6 @@
 package com.tw.coupang.one_payroll.payslip.payrollmock;
 
-import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
+import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

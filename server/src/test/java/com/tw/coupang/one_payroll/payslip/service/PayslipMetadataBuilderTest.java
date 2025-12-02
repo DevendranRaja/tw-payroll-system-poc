@@ -2,8 +2,8 @@ package com.tw.coupang.one_payroll.payslip.service;
 
 import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
-import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
-import com.tw.coupang.one_payroll.integration.enums.PayrollStatus;
+import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
+import com.tw.coupang.one_payroll.payroll.enums.PayrollStatus;
 import com.tw.coupang.one_payroll.payslip.dto.PayslipMetadataDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
