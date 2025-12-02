@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PayrollRunRepository extends JpaRepository<PayrollRun, Integer> {
@@ -23,6 +24,15 @@ public interface PayrollRunRepository extends JpaRepository<PayrollRun, Integer>
             @Param("employeeId") String employeeId,
             @Param("startDate") LocalDate startDate,
             @Param("endDate") LocalDate endDate
+    );
+
+    @Query(value = "SELECT * FROM public.payroll_run pr WHERE pr.employee_id = :employeeId " +
+            "AND TO_CHAR(pr.pay_period_end, 'YYYY-MM') = :yearMonth " +
+            "ORDER BY pr.pay_period_end DESC",
+            nativeQuery = true)
+    Optional<PayrollRun> findPayrollForEmployeeIdAndPayPeriod(
+            @Param("employeeId") String employeeId,
+            @Param("yearMonth") String yearMonth
     );
 
     // Fetch the next 100 records that need to be sent
