@@ -23,4 +23,8 @@ public class ApiResponse {
     public static ApiResponse failure(String code, String msg, Object details) {
         return new ApiResponse(code, msg, LocalDateTime.now(), details);
     }
+
+    public static ApiResponse error(String code, String msg) {
+        return new ApiResponse(code, msg, LocalDateTime.now(), null);
+    }
 }

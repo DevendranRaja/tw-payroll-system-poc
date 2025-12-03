@@ -4,11 +4,11 @@ import com.tw.coupang.one_payroll.integration.dto.PayrollBatchRequest;
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchResponse;
 import com.tw.coupang.one_payroll.integration.entity.PayrollBatch;
 import com.tw.coupang.one_payroll.integration.entity.PayrollBatchLog;
-import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
-import com.tw.coupang.one_payroll.integration.enums.PayrollStatus;
 import com.tw.coupang.one_payroll.integration.repository.PayrollBatchLogRepository;
 import com.tw.coupang.one_payroll.integration.repository.PayrollBatchRepository;
-import com.tw.coupang.one_payroll.integration.repository.PayrollRunRepository;
+import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
+import com.tw.coupang.one_payroll.payroll.enums.PayrollStatus;
+import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,6 +72,8 @@ public class MockIntegrationService {
         //Update Batch
         batch.setStatus(finalStatus);
         batch.setUpdatedAt(LocalDateTime.now());
+        batch.setLogMessage(errorMessage);
+        batch.setEmployeeCount(employeeIds.size());
         batchRepo.save(batch);
 
         //Save Logs

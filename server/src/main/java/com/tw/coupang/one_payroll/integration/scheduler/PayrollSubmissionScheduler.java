@@ -2,10 +2,10 @@ package com.tw.coupang.one_payroll.integration.scheduler;
 
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchRequest;
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchResponse;
-import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
-import com.tw.coupang.one_payroll.integration.enums.PayrollStatus;
-import com.tw.coupang.one_payroll.integration.repository.PayrollRunRepository;
 import com.tw.coupang.one_payroll.integration.service.MockIntegrationService;
+import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
+import com.tw.coupang.one_payroll.payroll.enums.PayrollStatus;
+import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -15,7 +15,6 @@ import java.math.BigDecimal;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -40,7 +39,7 @@ public class PayrollSubmissionScheduler {
         log.info("Checking for pending payroll records...");
 
         // 1. Fetch Chunk as bulk rows of 100
-        List<PayrollRun> pendingRuns = payrollRunRepository.findTop100ByStatus(PayrollStatus.PROCESSED);
+        List<PayrollRun> pendingRuns = payrollRunRepository.findTop5ByStatus(PayrollStatus.PROCESSED);
 
         if (pendingRuns.isEmpty()) {
             log.info("No pending payroll records found.");
@@ -81,7 +80,7 @@ public class PayrollSubmissionScheduler {
         // Map Employee IDs
         List<String> employeeIds = runs.stream()
                 .map(PayrollRun::getEmployeeId)
-                .collect(Collectors.toList());
+                .toList();
         request.setEmployeeIds(employeeIds);
 
         // Sum Total Amount

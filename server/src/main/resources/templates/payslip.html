@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Payslip</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            margin: 30px;
+        }
+        .center { text-align: center; }
+        .title { font-size: 22px; font-weight: bold; }
+        .subtitle { font-size: 18px; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; }
+        th { background: #f0f0f0; font-weight: bold; }
+        .no-border td { border: none !important; padding: 4px 0; }
+        .right { text-align: right; }
+        .bold { font-weight: bold; }
+        .footer { margin-top: 50px; text-align: right; font-weight: bold; }
+    </style>
+</head>
+
+<body>
+
+<!-- HEADER -->
+<div class="center">
+    <div class="title">Pay Slip</div>
+    <div class="subtitle" th:text="${#temporals.format(payslip.payPeriod, 'MMMM yyyy')}"></div>
+</div>
+
+<br/>
+
+<!-- EMPLOYEE INFO -->
+<table class="no-border">
+    <tr>
+        <td><b>Employee ID:</b></td>
+        <td th:text="${payslip.employeeId}"></td>
+
+        <td><b>Employee Name:</b></td>
+        <td th:text="${payslip.employeeName}"></td>
+    </tr>
+
+    <tr>
+        <td><b>Department:</b></td>
+        <td th:text="${payslip.department}"></td>
+
+        <td><b>Designation:</b></td>
+        <td th:text="${payslip.designation}"></td>
+    </tr>
+
+    <tr>
+        <td><b>Period:</b></td>
+        <td th:text="${#temporals.format(payslip.payPeriod, 'MMMM yyyy')}"></td>
+    </tr>
+</table>
+
+<br/><br/>
+
+<!-- EARNINGS - DEDUCTIONS TABLE -->
+<table>
+    <tr>
+        <th colspan="2">Earnings</th>
+        <th colspan="2">Deductions</th>
+    </tr>
+
+    <tr>
+        <th>Type</th>
+        <th>Amount</th>
+        <th>Type</th>
+        <th>Amount</th>
+    </tr>
+
+    <tr th:each="i : ${#numbers.sequence(0, (payslip.earnings.size() > payslip.deductions.size() ? payslip.earnings.size() : payslip.deductions.size()) - 1)}">
+
+        <!-- Earnings -->
+        <td th:text="${i < payslip.earnings.size()} ?
+            ${#strings.capitalize(#lists.toList(payslip.earnings.keySet())[i])} : ''"></td>
+
+        <td th:text="${i < payslip.earnings.size()} ?
+            ${#lists.toList(payslip.earnings.values())[i]} : ''"></td>
+
+        <!-- Deductions -->
+        <td th:text="${i < payslip.deductions.size()} ?
+            ${#strings.capitalize(#lists.toList(payslip.deductions.keySet())[i])} : ''"></td>
+
+        <td th:text="${i < payslip.deductions.size()} ?
+            ${#lists.toList(payslip.deductions.values())[i]} : ''"></td>
+    </tr>
+
+    <tr>
+        <td class="bold">Total Earnings</td>
+        <td class="bold" th:text="${payslip.totalEarnings}"></td>
+
+        <td class="bold">Total Deductions</td>
+        <td class="bold" th:text="${payslip.totalDeductions}"></td>
+    </tr>
+
+    <tr>
+        <td colspan="2"></td>
+        <td class="bold right">Net Amount</td>
+        <td class="bold" th:text="${payslip.netPay}"></td>
+    </tr>
+</table>
+
+<!-- AMOUNT IN WORDS -->
+<div style="margin-top: 20px;">
+    <b>Amount (in words):</b>
+    <span th:text="${T(com.tw.coupang.one_payroll.payslip.util.NumberToWords).convert(payslip.netPay.longValue())} + ' Only'"></span>
+</div>
+
+<div class="footer">Authorised Signatory</div>
+
+</body>
+</html>

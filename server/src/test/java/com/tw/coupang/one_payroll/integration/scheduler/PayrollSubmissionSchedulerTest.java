@@ -2,10 +2,10 @@ package com.tw.coupang.one_payroll.integration.scheduler;
 
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchRequest;
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchResponse;
-import com.tw.coupang.one_payroll.integration.entity.PayrollRun;
-import com.tw.coupang.one_payroll.integration.enums.PayrollStatus;
-import com.tw.coupang.one_payroll.integration.repository.PayrollRunRepository;
 import com.tw.coupang.one_payroll.integration.service.MockIntegrationService;
+import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
+import com.tw.coupang.one_payroll.payroll.enums.PayrollStatus;
+import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -49,7 +49,7 @@ class PayrollSubmissionSchedulerTest {
 
         ReflectionTestUtils.setField(scheduler, "mockApiUrl", "http://localhost:8080/test-url");
 
-        when(payrollRunRepository.findTop100ByStatus(PayrollStatus.PROCESSED))
+        when(payrollRunRepository.findTop5ByStatus(PayrollStatus.PROCESSED))
                 .thenReturn(List.of(run));
 
         PayrollBatchResponse mockResponse = new PayrollBatchResponse("BATCH-123", "SUCCESS", "time", "Batch processed successfully.");
@@ -71,7 +71,7 @@ class PayrollSubmissionSchedulerTest {
                 .status(PayrollStatus.PROCESSED)
                 .build();
 
-        when(payrollRunRepository.findTop100ByStatus(PayrollStatus.PROCESSED))
+        when(payrollRunRepository.findTop5ByStatus(PayrollStatus.PROCESSED))
                 .thenReturn(List.of(run));
 
         when(restTemplate.postForObject(anyString(), any(PayrollBatchRequest.class), eq(PayrollBatchResponse.class)))
