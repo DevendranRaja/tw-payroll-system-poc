@@ -13,8 +13,8 @@ public interface PayPeriodRepository extends JpaRepository<PayPeriod, Integer> {
         select case when count(p) > 0 then true else false end
         from PayPeriod p
         where p.payGroupId = :payGroupId
-          and p.periodStartDate <= :endDate
-          and p.periodEndDate >= :startDate
+          and p.periodStartDate <= :periodEndDate
+          and p.periodEndDate >= :periodEndDate
     """)
     boolean existsOverlappingPeriod(@Param("payGroupId") Integer payGroupId,
                                     @Param("periodStartDate") LocalDate periodStartDate,
