@@ -1,25 +1,23 @@
-package com.tw.coupang.one_payroll.payroll.dto.request;
+package com.tw.coupang.one_payroll.payperiod.dto.request;
 
-import com.tw.coupang.one_payroll.payperiod.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.common.validator.HasPayPeriod;
 import com.tw.coupang.one_payroll.common.validator.ValidPayPeriod;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@Getter
 @ValidPayPeriod
-public class PayrollCalculationRequest implements HasPayPeriod {
+public class PayPeriodCreateRequest implements HasPayPeriod {
 
-    @NotBlank(message = "employeeId is required")
-    private String employeeId;
+    @NotNull(message = "payGroupId is required")
+    private Integer payGroupId;
 
     @NotNull(message = "payPeriod is required")
     @Valid

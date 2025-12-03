@@ -1,7 +1,7 @@
-package com.tw.coupang.one_payroll.payroll.validator;
+package com.tw.coupang.one_payroll.payperiod.validator;
 
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
-import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
+import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -10,7 +10,7 @@ import java.time.temporal.ChronoUnit;
 
 @Slf4j
 @Component
-public class PayrollCalculationValidator {
+public class PayPeriodCycleValidator {
 
     public void validatePayPeriodAgainstPayGroup(LocalDate startDate, LocalDate endDate, PayGroup payGroup) {
         try {

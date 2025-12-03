@@ -1,4 +1,4 @@
-package com.tw.coupang.one_payroll.payroll.dto.request;
+package com.tw.coupang.one_payroll.payperiod.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

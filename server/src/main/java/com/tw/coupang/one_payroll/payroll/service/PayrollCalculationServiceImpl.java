@@ -8,7 +8,7 @@ import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
-import com.tw.coupang.one_payroll.payroll.validator.PayrollCalculationValidator;
+import com.tw.coupang.one_payroll.payperiod.validator.PayPeriodCycleValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -20,12 +20,12 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
 
     private final EmployeeMasterService employeeMasterService;
     private final PayGroupValidator payGroupValidator;
-    private final PayrollCalculationValidator payrollCalculationValidator;
+    private final PayPeriodCycleValidator payPeriodCycleValidator;
 
-    public PayrollCalculationServiceImpl(EmployeeMasterService employeeMasterService, PayGroupValidator payGroupValidator, PayrollCalculationValidator payrollCalculationValidator) {
+    public PayrollCalculationServiceImpl(EmployeeMasterService employeeMasterService, PayGroupValidator payGroupValidator, PayPeriodCycleValidator payPeriodCycleValidator) {
         this.employeeMasterService = employeeMasterService;
         this.payGroupValidator = payGroupValidator;
-        this.payrollCalculationValidator = payrollCalculationValidator;
+        this.payPeriodCycleValidator = payPeriodCycleValidator;
     }
 
     @Override
@@ -48,7 +48,7 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
 
         log.info("Validated employee and pay group for employeeId={}, payGroupId={}", employeeId, payGroupId);
 
-        payrollCalculationValidator.validatePayPeriodAgainstPayGroup(startDate, endDate, payGroup);
+        payPeriodCycleValidator.validatePayPeriodAgainstPayGroup(startDate, endDate, payGroup);
 
         log.info("Pay period validated for employeeId={} ({} → {})", employeeId, startDate, endDate);
 

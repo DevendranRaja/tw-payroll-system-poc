@@ -5,8 +5,9 @@ import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveExce
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
+import com.tw.coupang.one_payroll.payperiod.exception.OverlappingPayPeriodException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
-import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
+import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -179,6 +180,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(OverlappingPayPeriodException.class)
+    public ResponseEntity<ApiResponse> handleOverlappingPayPeriod(OverlappingPayPeriodException ex) {
+        log.warn("Pay period overlap: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "PAY_PERIOD_OVERLAP",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleGeneric(Exception ex) {
