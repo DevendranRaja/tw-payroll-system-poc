@@ -14,7 +14,7 @@ public class PayrollBatchLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long logId;
-
+    private String logMessage;
     private String batchRefId;
     private String employeeId;
     private String status;
