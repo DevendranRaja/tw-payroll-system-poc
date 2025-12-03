@@ -8,11 +8,16 @@ import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.service.PayGroupService;
+import com.tw.coupang.one_payroll.userauth.config.SecurityConfig;
+import com.tw.coupang.one_payroll.userauth.filter.JwtAuthenticationFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -29,7 +34,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 
-@WebMvcTest(PayGroupController.class)
+@WebMvcTest(
+        controllers = PayGroupController.class,
+        excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
+                        SecurityConfig.class,
+                        JwtAuthenticationFilter.class
+                })
+        }
+)
+@AutoConfigureMockMvc(addFilters = false)
 class PayGroupControllerValidationTest {
 
     @Autowired
