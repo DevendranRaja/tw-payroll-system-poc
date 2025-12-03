@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RestControllerAdvice
@@ -95,7 +97,7 @@ public class GlobalExceptionHandler {
             return ResponseEntity.badRequest().body(response);
         }
 
-        if (details != null && details.contains("Invalid `null` value")) {
+        if (details.contains("Invalid `null` value")) {
             String fieldName = null;
 
             if (details.contains("property")) {
@@ -119,6 +121,16 @@ public class GlobalExceptionHandler {
             );
 
             return ResponseEntity.badRequest().body(response);
+        }
+
+        if (details.contains("Unexpected character") || details.contains("expected a value")) {
+            return ResponseEntity.badRequest().body(
+                    ApiResponse.failure(
+                            VALIDATION_ERROR_CODE,
+                            "Malformed JSON. One or more fields have missing or invalid values.",
+                            "A value was missing or incorrectly formatted in the request body. Please check the JSON structure and ensure all fields have valid values."
+                    )
+            );
         }
 
         ApiResponse response = ApiResponse.failure(
