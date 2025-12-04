@@ -258,6 +258,114 @@ class PayrollCalculationServiceImplTest {
     }
 
     @Test
+    void shouldThrowExceptionWhenBaseSalaryIsNegative() {
+        //given
+        PayrollCalculationRequest request = buildRequest("EMP_NEGATIVE_SALARY");
+        EmployeeMaster employee = buildEmployeeObjectWithBasePay(valueOf(-100));
+
+        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
+
+        //when + then
+        final var message = assertThrows(IllegalArgumentException.class, () -> service.calculate(request));
+        assertEquals("Base salary must be greater than zero for payroll calculation", message.getMessage());
+    }
+
+    @Test
+    void shouldNotPersistEarningsWhenNoEarningTypesConfigured() {
+        //given
+        PayrollCalculationRequest request = buildRequest("EMP1");
+        EmployeeMaster employee = buildEmployeeObjectWithBasePay(valueOf(150.00));
+        PayGroup payGroup = buildPayGroup();
+
+        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
+        when(earningTypeRepository.findAll()).thenReturn(emptyList());
+        when(deductionTypeRepository.findAll()).thenReturn(mockDeductionTypes());
+
+        when(payrollRunRepository.save(any(PayrollRun.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        //when
+        service.calculate(request);
+
+        //then
+        verify(payrollEarningsRepository, never()).saveAll(anyList());
+        verify(payrollDeductionsRepository).saveAll(anyList());
+    }
+
+    @Test
+    void shouldNotPersistDeductionsWhenNoDeductionTypesConfigured() {
+        //given
+        PayrollCalculationRequest request = buildRequest("EMP1");
+        EmployeeMaster employee = buildEmployeeObjectWithBasePay(valueOf(150.00));
+        PayGroup payGroup = buildPayGroup();
+
+        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
+        when(earningTypeRepository.findAll()).thenReturn(mockEarningTypes());
+        when(deductionTypeRepository.findAll()).thenReturn(emptyList());
+
+        when(payrollRunRepository.save(any(PayrollRun.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        //when
+        service.calculate(request);
+
+        //then
+        verify(payrollDeductionsRepository, never()).saveAll(anyList());
+        verify(payrollEarningsRepository).saveAll(anyList());
+    }
+
+    @Test
+    void shouldHandleVeryLargeSalaryWithoutOverflow() {
+        //given
+        PayrollCalculationRequest request = buildRequest("EMP_RICH");
+        EmployeeMaster employee = buildEmployeeObjectWithBasePay(new BigDecimal("1000000"));
+        PayGroup payGroup = buildPayGroup();
+
+        when(employeeMasterService.getEmployeeById(any())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(any())).thenReturn(payGroup);
+        when(earningTypeRepository.findAll()).thenReturn(mockEarningTypes());
+        when(deductionTypeRepository.findAll()).thenReturn(mockDeductionTypes());
+        when(payrollRunRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        //when
+        final var response = service.calculate(request);
+
+        //then
+        assertNotNull(response);
+        assertTrue(response.netPay().doubleValue() > 0);
+    }
+
+    @Test
+    void shouldIgnoreBonusWhenBonusTypeNotPresent() {
+        //given
+        PayrollCalculationRequest request = buildRequest("EMP1");
+        EmployeeMaster employee = buildEmployeeObjectWithBasePay(valueOf(150.00));
+        PayGroup payGroup = buildPayGroup();
+
+        List<EarningType> typesWithoutBonus = List.of(
+                new EarningType(1, "Basic Salary", ""),
+                new EarningType(2, "HRA", "")
+        );
+
+        when(employeeMasterService.getEmployeeById(any())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(any())).thenReturn(payGroup);
+        when(earningTypeRepository.findAll()).thenReturn(typesWithoutBonus);
+        when(deductionTypeRepository.findAll()).thenReturn(mockDeductionTypes());
+        when(payrollRunRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+
+        //when
+        service.calculate(request);
+
+        //then
+        ArgumentCaptor<List<PayrollEarnings>> captor = ArgumentCaptor.forClass(List.class);
+        verify(payrollEarningsRepository).saveAll(captor.capture());
+
+        assertEquals(2, captor.getValue().size());
+    }
+
+    @Test
     void shouldFailWhenPayrollRunSaveFails() {
         //given
         PayrollCalculationRequest request = buildRequest("EMP1");

@@ -77,6 +77,11 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
 
         log.info("Pay period validated for employeeId={} ({} → {})", employeeId, startDate, endDate);
 
+        if (employee.getBaseSalary().compareTo(ZERO) <= 0) {
+            log.warn("Employee with non-positive base salary attempted payroll calculation. employeeId={}", employeeId);
+            throw new IllegalArgumentException("Base salary must be greater than zero for payroll calculation");
+        }
+
         //TODO: Refactor salary calculation for different pay cycles
         final var monthlySalary = employee.getBaseSalary().multiply(BigDecimal.valueOf(30)); // assuming 30 days in a month
 
@@ -163,7 +168,9 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
                 .filter(Objects::nonNull)
                 .toList();
 
-        payrollEarningsRepository.saveAll(earningsList);
+        if (!earningsList.isEmpty()) {
+            payrollEarningsRepository.saveAll(earningsList);
+        }
     }
 
     private void persistDeductions(final Map<String, BigDecimal> deductionMap,
@@ -188,7 +195,9 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
                 .filter(Objects::nonNull)
                 .toList();
 
-        payrollDeductionsRepository.saveAll(deductionList);
+        if (!deductionList.isEmpty()) {
+            payrollDeductionsRepository.saveAll(deductionList);
+        }
     }
 
     private Map<String, BigDecimal> buildEarningMap(final BigDecimal monthlySalary) {
