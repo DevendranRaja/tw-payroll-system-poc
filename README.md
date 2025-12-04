@@ -168,3 +168,59 @@ Commit your changes (git commit -m 'Add feature …').
 Push to the branch (git push origin feature/YourFeature).
 
 Submit a pull request describing your changes.
+
+
+
+
+flowchart LR
+
+    subgraph UI["Frontend / External Clients"]
+        A1[Admin UI]
+        A2[Employee UI]
+        A3[Scheduler Trigger]
+    end
+
+    subgraph API["REST API Layer"]
+        C1[EmployeeMasterController]
+        C2[PayGroupController]
+        C3[PayrollCalculationController]
+        C4[PayslipController]
+        C5[IntegrationController]
+    end
+
+    subgraph Domain["Domain Services"]
+        D1[Employee Master Service]
+        D2[Pay Group Service]
+        D3[Payroll Calculation Engine]
+        D4[Payslip Metadata Builder]
+        D5[Timesheet Service]
+        D6[Mock SAP/Bank Integration Service]
+        D7[Validation Manager]
+    end
+
+    subgraph DB["PostgreSQL Database"]
+        T1[(employee_master)]
+        T2[(pay_group)]
+        T3[(pay_period)]
+        T4[(timesheet_summary)]
+        T5[(payroll_run)]
+        T6[(payslip)]
+        T7[(payroll_batch)]
+        T8[(payroll_batch_log)]
+        T9[(error_log)]
+    end
+
+    subgraph Infra["Infrastructure & External"]
+        S1[Scheduler (Spring Cron)]
+        S2[Mock SAP/Bank API]
+        S3[CI/CD - GitHub Actions]
+        S4[Sonar + Jacoco + Checkstyle]
+    end
+
+    UI --> API
+    API --> Domain
+    Domain --> DB
+    Domain --> Infra
+    Infra --> DB
+
+
