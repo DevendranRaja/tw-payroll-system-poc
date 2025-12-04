@@ -4,6 +4,7 @@ import com.tw.coupang.one_payroll.userauth.dto.AuthResponse;
 import com.tw.coupang.one_payroll.userauth.dto.UserCreateRequest;
 import com.tw.coupang.one_payroll.userauth.dto.UserLoginRequest;
 import com.tw.coupang.one_payroll.userauth.entity.UserAuth;
+import com.tw.coupang.one_payroll.userauth.exception.AuthenticationException;
 import com.tw.coupang.one_payroll.userauth.exception.UserIdAlreadyExistsException;
 import com.tw.coupang.one_payroll.userauth.repository.UserAuthRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,28 +29,25 @@ public class UserAuthService {
                 .userId(request.getUserId())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole())
+                .employeeId(request.getEmployeeId())
                 .build();
 
         repository.save(newUser);
 
-        String token = ""
-//                jwtService.generateToken(newUser.getUsername(), newUser.getRole().name())
-                ;
+        String token = jwtService.generateToken(newUser.getUserId(), newUser.getRole().name());
 
         return new AuthResponse(newUser.getUserId(), newUser.getRole().name(), token);
     }
 
     public AuthResponse login(UserLoginRequest request) {
         UserAuth user = repository.findByUserId(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("Invalid username or password."));
+                .orElseThrow(() -> new AuthenticationException("Invalid username or password."));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid username or password.");
+            throw new AuthenticationException("Invalid username or password.");
         }
 
-        String token = ""
-//                jwtService.generateToken(newUser.getUsername(), newUser.getRole().name())
-                ;
+        String token = jwtService.generateToken(user.getUserId(), user.getRole().name());
 
         return new AuthResponse(user.getUserId(), user.getRole().name(), token);
     }

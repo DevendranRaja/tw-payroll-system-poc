@@ -12,6 +12,7 @@ import com.tw.coupang.one_payroll.payperiod.exception.OverlappingPayPeriodExcept
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
 import com.tw.coupang.one_payroll.userauth.exception.UserIdAlreadyExistsException;
+import com.tw.coupang.one_payroll.userauth.exception.AuthenticationException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -270,6 +271,19 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse> handleAuthentication(AuthenticationException ex) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "INVALID_CREDENTIALS",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
 }

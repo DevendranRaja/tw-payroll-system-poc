@@ -29,13 +29,11 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
-    // Whitelist Swagger & OpenAPI URLs (without context path!)
     private static final String[] SWAGGER_WHITELIST = {
             "/swagger-ui/**",
             "/v3/api-docs/**"
     };
 
-    // Whitelist auth endpoints
     private static final String[] AUTH_WHITELIST = {
             "/api/auth/**"
     };

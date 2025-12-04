@@ -14,4 +14,7 @@ public class UserCreateRequest {
 
     @NotBlank
     private UserRole role;
+
+    @NotBlank
+    private String employeeId;
 }

@@ -259,6 +259,15 @@ INSERT INTO employee_master (
 ('E009', 'Daniel', 'Cho', 'Sales', 'Sales Lead', 'daniel.cho@company.com', 3, 'ACTIVE', '2021-11-15'),
 ('E010', 'Grace', 'Lim', 'Legal', 'Compliance Officer', 'grace.lim@company.com', 3, 'ACTIVE', '2020-09-30');
 
+INSERT INTO user_auth (
+   user_id, password_hash, role, employee_id
+) VALUES (
+   'admin01',
+   '$2a$10$RH/jVchITl6LrWvms0V9oupO56mgPs472ObLZ3yQJMkwB9aQwIGE6',
+   'ADMIN',
+   'E001'
+);
+
 INSERT INTO payroll_run (
     employee_id, pay_period_start, pay_period_end, gross_pay, tax_deduction, benefit_addition, net_pay
 ) VALUES
@@ -318,12 +327,3 @@ VALUES
 ('E008', 8, 22, 176.00, 8.00),
 ('E009', 9, 21, 168.00, 4.00),
 ('E010', 10, 20, 160.00, 0.00);
-
-INSERT INTO user_auth (
-   user_id, password_hash, role, employee_id
-) VALUES (
-   'admin01',
-   '$2b$10$CwTycUXWue0Thq9StjUM0uJ8NvwP4rjYpA1NVuMcZV8K4D4x3D9l2',
-   'ADMIN',
-   'E001'
-);
