@@ -10,6 +10,7 @@ import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
+import com.tw.coupang.one_payroll.userauth.exception.UserIdAlreadyExistsException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -234,4 +235,18 @@ public class GlobalExceptionHandler {
         }
 
     }
+
+    @ExceptionHandler(UserIdAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse> handleUserIdExists(UserIdAlreadyExistsException ex) {
+        log.warn("UserId already exists: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "USERID_ALREADY_EXISTS",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
 }

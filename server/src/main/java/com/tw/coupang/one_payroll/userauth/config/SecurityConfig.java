@@ -24,21 +24,36 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
-public class SecurityConfig
-{
+public class SecurityConfig {
+
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
+    // Whitelist Swagger & OpenAPI URLs (without context path!)
+    private static final String[] SWAGGER_WHITELIST = {
+            "/swagger-ui/**",
+            "/v3/api-docs/**"
+    };
+
+    // Whitelist auth endpoints
+    private static final String[] AUTH_WHITELIST = {
+            "/api/auth/**"
+    };
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity)throws Exception
-    {
-        httpSecurity.csrf(AbstractHttpConfigurer::disable)
+    public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
+
+        httpSecurity
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(SWAGGER_WHITELIST).permitAll()
+                        .requestMatchers(AUTH_WHITELIST).permitAll()
                         .requestMatchers(SecurityConstants.ADMIN_URLS).hasRole(SecurityConstants.ROLE_ADMIN)
-                        .requestMatchers(SecurityConstants.EMPLOYEE_URLS).hasAnyRole(SecurityConstants.ROLE_ADMIN,SecurityConstants.ROLE_EMPLOYEE)
-                        .anyRequest().authenticated())
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                        .requestMatchers(SecurityConstants.EMPLOYEE_URLS)
+                        .hasAnyRole(SecurityConstants.ROLE_ADMIN, SecurityConstants.ROLE_EMPLOYEE)
+                        .anyRequest().authenticated()
+                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 

@@ -1,8 +1,3 @@
--- Create database
-CREATE DATABASE tw_payroll;
-
-\c tw_payroll;
-
 -------------------------------------------------------
 -- ENUM TYPES
 -------------------------------------------------------
@@ -11,7 +6,7 @@ CREATE TYPE employee_status AS ENUM ('ACTIVE', 'INACTIVE');
 CREATE TYPE pay_cycle_type AS ENUM ('WEEKLY', 'BIWEEKLY', 'MONTHLY');
 CREATE TYPE payroll_status AS ENUM ('PROCESSED', 'FAILED');
 CREATE TYPE integration_status AS ENUM ('PENDING', 'SUCCESS', 'FAILED');
-
+CREATE TYPE user_role AS ENUM ('ADMIN', 'EMPLOYEE');
 -------------------------------------------------------
 -- Trigger function for auto-updating updated_at
 -------------------------------------------------------
@@ -195,6 +190,30 @@ CREATE INDEX idx_timesheet_employee ON timesheet_summary(employee_id);
 CREATE INDEX idx_timesheet_period ON timesheet_summary(pay_period_id);
 
 -------------------------------------------------------
+-- RBAC: user_auth
+-------------------------------------------------------
+
+
+CREATE TABLE user_auth (
+   user_id VARCHAR(50) PRIMARY KEY,
+   password_hash VARCHAR(255) NOT NULL,
+   role user_role NOT NULL,
+   employee_id VARCHAR(10),
+
+
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+
+   FOREIGN KEY (employee_id) REFERENCES employee_master(employee_id)
+);
+
+
+CREATE TRIGGER trg_user_auth_update
+BEFORE UPDATE ON user_auth
+FOR EACH ROW
+EXECUTE FUNCTION update_timestamp();
+-------------------------------------------------------
 -- INSERT DATA
 -------------------------------------------------------
 
@@ -267,3 +286,12 @@ VALUES
 ('E008', 8, 22, 176.00, 8.00),
 ('E009', 9, 21, 168.00, 4.00),
 ('E010', 10, 20, 160.00, 0.00);
+
+INSERT INTO user_auth (
+   user_id, password_hash, role, employee_id
+) VALUES (
+   'admin01',
+   '$2b$10$CwTycUXWue0Thq9StjUM0uJ8NvwP4rjYpA1NVuMcZV8K4D4x3D9l2',
+   'ADMIN',
+   'E001'
+);
