@@ -34,7 +34,7 @@ public class UserAuthService {
 
         repository.save(newUser);
 
-        String token = jwtService.generateToken(newUser.getUserId(), newUser.getRole().name());
+        String token = jwtService.generateToken(newUser.getUserId(), newUser.getEmployeeId(), newUser.getRole().name());
 
         return new AuthResponse(newUser.getUserId(), newUser.getRole().name(), token);
     }
@@ -47,7 +47,7 @@ public class UserAuthService {
             throw new AuthenticationException("Invalid username or password.");
         }
 
-        String token = jwtService.generateToken(user.getUserId(), user.getRole().name());
+        String token = jwtService.generateToken(user.getUserId(), user.getEmployeeId(), user.getRole().name());
 
         return new AuthResponse(user.getUserId(), user.getRole().name(), token);
     }

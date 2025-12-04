@@ -11,6 +11,7 @@ import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payperiod.exception.OverlappingPayPeriodException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
+import com.tw.coupang.one_payroll.userauth.exception.JwtTokenParsingException;
 import com.tw.coupang.one_payroll.userauth.exception.UserIdAlreadyExistsException;
 import com.tw.coupang.one_payroll.userauth.exception.AuthenticationException;
 import jakarta.validation.ConstraintViolationException;
@@ -285,5 +286,15 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
+
+    @ExceptionHandler(JwtTokenParsingException.class)
+    public ResponseEntity<ApiErrorResponse> handleJwtException(JwtTokenParsingException ex)
+    {
+        log.warn("Exception occurred while parsing/validating token: {}", ex.getMessage());
+
+        ApiErrorResponse response = ApiErrorResponse.failure("INVALID_TOKEN", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
 
 }

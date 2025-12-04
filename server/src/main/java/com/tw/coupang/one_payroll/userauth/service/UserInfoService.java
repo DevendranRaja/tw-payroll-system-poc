@@ -3,7 +3,6 @@ package com.tw.coupang.one_payroll.userauth.service;
 import com.tw.coupang.one_payroll.userauth.entity.UserAuth;
 import com.tw.coupang.one_payroll.userauth.repository.UserAuthRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
