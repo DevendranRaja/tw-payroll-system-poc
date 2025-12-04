@@ -1,0 +1,28 @@
+name: Enforce Commit Message Format
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  commit-message-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check commit messages
+        run: |
+          COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --pretty=%s)
+
+          echo "$COMMITS" | while read line; do
+            if ! [[ "$line" =~ ^\[PAY-[0-9]+\]\: ]]; then
+              echo "Invalid commit message: $line"
+              echo "Commit messages must start with: PAY-123: description"
+              exit 1
+            fi
+          done
+
+          echo "✅ All commit messages are in valid format."
