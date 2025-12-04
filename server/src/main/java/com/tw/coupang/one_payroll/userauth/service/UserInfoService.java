@@ -19,10 +19,7 @@ public class UserInfoService implements UserDetailsService {
         UserAuth user = userAuthRepository.findByUserId(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
-        return User.builder()
-                .username(user.getUserId())
-                .password(user.getPassword())
-                .roles(user.getRole().name())
-                .build();
+        return new UserInfoDetails(user);
     }
 }
+
