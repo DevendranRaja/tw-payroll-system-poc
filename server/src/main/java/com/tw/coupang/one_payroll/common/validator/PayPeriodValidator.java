@@ -1,6 +1,5 @@
-package com.tw.coupang.one_payroll.payroll.validator;
+package com.tw.coupang.one_payroll.common.validator;
 
-import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.extern.slf4j.Slf4j;
@@ -11,13 +10,12 @@ import java.time.YearMonth;
 
 @Slf4j
 @Component
-public class PayPeriodValidator implements ConstraintValidator<ValidPayPeriod, PayrollCalculationRequest> {
+public class PayPeriodValidator implements ConstraintValidator<ValidPayPeriod, HasPayPeriod> {
 
     @Override
-    public boolean isValid(PayrollCalculationRequest request, ConstraintValidatorContext context) {
-        if (request == null) return true;
-        if (request.getPayPeriod() == null) {
-            log.info("Invalid PayrollCalculationRequest: payPeriod is null");
+    public boolean isValid(HasPayPeriod request, ConstraintValidatorContext context) {
+        if (request == null || request.getPayPeriod() == null) {
+            log.warn("PayPeriod validation skipped: request or payPeriod is null");
             return true;
         }
 
@@ -25,23 +23,25 @@ public class PayPeriodValidator implements ConstraintValidator<ValidPayPeriod, P
         final LocalDate end = request.getPayPeriod().getEndDate();
 
         if (start == null || end == null) {
-            log.info("Invalid PayrollCalculationRequest: startDate or endDate is null (start={}, end={})", start, end);
+            log.warn("Invalid Request: startDate or endDate is null (startDate={}, endDate={})", start, end);
             return true;
         }
 
-        log.debug("Validating pay period: start={}, end={}", start, end);
+        log.debug("Validating pay period: startDate={}, endDate={}", start, end);
 
         if (!isEndAfterStart(start, end)) {
-            log.warn("Invalid pay period: end is not after start (start={}, end={})", start, end);
+            log.warn("Invalid pay period: endDate is not after startDate (startDate={}, endDate={})", start, end);
             addViolation(context, "endDate", "endDate must be after startDate");
             return false;
         }
 
         if (!isSameMonth(start, end)) {
-            log.warn("Invalid pay period: start and end not within same month (start={}, end={})", start, end);
+            log.warn("Invalid pay period: startDate and endDate not within same month (startDate={}, endDate={})", start, end);
             addViolation(context, "startDate", "period must be within a single calendar cycle (same month)");
             return false;
         }
+
+        log.info("PayPeriod validated successfully: {} to {}", start, end);
 
         return true;
     }

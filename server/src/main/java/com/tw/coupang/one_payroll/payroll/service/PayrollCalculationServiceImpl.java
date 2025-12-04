@@ -6,11 +6,11 @@ import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveExce
 import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
+import com.tw.coupang.one_payroll.payperiod.validator.PayPeriodCycleValidator;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.dto.response.PayrollRunResponse;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
-import com.tw.coupang.one_payroll.payroll.validator.PayrollCalculationValidator;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
     private final EmployeeMasterService employeeMasterService;
     private final PayGroupValidator payGroupValidator;
     private final PayrollRunRepository payrollRunRepository;
-    private final PayrollCalculationValidator payrollCalculationValidator;
+    private final PayPeriodCycleValidator payPeriodCycleValidator;
 
     @Override
     public PayrollRunResponse calculate(PayrollCalculationRequest request) {
@@ -52,7 +52,7 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
 
         log.info("Validated employee and pay group for employeeId={}, payGroupId={}", employeeId, payGroupId);
 
-        payrollCalculationValidator.validatePayPeriodAgainstPayGroup(startDate, endDate, payGroup);
+        payPeriodCycleValidator.validatePayPeriodAgainstPayGroup(startDate, endDate, payGroup);
 
         log.info("Pay period validated for employeeId={} ({} → {})", employeeId, startDate, endDate);
 

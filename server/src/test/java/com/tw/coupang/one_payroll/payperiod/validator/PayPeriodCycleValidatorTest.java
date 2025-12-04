@@ -1,8 +1,8 @@
-package com.tw.coupang.one_payroll.payroll.validator;
+package com.tw.coupang.one_payroll.payperiod.validator;
 
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
-import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
+import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -19,10 +19,10 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(MockitoExtension.class)
-class PayrollCalculationValidatorTest {
+class PayPeriodCycleValidatorTest {
 
     @InjectMocks
-    private PayrollCalculationValidator validator;
+    private PayPeriodCycleValidator validator;
 
     @ParameterizedTest
     @MethodSource("payPeriodValidationProvider")

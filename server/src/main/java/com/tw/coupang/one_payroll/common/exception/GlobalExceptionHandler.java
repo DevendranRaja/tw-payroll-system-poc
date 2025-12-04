@@ -8,8 +8,9 @@ import com.tw.coupang.one_payroll.integration.exception.BatchNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
+import com.tw.coupang.one_payroll.payperiod.exception.OverlappingPayPeriodException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
-import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
+import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -94,7 +95,7 @@ public class GlobalExceptionHandler {
             return ResponseEntity.badRequest().body(response);
         }
 
-        if (details != null && details.contains("Invalid `null` value")) {
+        if (details.contains("Invalid `null` value")) {
             String fieldName = null;
 
             if (details.contains("property")) {
@@ -118,6 +119,16 @@ public class GlobalExceptionHandler {
             );
 
             return ResponseEntity.badRequest().body(response);
+        }
+
+        if (details.contains("Unexpected character") || details.contains("expected a value")) {
+            return ResponseEntity.badRequest().body(
+                    ApiResponse.failure(
+                            VALIDATION_ERROR_CODE,
+                            "Malformed JSON. One or more fields have missing or invalid values.",
+                            "A value was missing or incorrectly formatted in the request body. Please check the JSON structure and ensure all fields have valid values."
+                    )
+            );
         }
 
         ApiResponse response = ApiResponse.failure(
@@ -196,6 +207,18 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(OverlappingPayPeriodException.class)
+    public ResponseEntity<ApiResponse> handleOverlappingPayPeriod(OverlappingPayPeriodException ex) {
+        log.warn("Pay period overlap: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "PAY_PERIOD_OVERLAP",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleGeneric(Exception ex) {

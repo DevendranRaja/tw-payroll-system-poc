@@ -162,6 +162,29 @@ CREATE TABLE payroll_batch_log (
 );
 
 -------------------------------------------------------
+-- pay_period
+-------------------------------------------------------
+
+CREATE TABLE pay_period (
+    pay_period_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    pay_group_id INT NOT NULL REFERENCES pay_group(pay_group_id),
+
+    period_start_date DATE NOT NULL,
+    period_end_date DATE NOT NULL,
+
+    range VARCHAR(20) NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE pay_period ADD CONSTRAINT uk_pay_period_group_start_end UNIQUE (pay_group_id, period_start_date, period_end_date);
+
+-- Indexes for faster lookup
+CREATE INDEX idx_pay_period_group ON pay_period(pay_group_id);
+CREATE INDEX idx_pay_period_range ON pay_period(range);
+
+-------------------------------------------------------
 -- timesheet_summary
 -------------------------------------------------------
 
@@ -253,6 +276,15 @@ VALUES
 ('Payroll Calculation', 'E003', 'Negative working hours detected'),
 ('Payroll Calculation', 'E007', 'Invalid pay group ID reference'),
 ('Bank Integration', 'E005', 'Bank account verification failed');
+
+INSERT INTO pay_period (pay_group_id, period_start_date, period_end_date, range)
+VALUES
+(1, '2025-01-01', '2025-01-31', 'JAN-2025'),
+(1, '2025-02-01', '2025-02-28', 'FEB-2025'),
+(2, '2025-06-01', '2025-06-07', '01-07 JUN25'),
+(2, '2025-06-01', '2025-06-07', '08-14 JUN25'),
+(2, '2025-06-01', '2025-06-07', '01-07 JUN25'),
+(2, '2025-06-01', '2025-06-07', '01-07 JUN25');
 
 INSERT INTO timesheet_summary
 (employee_id, pay_period_id, no_of_days_worked, hours_worked, holiday_hours)

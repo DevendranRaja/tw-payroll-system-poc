@@ -1,4 +1,4 @@
-package com.tw.coupang.one_payroll.payroll.validator;
+package com.tw.coupang.one_payroll.common.validator;
 
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;

@@ -1,6 +1,6 @@
 package com.tw.coupang.one_payroll.payroll.controller;
 
-import com.tw.coupang.one_payroll.payroll.dto.request.PayPeriod;
+import com.tw.coupang.one_payroll.payperiod.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payroll.dto.response.PayrollRunResponse;
