@@ -445,10 +445,11 @@ class PayrollCalculationServiceImplTest {
         );
 
         PayrollCalculationRequest request = buildRequest("EMP1");
+        final var grossPay = valueOf(30000);
 
         // when
         final var exception = assertThrows(IllegalStateException.class, () -> service.payrollGrossToNetPayCalculation(
-                valueOf(30000), deductions, payGroup, request));
+                grossPay, deductions, payGroup, request));
 
         // then
         assertEquals("Total deductions exceed or equal gross pay, cannot compute net pay", exception.getMessage());
