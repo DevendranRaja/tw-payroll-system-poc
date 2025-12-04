@@ -1,6 +1,6 @@
-package com.tw.coupang.one_payroll.payroll.validator;
+package com.tw.coupang.one_payroll.common.validator;
 
-import com.tw.coupang.one_payroll.payroll.dto.request.PayPeriod;
+import com.tw.coupang.one_payroll.payperiod.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import jakarta.validation.ConstraintValidatorContext;
 import org.junit.jupiter.api.Test;

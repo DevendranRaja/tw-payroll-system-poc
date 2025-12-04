@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: tw-payroll
+      POSTGRES_DB: tw_payroll
     ports:
       - "5432:5432"
     volumes:

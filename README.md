@@ -168,3 +168,10 @@ Commit your changes (git commit -m 'Add feature …').
 Push to the branch (git push origin feature/YourFeature).
 
 Submit a pull request describing your changes.
+
+
+<img width="1376" height="768" alt="image" src="https://github.com/user-attachments/assets/88442555-c193-4112-b605-e7abc5383b16" />
+
+
+
+

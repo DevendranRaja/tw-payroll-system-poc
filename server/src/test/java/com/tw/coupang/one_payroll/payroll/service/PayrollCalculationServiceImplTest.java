@@ -9,12 +9,12 @@ import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
-import com.tw.coupang.one_payroll.payroll.dto.request.PayPeriod;
+import com.tw.coupang.one_payroll.payperiod.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
-import com.tw.coupang.one_payroll.payroll.exception.InvalidPayPeriodException;
 import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
-import com.tw.coupang.one_payroll.payroll.validator.PayrollCalculationValidator;
+import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
+import com.tw.coupang.one_payroll.payperiod.validator.PayPeriodCycleValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -32,8 +32,15 @@ import static java.math.BigDecimal.ZERO;
 import static java.math.BigDecimal.valueOf;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class PayrollCalculationServiceImplTest {
@@ -51,7 +58,7 @@ class PayrollCalculationServiceImplTest {
     private PayGroupValidator payGroupValidator;
 
     @Mock
-    private PayrollCalculationValidator payrollCalculationValidator;
+    private PayPeriodCycleValidator payPeriodCycleValidator;
 
     @Test
     void shouldThrowEmployeeNotFoundWhenEmployeeMissing() {
@@ -63,7 +70,7 @@ class PayrollCalculationServiceImplTest {
         assertThrows(EmployeeNotFoundException.class, () -> service.calculate(request));
 
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
-        verifyNoInteractions(payGroupValidator, payrollCalculationValidator);
+        verifyNoInteractions(payGroupValidator, payPeriodCycleValidator);
     }
 
     @Test
@@ -78,7 +85,7 @@ class PayrollCalculationServiceImplTest {
         assertThrows(EmployeeInactiveException.class, () -> service.calculate(request));
 
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
-        verifyNoInteractions(payGroupValidator, payrollCalculationValidator);
+        verifyNoInteractions(payGroupValidator, payPeriodCycleValidator);
     }
 
     @Test
@@ -95,7 +102,7 @@ class PayrollCalculationServiceImplTest {
 
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
         verify(payGroupValidator).validatePayGroupExists(2);
-        verifyNoInteractions(payrollCalculationValidator);
+        verifyNoInteractions(payPeriodCycleValidator);
     }
 
     @Test
@@ -108,7 +115,7 @@ class PayrollCalculationServiceImplTest {
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
 
         doThrow(new InvalidPayPeriodException("Invalid pay period"))
-                .when(payrollCalculationValidator)
+                .when(payPeriodCycleValidator)
                 .validatePayPeriodAgainstPayGroup(
                         request.getPayPeriod().getStartDate(),
                         request.getPayPeriod().getEndDate(),
@@ -118,7 +125,7 @@ class PayrollCalculationServiceImplTest {
 
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
         verify(payGroupValidator).validatePayGroupExists(2);
-        verify(payrollCalculationValidator).validatePayPeriodAgainstPayGroup(
+        verify(payPeriodCycleValidator).validatePayPeriodAgainstPayGroup(
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup);
@@ -133,7 +140,7 @@ class PayrollCalculationServiceImplTest {
         when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
 
-        doNothing().when(payrollCalculationValidator).validatePayPeriodAgainstPayGroup(
+        doNothing().when(payPeriodCycleValidator).validatePayPeriodAgainstPayGroup(
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup);
@@ -144,7 +151,7 @@ class PayrollCalculationServiceImplTest {
         assertEquals(payGroup.getId(), actual.payGroupId());
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
         verify(payGroupValidator).validatePayGroupExists(2);
-        verify(payrollCalculationValidator).validatePayPeriodAgainstPayGroup(
+        verify(payPeriodCycleValidator).validatePayPeriodAgainstPayGroup(
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup);

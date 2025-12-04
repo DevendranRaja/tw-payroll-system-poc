@@ -74,7 +74,7 @@ CREATE TABLE payroll_run (
     net_pay DECIMAL(10,2),
     status payroll_status DEFAULT 'PROCESSED',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (employee_id) REFERENCES employee_master(employee_id)
+    FOREIGN KEY (employee_id) REFERENCES employee_master(employee_id),
     CONSTRAINT uq_payroll_run_emp_period UNIQUE (employee_id, pay_period_start, pay_period_end)
 );
 
@@ -155,6 +155,29 @@ CREATE TABLE payroll_batch_log (
     timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (batch_ref_id) REFERENCES payroll_batch(batch_ref_id)
 );
+
+-------------------------------------------------------
+-- pay_period
+-------------------------------------------------------
+
+CREATE TABLE pay_period (
+    pay_period_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+
+    pay_group_id INT NOT NULL REFERENCES pay_group(pay_group_id),
+
+    period_start_date DATE NOT NULL,
+    period_end_date DATE NOT NULL,
+
+    range VARCHAR(20) NOT NULL,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE pay_period ADD CONSTRAINT uk_pay_period_group_start_end UNIQUE (pay_group_id, period_start_date, period_end_date);
+
+-- Indexes for faster lookup
+CREATE INDEX idx_pay_period_group ON pay_period(pay_group_id);
+CREATE INDEX idx_pay_period_range ON pay_period(range);
 
 -------------------------------------------------------
 -- timesheet_summary
@@ -251,7 +274,7 @@ INSERT INTO payroll_run (
 ('E010', '2025-10-01', '2025-10-31', 9000.00, 1080.00, 720.00, 8640.00);
 
 INSERT INTO payslip (
-    employee_id, payroll_id, pay_period, gross_pay, net_pay, tax, benefits, earnings_json, deductions_json, file_path
+    employee_id, payroll_id, pay_period, gross_pay, net_pay, benefits, earnings_json, deductions_json, file_path
 ) VALUES
 ('E001', 1, '2025-10-31', 5000.00, 4750.00, 250.00,'{"grossPay": 5000.00, "benefits": 250.00}','{"tax": 500.00}','/payslips/E001_OCT2025.pdf'),
 ('E002', 2, '2025-10-31', 7000.00, 6650.00, 350.00,'{"grossPay": 7000.00, "benefits": 350.00}','{"tax": 700.00}','/payslips/E002_OCT2025.pdf'),
@@ -272,6 +295,15 @@ VALUES
 ('Payroll Calculation', 'E003', 'Negative working hours detected'),
 ('Payroll Calculation', 'E007', 'Invalid pay group ID reference'),
 ('Bank Integration', 'E005', 'Bank account verification failed');
+
+INSERT INTO pay_period (pay_group_id, period_start_date, period_end_date, range)
+VALUES
+(1, '2025-01-01', '2025-01-31', 'JAN-2025'),
+(1, '2025-02-01', '2025-02-28', 'FEB-2025'),
+(2, '2025-06-01', '2025-06-07', '01-07 JUN25'),
+(2, '2025-06-08', '2025-06-14', '08-14 JUN25'),
+(2, '2025-06-15', '2025-06-21', '15-21 JUN25'),
+(2, '2025-06-22', '2025-06-28', '22-28 JUN25');
 
 INSERT INTO timesheet_summary
 (employee_id, pay_period_id, no_of_days_worked, hours_worked, holiday_hours)
