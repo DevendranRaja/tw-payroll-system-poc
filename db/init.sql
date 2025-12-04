@@ -4,7 +4,7 @@
 
 CREATE TYPE employee_status AS ENUM ('ACTIVE', 'INACTIVE');
 CREATE TYPE pay_cycle_type AS ENUM ('WEEKLY', 'BIWEEKLY', 'MONTHLY');
-CREATE TYPE payroll_status AS ENUM ('PROCESSED', 'FAILED');
+CREATE TYPE payroll_status AS ENUM ('PROCESSED', 'FAILED', 'SUBMITTED', 'SUBMISSION_FAILED');
 CREATE TYPE integration_status AS ENUM ('PENDING', 'SUCCESS', 'FAILED');
 
 -------------------------------------------------------
