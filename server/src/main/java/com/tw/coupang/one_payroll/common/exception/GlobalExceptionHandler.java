@@ -5,6 +5,7 @@ import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictExce
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.integration.exception.BatchNotFoundException;
+import com.tw.coupang.one_payroll.integration.exception.MandatoryFieldMissingException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
@@ -192,6 +193,20 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(MandatoryFieldMissingException.class)
+    public ResponseEntity<ApiResponse> handleMandatoryFieldMissingException(MandatoryFieldMissingException ex) {
+
+        log.warn(" Mandatory Field Missing: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "MANDATORY_FIELD_MISSING",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     @ExceptionHandler(EmployeeInactiveException.class)
