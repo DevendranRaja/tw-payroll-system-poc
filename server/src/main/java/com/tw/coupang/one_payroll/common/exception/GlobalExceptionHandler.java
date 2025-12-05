@@ -11,6 +11,8 @@ import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payperiod.exception.OverlappingPayPeriodException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
+import com.tw.coupang.one_payroll.timesheet.exception.InvalidTimesheetException;
+import com.tw.coupang.one_payroll.timesheet.exception.TimesheetNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -256,5 +258,15 @@ public class GlobalExceptionHandler {
             return ResponseEntity.badRequest().body(response);
         }
 
+    }
+
+    @ExceptionHandler(InvalidTimesheetException.class)
+    public ResponseEntity<String> handleInvalidTimesheet(InvalidTimesheetException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(TimesheetNotFoundException.class)
+    public ResponseEntity<String> handleTimesheetNotFound(TimesheetNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 }
