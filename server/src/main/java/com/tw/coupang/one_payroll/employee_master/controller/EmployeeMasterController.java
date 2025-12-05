@@ -7,6 +7,7 @@ import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,6 +40,7 @@ public class EmployeeMasterController {
         return ResponseEntity.ok(updated);
     }
 
+    @PreAuthorize("hasRole('ADMIN') or #employeeId == authentication.principal.employeeId")
     @GetMapping("/employee/{employeeId}")
     public ResponseEntity<EmployeeMaster> getEmployeeById(@PathVariable String employeeId) {
         EmployeeMaster employee = employeeMasterService.getEmployeeById(employeeId);
