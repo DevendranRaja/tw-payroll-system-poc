@@ -1,6 +1,7 @@
 package com.tw.coupang.one_payroll.userauth.config;
 
 import com.tw.coupang.one_payroll.common.constants.SecurityConstants;
+import com.tw.coupang.one_payroll.userauth.enums.UserRole;
 import com.tw.coupang.one_payroll.userauth.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -29,26 +30,17 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
 
-    private static final String[] SWAGGER_WHITELIST = {
-            "/swagger-ui/**",
-            "/v3/api-docs/**"
-    };
-
-    private static final String[] AUTH_WHITELIST = {
-            "/api/auth/**"
-    };
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(SWAGGER_WHITELIST).permitAll()
-                        .requestMatchers(AUTH_WHITELIST).permitAll()
-                        .requestMatchers(SecurityConstants.ADMIN_URLS).hasRole(SecurityConstants.ROLE_ADMIN)
+                        .requestMatchers(SecurityConstants.SWAGGER_WHITELIST).permitAll()
+                        .requestMatchers(SecurityConstants.AUTH_WHITELIST).permitAll()
+                        .requestMatchers(SecurityConstants.ADMIN_URLS).hasRole(String.valueOf(UserRole.ADMIN))
                         .requestMatchers(SecurityConstants.EMPLOYEE_URLS)
-                        .hasAnyRole(SecurityConstants.ROLE_ADMIN, SecurityConstants.ROLE_EMPLOYEE)
+                        .hasAnyRole(String.valueOf(UserRole.ADMIN), String.valueOf(UserRole.EMPLOYEE))
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

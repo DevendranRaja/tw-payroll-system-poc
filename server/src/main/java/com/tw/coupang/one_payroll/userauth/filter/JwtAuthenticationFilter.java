@@ -32,7 +32,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
-    ) throws ServletException, IOException {
+    ) throws ServletException, IOException
+    {
+        String path = request.getServletPath();
+
+        // Skip JWT validation for login/register
+        if (path.startsWith("/api/auth/")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String authHeader = request.getHeader(SecurityConstants.AUTHORIZATION);
 
         // Check if Authorization header is present and starts with "Bearer "
