@@ -57,13 +57,13 @@ public class EmployeeMaster {
     @Column(name = "status")
     private EmployeeStatus status;
 
+    @Column(name = "joining_date")
+    private LocalDate joiningDate;
+
     @Enumerated(EnumType.STRING)
     @JdbcType(PostgreSQLEnumJdbcType.class)
     @Column(name = "pay_type", nullable = false)
     private PayType payType;
-
-    @Column(name = "joining_date")
-    private LocalDate joiningDate;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

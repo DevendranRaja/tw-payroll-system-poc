@@ -32,6 +32,7 @@ CREATE TABLE employee_master (
     email VARCHAR(100) UNIQUE NOT NULL,
     pay_group_id INT NOT NULL,
     status employee_status DEFAULT 'ACTIVE',
+    pay_type pay_type NOT NULL,
     joining_date DATE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -217,13 +218,6 @@ CREATE INDEX idx_timesheet_employee ON timesheet_summary(employee_id);
 CREATE INDEX idx_timesheet_period ON timesheet_summary(pay_period_id);
 
 -------------------------------------------------------
--- updates
--------------------------------------------------------
-
-ALTER TABLE employee_master
-ADD COLUMN pay_type pay_type NOT NULL DEFAULT 'SALARIED';
-
--------------------------------------------------------
 -- INSERT DATA
 -------------------------------------------------------
 
@@ -233,18 +227,18 @@ INSERT INTO pay_group (group_name, payment_cycle, base_tax_rate, benefit_rate, d
 ('Expat Staff', 'MONTHLY', 12.00, 8.00, 3.00, 1.00);
 
 INSERT INTO employee_master (
-    employee_id, first_name, last_name, department, designation, email, pay_group_id, status, joining_date
+    employee_id, first_name, last_name, department, designation, email, pay_group_id, status, joining_date, pay_type
 ) VALUES
-('E001', 'Jin', 'Park', 'Finance', 'Analyst', 'jin.park@company.com', 1, 'ACTIVE', '2021-02-12'),
-('E002', 'Mina', 'Choi', 'HR', 'HR Manager', 'mina.cho@company.com', 1, 'ACTIVE', '2020-08-01'),
-('E003', 'Ravi', 'Kumar', 'Engineering', 'Backend Dev', 'ravi.kumar@company.com', 1, 'ACTIVE', '2022-05-15'),
-('E004', 'Sujin', 'Lee', 'Engineering', 'Frontend Dev', 'sujin.lee@company.com', 1, 'ACTIVE', '2022-10-05'),
-('E005', 'Alex', 'Kim', 'Finance', 'Accountant', 'alex.kim@company.com', 1, 'ACTIVE', '2021-07-20'),
-('E006', 'Rohan', 'Sharma', 'Operations', 'Supervisor', 'rohan.sharma@company.com', 2, 'ACTIVE', '2023-01-12'),
-('E007', 'Yuna', 'Han', 'Support', 'CSR', 'yuna.han@company.com', 2, 'ACTIVE', '2023-03-09'),
-('E008', 'Eunji', 'Kang', 'Engineering', 'QA Engineer', 'eunji.kang@company.com', 1, 'ACTIVE', '2022-06-20'),
-('E009', 'Daniel', 'Cho', 'Sales', 'Sales Lead', 'daniel.cho@company.com', 3, 'ACTIVE', '2021-11-15'),
-('E010', 'Grace', 'Lim', 'Legal', 'Compliance Officer', 'grace.lim@company.com', 3, 'ACTIVE', '2020-09-30');
+('E001', 'Jin', 'Park', 'Finance', 'Analyst', 'jin.park@company.com', 1, 'ACTIVE', '2021-02-12', "SALARIED"),
+('E002', 'Mina', 'Choi', 'HR', 'HR Manager', 'mina.cho@company.com', 1, 'ACTIVE', '2020-08-01', "SALARIED"),
+('E003', 'Ravi', 'Kumar', 'Engineering', 'Backend Dev', 'ravi.kumar@company.com', 1, 'ACTIVE', '2022-05-15', "SALARIED"),
+('E004', 'Sujin', 'Lee', 'Engineering', 'Frontend Dev', 'sujin.lee@company.com', 1, 'ACTIVE', '2022-10-05', "SALARIED"),
+('E005', 'Alex', 'Kim', 'Finance', 'Accountant', 'alex.kim@company.com', 1, 'ACTIVE', '2021-07-20', "SALARIED"),
+('E006', 'Rohan', 'Sharma', 'Operations', 'Supervisor', 'rohan.sharma@company.com', 2, 'ACTIVE', '2023-01-12', "HOURLY"),
+('E007', 'Yuna', 'Han', 'Support', 'CSR', 'yuna.han@company.com', 2, 'ACTIVE', '2023-03-09', "HOURLY"),
+('E008', 'Eunji', 'Kang', 'Engineering', 'QA Engineer', 'eunji.kang@company.com', 1, 'ACTIVE', '2022-06-20', "SALARIED"),
+('E009', 'Daniel', 'Cho', 'Sales', 'Sales Lead', 'daniel.cho@company.com', 3, 'ACTIVE', '2021-11-15', "SALARIED"),
+('E010', 'Grace', 'Lim', 'Legal', 'Compliance Officer', 'grace.lim@company.com', 3, 'ACTIVE', '2020-09-30', "SALARIED");
 
 INSERT INTO payroll_run (
     employee_id, pay_period_start, pay_period_end, gross_pay, tax_deduction, benefit_addition, net_pay
@@ -297,6 +291,3 @@ INSERT INTO timesheet_summary
 VALUES
 ('E001', 1, 22, 176.00, 8.00),
 ('E002', 2, 20, 160.00, 0.00);
-
-UPDATE employee_master SET pay_type = 'SALARIED' WHERE pay_group_id IN (1, 3);
-UPDATE employee_master SET pay_type = 'HOURLY' WHERE pay_group_id = 2;
