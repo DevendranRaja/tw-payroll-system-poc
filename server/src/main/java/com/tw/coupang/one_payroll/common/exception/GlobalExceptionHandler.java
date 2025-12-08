@@ -9,6 +9,7 @@ import com.tw.coupang.one_payroll.integration.exception.MandatoryFieldMissingExc
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.payperiod.exception.PayPeriodNotFoundException;
+import com.tw.coupang.one_payroll.payroll.exception.InvalidPayrollStateException;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payperiod.exception.OverlappingPayPeriodException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
@@ -301,5 +302,18 @@ public class GlobalExceptionHandler {
                 null
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(InvalidPayrollStateException.class)
+    public ResponseEntity<ApiResponse> handleInvalidPayrollState(InvalidPayrollStateException ex) {
+        log.warn("Invalid payroll state: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "INVALID_PAYROLL_STATE",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }

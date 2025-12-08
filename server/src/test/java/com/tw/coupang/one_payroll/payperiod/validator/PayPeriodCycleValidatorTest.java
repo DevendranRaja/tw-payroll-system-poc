@@ -48,6 +48,7 @@ class PayPeriodCycleValidatorTest {
                 Arguments.of(LocalDate.of(2025, 3, 10), LocalDate.of(2025, 3, 9), monthly, false),
                 Arguments.of(LocalDate.of(2025, 3, 1), LocalDate.of(2025, 3, 31), monthly, true),
                 Arguments.of(LocalDate.of(2025, 3, 1), LocalDate.of(2025, 4, 1), monthly, false),
+                Arguments.of(LocalDate.of(2025, 12, 1), LocalDate.of(2026, 12, 31), monthly, false),
                 Arguments.of(LocalDate.of(2025, 3, 2), LocalDate.of(2025, 3, 31), monthly, false),
                 Arguments.of(LocalDate.of(2025, 3, 1), LocalDate.of(2025, 3, 30), monthly, false),
 
@@ -67,6 +68,7 @@ class PayPeriodCycleValidatorTest {
                 .baseTaxRate(BigDecimal.TEN)
                 .benefitRate(BigDecimal.valueOf(5))
                 .deductionRate(BigDecimal.valueOf(2))
+                .holidayRate(BigDecimal.valueOf(1.5))
                 .createdAt(LocalDateTime.now())
                 .build();
     }
@@ -79,6 +81,7 @@ class PayPeriodCycleValidatorTest {
                 .baseTaxRate(BigDecimal.valueOf(15))
                 .benefitRate(BigDecimal.valueOf(5))
                 .deductionRate(BigDecimal.valueOf(5))
+                .holidayRate(BigDecimal.ONE)
                 .createdAt(LocalDateTime.now())
                 .build();
     }
@@ -91,6 +94,7 @@ class PayPeriodCycleValidatorTest {
                 .baseTaxRate(BigDecimal.TEN)
                 .benefitRate(BigDecimal.valueOf(5))
                 .deductionRate(BigDecimal.ONE)
+                .holidayRate(BigDecimal.ONE)
                 .createdAt(LocalDateTime.now())
                 .build();
     }

@@ -53,7 +53,8 @@ public class PayPeriodServiceImpl implements PayPeriodService {
                 .build();
     }
 
-    private void checkOverlap(Integer payGroupId, LocalDate start, LocalDate end) {
+    @Override
+    public void checkOverlap(Integer payGroupId, LocalDate start, LocalDate end) {
         boolean exists = payPeriodRepository.existsOverlappingPeriod(payGroupId, start, end);
         if (exists) {
             throw new OverlappingPayPeriodException("Pay period overlaps with existing period(s) for payGroupId=" + payGroupId);

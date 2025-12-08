@@ -10,10 +10,12 @@ import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
 import com.tw.coupang.one_payroll.payperiod.entity.PayPeriod;
 import com.tw.coupang.one_payroll.payperiod.exception.PayPeriodNotFoundException;
 import com.tw.coupang.one_payroll.payperiod.repository.PayPeriodRepository;
+import com.tw.coupang.one_payroll.payperiod.service.PayPeriodService;
 import com.tw.coupang.one_payroll.payperiod.validator.PayPeriodCycleValidator;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.dto.response.PayrollRunResponse;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
+import com.tw.coupang.one_payroll.payroll.exception.InvalidPayrollStateException;
 import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
 import com.tw.coupang.one_payroll.timesheet.entity.TimesheetSummary;
 import com.tw.coupang.one_payroll.timesheet.exception.TimesheetNotFoundException;
@@ -48,6 +50,7 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
     private final PayPeriodCycleValidator payPeriodCycleValidator;
     private final TimesheetRepository timesheetRepository;
     private final PayPeriodRepository payPeriodRepository;
+    private final PayPeriodService payPeriodService;
 
     @Override
     public PayrollRunResponse calculate(PayrollCalculationRequest request) {
@@ -66,7 +69,10 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
         final LocalDate startDate = request.getPayPeriod().getStartDate();
         final LocalDate endDate = request.getPayPeriod().getEndDate();
 
-        log.info("Validated employee and pay group for employeeId={}, payGroupId={}", employeeId, payGroupId);
+        validateEmployeeJoiningDateAgainstPayPeriods(employee, startDate, endDate);
+        payPeriodService.checkOverlap(payGroupId, startDate, endDate);
+
+        log.info("Validated employee, pay group and pay periods for employeeId={}, payGroupId={}", employeeId, payGroupId);
 
         payPeriodCycleValidator.validatePayPeriodAgainstPayGroup(startDate, endDate, payGroup);
 
@@ -209,5 +215,22 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
         log.info("Hourly/Contract employee prorated pay: {} (hoursWorked={}, extraHoursWorked={})", gross, hoursWorked, extraHoursWorked);
 
         return gross;
+    }
+
+    private void validateEmployeeJoiningDateAgainstPayPeriods(EmployeeMaster employee, LocalDate periodStart, LocalDate periodEnd) {
+
+        LocalDate joiningDate = employee.getJoiningDate();
+
+        if (joiningDate.isAfter(periodEnd)) {
+            throw new InvalidPayrollStateException(
+                    String.format(
+                            "Employee %s joined on %s which is after the pay period %s to %s",
+                            employee.getEmployeeId(),
+                            joiningDate,
+                            periodStart,
+                            periodEnd
+                    )
+            );
+        }
     }
 }
