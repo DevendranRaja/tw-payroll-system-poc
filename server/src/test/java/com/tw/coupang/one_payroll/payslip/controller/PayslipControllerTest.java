@@ -18,7 +18,6 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
-
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -140,4 +139,40 @@ class PayslipControllerTest {
 
         verify(pdfService, times(1)).generateYtdPdf(empId, year);
     }
+
+//    @Test
+//    @WithMockUser(username = "E001", roles = {"EMPLOYEE"})
+//    void employeeCanAccessOwnPayslip() throws Exception {
+//        String empId = "E001";
+//        String period = "2025-11";
+//
+//        PayslipResponse response = PayslipResponse.builder()
+//                .employeeId(empId)
+//                .period(period)
+//                .earnings(Collections.singletonMap("Basic", BigDecimal.valueOf(5000)))
+//                .deductions(Collections.singletonMap("Tax", BigDecimal.valueOf(500)))
+//                .grossPay(BigDecimal.valueOf(5000))
+//                .netPay(BigDecimal.valueOf(4500))
+//                .createdAt(LocalDateTime.now())
+//                .build();
+//
+//        when(payslipService.getPayslipMetadata(empId, period)).thenReturn(response);
+//
+//        mockMvc.perform(get("/payslip-ess/{employeeId}/payslip", empId)
+//                        .param("period", period))
+//                .andExpect(status().isOk());
+//    }
+//
+//    @Test
+//    @WithMockUser(username = "E002")
+//    void employeeCannotAccessOthersPayslip() throws Exception
+//    {
+//        String empId = "E001";
+//        String period = "2025-11";
+//
+//        mockMvc.perform(get("/payslip-ess/{employeeId}/payslip", empId)
+//                        .with(user("E002"))
+//                        .param("period", period))
+//                .andExpect(status().isForbidden());
+//    }
 }

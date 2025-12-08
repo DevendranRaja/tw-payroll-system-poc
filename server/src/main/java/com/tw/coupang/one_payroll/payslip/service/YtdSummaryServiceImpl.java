@@ -10,6 +10,7 @@ import com.tw.coupang.one_payroll.payslip.dto.YtdSummaryResponse;
 import com.tw.coupang.one_payroll.payslip.entity.Payslip;
 import com.tw.coupang.one_payroll.payslip.repository.PayslipRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,7 @@ public class YtdSummaryServiceImpl implements YtdSummaryService
         this.employeeMasterRepository = employeeMasterRepository;
     }
 
+    @PreAuthorize("#employeeId == authentication.principal.employeeId")
     @Transactional(readOnly = true)
     @Override
     public YtdSummaryForPdfDto getYtdSummaryWithBreakdown(String employeeId, int year)
@@ -79,6 +81,7 @@ public class YtdSummaryServiceImpl implements YtdSummaryService
 
     }
 
+    @PreAuthorize("#employeeId == authentication.principal.employeeId")
     @Override
     @Transactional(readOnly = true)
     public YtdSummaryResponse getYtdSummaryDetails(String employeeId, int year)

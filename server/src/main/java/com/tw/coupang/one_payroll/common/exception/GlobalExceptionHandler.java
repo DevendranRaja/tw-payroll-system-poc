@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -296,5 +297,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
     }
 
-
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException ex)
+    {
+        log.warn("Unauthorized Access: {}", ex.getMessage());
+        ApiErrorResponse response = ApiErrorResponse.failure("ACCESS_DENIED", ex.getMessage(),
+                Map.of("reason", "You are not allowed to access this resource"));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
 }
