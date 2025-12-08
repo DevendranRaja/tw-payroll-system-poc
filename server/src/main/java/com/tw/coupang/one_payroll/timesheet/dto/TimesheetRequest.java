@@ -18,7 +18,7 @@ public class TimesheetRequest {
     private Integer noOfDaysWorked;
 
     @NotNull(message = "Hours worked is required")
-    @Min(value = 0, message = "Hours worked must be >= 0")
+    @DecimalMin(value = "0.00", message = "Hours worked must be >= 0")
     private BigDecimal hoursWorked;
 
     // Optional in request, defaults to 0 as of now
