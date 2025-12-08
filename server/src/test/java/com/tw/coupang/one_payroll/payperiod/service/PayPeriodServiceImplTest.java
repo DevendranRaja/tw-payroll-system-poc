@@ -123,7 +123,7 @@ class PayPeriodServiceImplTest {
                 .payGroupId(payGroup.getId())
                 .periodStartDate(start)
                 .periodEndDate(end)
-                .range("OCT-2025")
+                .range(start + "/" + end)
                 .build();
 
         when(payPeriodRepository.save(any(com.tw.coupang.one_payroll.payperiod.entity.PayPeriod.class))).thenReturn(savedPeriod);
@@ -139,7 +139,7 @@ class PayPeriodServiceImplTest {
         assertEquals(payGroup.getId(), captured.getPayGroupId());
         assertEquals(start, captured.getPeriodStartDate());
         assertEquals(end, captured.getPeriodEndDate());
-        assertEquals("OCT-2025", captured.getRange());
+        assertEquals(start + "/" + end, captured.getRange());
 
         verify(calculatorValidator).validatePayPeriodAgainstPayGroup(start, end, payGroup);
     }
@@ -164,7 +164,7 @@ class PayPeriodServiceImplTest {
                 .payGroupId(payGroup.getId())
                 .periodStartDate(start)
                 .periodEndDate(end)
-                .range("01-07 JUN25")
+                .range(start + "/" + end)
                 .build();
 
         when(payPeriodRepository.save(any(com.tw.coupang.one_payroll.payperiod.entity.PayPeriod.class))).thenReturn(savedPeriod);
@@ -180,7 +180,7 @@ class PayPeriodServiceImplTest {
         assertEquals(payGroup.getId(), captured.getPayGroupId());
         assertEquals(start, captured.getPeriodStartDate());
         assertEquals(end, captured.getPeriodEndDate());
-        assertEquals("01-07 JUN25", captured.getRange());
+        assertEquals(start + "/" + end, captured.getRange());
 
         verify(calculatorValidator).validatePayPeriodAgainstPayGroup(start, end, payGroup);
     }
@@ -205,7 +205,7 @@ class PayPeriodServiceImplTest {
                 .payGroupId(payGroup.getId())
                 .periodStartDate(start)
                 .periodEndDate(end)
-                .range("08-21 JUN25")
+                .range(start + "/" + end)
                 .build();
 
         when(payPeriodRepository.save(any(com.tw.coupang.one_payroll.payperiod.entity.PayPeriod.class))).thenReturn(savedPeriod);
@@ -221,7 +221,7 @@ class PayPeriodServiceImplTest {
         assertEquals(payGroup.getId(), captured.getPayGroupId());
         assertEquals(start, captured.getPeriodStartDate());
         assertEquals(end, captured.getPeriodEndDate());
-        assertEquals("08-21 JUN25", captured.getRange());
+        assertEquals(start + "/" + end, captured.getRange());
 
         verify(calculatorValidator).validatePayPeriodAgainstPayGroup(start, end, payGroup);
     }

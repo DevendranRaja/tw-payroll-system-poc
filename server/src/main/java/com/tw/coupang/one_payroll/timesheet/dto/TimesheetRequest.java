@@ -23,5 +23,7 @@ public class TimesheetRequest {
     private BigDecimal hoursWorked;
 
     // Optional in request, defaults to 0 as of now
-    private BigDecimal holidayHours;
+    private BigDecimal holidayHoursWorked;
+
+    private Integer holidayDays;
 }

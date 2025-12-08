@@ -6,6 +6,7 @@ CREATE TYPE employee_status AS ENUM ('ACTIVE', 'INACTIVE');
 CREATE TYPE pay_cycle_type AS ENUM ('WEEKLY', 'BIWEEKLY', 'MONTHLY');
 CREATE TYPE payroll_status AS ENUM ('PROCESSED', 'FAILED', 'SUBMITTED', 'SUBMISSION_FAILED');
 CREATE TYPE integration_status AS ENUM ('PENDING', 'SUCCESS', 'FAILED');
+CREATE TYPE pay_type AS ENUM ('SALARIED', 'HOURLY');
 
 -------------------------------------------------------
 -- Trigger function for auto-updating updated_at
@@ -56,7 +57,9 @@ CREATE TABLE pay_group (
     base_tax_rate DECIMAL(5,2) DEFAULT 10.00,
     benefit_rate DECIMAL(5,2) DEFAULT 5.00,
     deduction_rate DECIMAL(5,2) DEFAULT 2.50,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    holiday_rate DECIMAL(4,2) DEFAULT 1.50,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -------------------------------------------------------
@@ -168,7 +171,7 @@ CREATE TABLE pay_period (
     period_start_date DATE NOT NULL,
     period_end_date DATE NOT NULL,
 
-    range VARCHAR(20) NOT NULL,
+    range VARCHAR(30) NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -191,7 +194,8 @@ CREATE TABLE timesheet_summary (
 
     no_of_days_worked INT CHECK (no_of_days_worked >= 0),
     hours_worked DECIMAL(6,2) CHECK (hours_worked >= 0),
-    holiday_hours DECIMAL(6,2) DEFAULT 0 CHECK (holiday_hours >= 0),
+    holiday_hours_worked DECIMAL(6,2) DEFAULT 0 CHECK (holiday_hours_worked >= 0),
+    holiday_days INT DEFAULT 0 CHECK (holiday_days >= 0),
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -213,13 +217,20 @@ CREATE INDEX idx_timesheet_employee ON timesheet_summary(employee_id);
 CREATE INDEX idx_timesheet_period ON timesheet_summary(pay_period_id);
 
 -------------------------------------------------------
+-- updates
+-------------------------------------------------------
+
+ALTER TABLE employee_master
+ADD COLUMN pay_type pay_type NOT NULL DEFAULT 'SALARIED';
+
+-------------------------------------------------------
 -- INSERT DATA
 -------------------------------------------------------
 
-INSERT INTO pay_group (group_name, payment_cycle, base_tax_rate, benefit_rate, deduction_rate) VALUES
-('Regular Staff', 'MONTHLY', 10.00, 5.00, 2.00),
-('Contract Staff', 'WEEKLY', 8.00, 3.00, 1.50),
-('Expat Staff', 'MONTHLY', 12.00, 8.00, 3.00);
+INSERT INTO pay_group (group_name, payment_cycle, base_tax_rate, benefit_rate, deduction_rate, holiday_rate) VALUES
+('Regular Staff', 'MONTHLY', 10.00, 5.00, 2.00, 1.00),
+('Contract Staff', 'WEEKLY', 8.00, 3.00, 1.50, 1.50),
+('Expat Staff', 'MONTHLY', 12.00, 8.00, 3.00, 1.00);
 
 INSERT INTO employee_master (
     employee_id, first_name, last_name, department, designation, email, pay_group_id, status, joining_date
@@ -286,3 +297,6 @@ INSERT INTO timesheet_summary
 VALUES
 ('E001', 1, 22, 176.00, 8.00),
 ('E002', 2, 20, 160.00, 0.00);
+
+UPDATE employee_master SET pay_type = 'SALARIED' WHERE pay_group_id IN (1, 3);
+UPDATE employee_master SET pay_type = 'HOURLY' WHERE pay_group_id = 2;

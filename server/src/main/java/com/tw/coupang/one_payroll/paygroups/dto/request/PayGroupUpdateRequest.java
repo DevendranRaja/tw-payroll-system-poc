@@ -40,4 +40,9 @@ public class PayGroupUpdateRequest {
     @DecimalMax(value = "100.0", inclusive = true, message = "deductionRate must be <= 100.0")
     @JsonSetter(nulls = Nulls.FAIL)
     private BigDecimal deductionRate;
+
+    @DecimalMin(value = "0.0", inclusive = true, message = "holidayRate must be >= 0.0")
+    @DecimalMax(value = "100.0", inclusive = true, message = "holidayRate must be <= 100.0")
+    @JsonSetter(nulls = Nulls.FAIL)
+    private BigDecimal holidayRate;
 }

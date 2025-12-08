@@ -37,6 +37,8 @@ class TimesheetServiceTest {
         request.setPayPeriodId(1);
         request.setHoursWorked(BigDecimal.TEN);
         request.setNoOfDaysWorked(1);
+        request.setHolidayDays(0);
+        request.setHolidayHoursWorked(BigDecimal.ZERO);
 
         doNothing().when(timesheetValidator).validateRequest(request);
 
@@ -47,6 +49,8 @@ class TimesheetServiceTest {
                 .employeeId("E1")
                 .payPeriodId(1)
                 .hoursWorked(BigDecimal.TEN)
+                .holidayDays(0)
+                .holidayHoursWorked(BigDecimal.ZERO)
                 .build();
         when(timesheetRepository.save(any(TimesheetSummary.class))).thenReturn(savedEntity);
 
@@ -63,6 +67,8 @@ class TimesheetServiceTest {
         request.setEmployeeId("E1");
         request.setPayPeriodId(1);
         request.setHoursWorked(new BigDecimal("50")); // Updating hours
+        request.setHolidayDays(2);
+        request.setHolidayHoursWorked(BigDecimal.ZERO);
 
         doNothing().when(timesheetValidator).validateRequest(request);
 
@@ -70,6 +76,8 @@ class TimesheetServiceTest {
                 .id(1L)
                 .employeeId("E1")
                 .payPeriodId(1)
+                .holidayDays(2)
+                .holidayHoursWorked(BigDecimal.ZERO)
                 .hoursWorked(BigDecimal.TEN)
                 .build();
         when(timesheetRepository.findByEmployeeIdAndPayPeriodId("E1", 1)).thenReturn(Optional.of(existing));

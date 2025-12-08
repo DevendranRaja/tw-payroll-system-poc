@@ -1,7 +1,6 @@
 package com.tw.coupang.one_payroll.payperiod.service;
 
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
-import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
 import com.tw.coupang.one_payroll.payperiod.dto.request.PayPeriodCreateRequest;
 import com.tw.coupang.one_payroll.payperiod.dto.response.PayPeriodResponse;
@@ -67,18 +66,8 @@ public class PayPeriodServiceImpl implements PayPeriodService {
                         .payGroupId(payGroup.getId())
                         .periodStartDate(startDate)
                         .periodEndDate(endDate)
-                        .range(computeRange(startDate, endDate, payGroup.getPaymentCycle()))
+                        .range(startDate + "/" + endDate)
                         .build()
         );
-    }
-
-    private String computeRange(LocalDate start, LocalDate end, PaymentCycle cycle) {
-        return switch (cycle) {
-            case MONTHLY -> start.getMonth().name().substring(0,3) + "-" + start.getYear();
-            case WEEKLY, BIWEEKLY -> String.format("%02d-%02d %s%02d",
-                    start.getDayOfMonth(), end.getDayOfMonth(),
-                    start.getMonth().name().substring(0,3),
-                    start.getYear() % 100);
-        };
     }
 }

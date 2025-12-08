@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 public interface PayPeriodRepository extends JpaRepository<PayPeriod, Integer> {
 
@@ -19,4 +20,6 @@ public interface PayPeriodRepository extends JpaRepository<PayPeriod, Integer> {
     boolean existsOverlappingPeriod(@Param("payGroupId") Integer payGroupId,
                                     @Param("periodStartDate") LocalDate periodStartDate,
                                     @Param("periodEndDate") LocalDate periodEndDate);
+
+    Optional<PayPeriod> findByPayGroupIdAndPeriodStartDateAndPeriodEndDate(Integer payGroupId, LocalDate periodStartDate, LocalDate periodEndDate);
 }

@@ -10,11 +10,16 @@ import com.tw.coupang.one_payroll.paygroups.enums.PaymentCycle;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
 import com.tw.coupang.one_payroll.payperiod.dto.request.PayPeriod;
+import com.tw.coupang.one_payroll.payperiod.exception.PayPeriodNotFoundException;
+import com.tw.coupang.one_payroll.payperiod.repository.PayPeriodRepository;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
 import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
 import com.tw.coupang.one_payroll.payperiod.validator.PayPeriodCycleValidator;
+import com.tw.coupang.one_payroll.timesheet.entity.TimesheetSummary;
+import com.tw.coupang.one_payroll.timesheet.exception.TimesheetNotFoundException;
+import com.tw.coupang.one_payroll.timesheet.repository.TimesheetRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -25,6 +30,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static com.tw.coupang.one_payroll.payroll.enums.PayrollStatus.FAILED;
 import static com.tw.coupang.one_payroll.payroll.enums.PayrollStatus.PROCESSED;
@@ -36,6 +42,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -59,6 +66,12 @@ class PayrollCalculationServiceImplTest {
 
     @Mock
     private PayPeriodCycleValidator payPeriodCycleValidator;
+
+    @Mock
+    private PayPeriodRepository payPeriodRepository;
+
+    @Mock
+    private TimesheetRepository timesheetRepository;
 
     @Test
     void shouldThrowEmployeeNotFoundWhenEmployeeMissing() {
@@ -136,6 +149,19 @@ class PayrollCalculationServiceImplTest {
         PayrollCalculationRequest request = buildRequest("EMP456");
         EmployeeMaster employee = buildEmployeeObjectWithActiveStatus();
         PayGroup payGroup = buildPayGroup();
+        com.tw.coupang.one_payroll.payperiod.entity.PayPeriod payPeriod = com.tw.coupang.one_payroll.payperiod.entity.PayPeriod.builder()
+                .id(1)
+                .payGroupId(1)
+                .periodStartDate(request.getPayPeriod().getStartDate())
+                .periodEndDate(request.getPayPeriod().getEndDate())
+                .build();
+
+        TimesheetSummary timesheet = TimesheetSummary.builder()
+                .employeeId(request.getEmployeeId())
+                .payPeriodId(1)
+                .noOfDaysWorked(20)
+                .hoursWorked(BigDecimal.valueOf(160))
+                .build();
 
         when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
@@ -144,6 +170,14 @@ class PayrollCalculationServiceImplTest {
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup);
+
+        when(payPeriodRepository.findByPayGroupIdAndPeriodStartDateAndPeriodEndDate(
+                eq(employee.getPayGroupId()),
+                eq(payPeriod.getPeriodStartDate()),
+                eq(payPeriod.getPeriodEndDate())
+        )).thenReturn(Optional.of(payPeriod));
+
+        when(timesheetRepository.findByEmployeeIdAndPayPeriodId(request.getEmployeeId(), 1)).thenReturn(Optional.of(timesheet));
 
         final var actual = service.calculate(request);
 
@@ -155,6 +189,8 @@ class PayrollCalculationServiceImplTest {
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup);
+        verify(timesheetRepository).findByEmployeeIdAndPayPeriodId(request.getEmployeeId(), 1);
+
         final ArgumentCaptor<PayrollRun> captor = ArgumentCaptor.forClass(PayrollRun.class);
         verify(payrollRunRepository).save(captor.capture());
         assertEquals(employee.getEmployeeId(), captor.getValue().getEmployeeId());
@@ -300,6 +336,61 @@ class PayrollCalculationServiceImplTest {
         // then
         assertNotNull(payrollRunResponses);
         assertTrue(payrollRunResponses.isEmpty());
+    }
+
+    @Test
+    void shouldThrowPayPeriodNotFoundExceptionWhenPayPeriodMissing() {
+        PayrollCalculationRequest request = buildRequest("EMP789");
+        EmployeeMaster employee = buildEmployeeObjectWithActiveStatus();
+        PayGroup payGroup = buildPayGroup();
+
+        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(employee.getPayGroupId())).thenReturn(payGroup);
+        doNothing().when(payPeriodCycleValidator).validatePayPeriodAgainstPayGroup(
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate(),
+                payGroup
+        );
+
+        when(payPeriodRepository.findByPayGroupIdAndPeriodStartDateAndPeriodEndDate(
+                employee.getPayGroupId(),
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate()
+        )).thenReturn(Optional.empty());
+
+        assertThrows(PayPeriodNotFoundException.class, () -> service.calculate(request));
+    }
+
+    @Test
+    void shouldThrowTimesheetNotFoundExceptionWhenTimesheetMissing() {
+        PayrollCalculationRequest request = buildRequest("EMP456");
+        EmployeeMaster employee = buildEmployeeObjectWithActiveStatus();
+        PayGroup payGroup = buildPayGroup();
+        com.tw.coupang.one_payroll.payperiod.entity.PayPeriod payPeriod = com.tw.coupang.one_payroll.payperiod.entity.PayPeriod.builder()
+                .id(1)
+                .payGroupId(2)
+                .periodStartDate(request.getPayPeriod().getStartDate())
+                .periodEndDate(request.getPayPeriod().getEndDate())
+                .build();
+
+        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(employee.getPayGroupId())).thenReturn(payGroup);
+        doNothing().when(payPeriodCycleValidator).validatePayPeriodAgainstPayGroup(
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate(),
+                payGroup
+        );
+
+        when(payPeriodRepository.findByPayGroupIdAndPeriodStartDateAndPeriodEndDate(
+                employee.getPayGroupId(),
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate()
+        )).thenReturn(Optional.of(payPeriod));
+
+        when(timesheetRepository.findByEmployeeIdAndPayPeriodId(employee.getEmployeeId(), payPeriod.getId()))
+                .thenReturn(Optional.empty());
+
+        assertThrows(TimesheetNotFoundException.class, () -> service.calculate(request));
     }
 
     private PayrollCalculationRequest buildRequest(String employeeId) {

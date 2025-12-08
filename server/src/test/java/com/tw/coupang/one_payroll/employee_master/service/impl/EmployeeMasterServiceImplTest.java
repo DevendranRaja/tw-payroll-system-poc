@@ -4,6 +4,7 @@ import com.tw.coupang.one_payroll.employee_master.dto.CreateEmployeeRequest;
 import com.tw.coupang.one_payroll.employee_master.dto.UpdateEmployeeRequest;
 import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.enums.PayType;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.employee_master.repository.EmployeeMasterRepository;
@@ -37,7 +38,7 @@ class EmployeeMasterServiceImplTest {
     @Test
     void createEmployeeSuccess() {
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
-                "E001", "John", "Doe", "IT", "Developer", "john.doe@example.com", 1, LocalDate.now()
+                "E001", "John", "Doe", "IT", "Developer", "john.doe@example.com", 1, LocalDate.now(), PayType.SALARIED
         );
 
         when(repository.existsByEmail(request.getEmail())).thenReturn(false);
@@ -64,7 +65,7 @@ class EmployeeMasterServiceImplTest {
     @Test
     void createEmployeeEmployeeIdAlreadyExistsThrowsConflictException() {
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
-                "E002", "Jane", "Smith", "HR", "Manager", "jane.smith@example.com", 2, LocalDate.now()
+                "E002", "Jane", "Smith", "HR", "Manager", "jane.smith@example.com", 2, LocalDate.now(), PayType.HOURLY
         );
 
         when(repository.existsByEmployeeId(request.getEmployeeId())).thenReturn(true);
@@ -77,7 +78,7 @@ class EmployeeMasterServiceImplTest {
     @Test
     void createEmployeeEmailAlreadyExistsThrowsConflictException() {
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
-                "E003", "Alice", "Brown", "Finance", "Analyst", "alice.brown@example.com", 3, LocalDate.now()
+                "E003", "Alice", "Brown", "Finance", "Analyst", "alice.brown@example.com", 3, LocalDate.now(), PayType.SALARIED
         );
 
         when(repository.existsByEmployeeId(request.getEmployeeId())).thenReturn(false);
@@ -91,7 +92,7 @@ class EmployeeMasterServiceImplTest {
     @Test
     void updateEmployeeSuccessWithStatusChange() {
         String empId = "E001";
-        UpdateEmployeeRequest update = new UpdateEmployeeRequest("John", "DoeUpdated", "IT", "Senior Dev", "john.doe@example.com", 1, LocalDate.now(), "INACTIVE");
+        UpdateEmployeeRequest update = new UpdateEmployeeRequest("John", "DoeUpdated", "IT", "Senior Dev", "john.doe@example.com", 1, LocalDate.now(), "INACTIVE", PayType.SALARIED);
 
         EmployeeMaster existing = EmployeeMaster.builder()
                 .employeeId(empId)
@@ -123,7 +124,7 @@ class EmployeeMasterServiceImplTest {
     @Test
     void updateEmployeeNotFoundThrowsException() {
         String empId = "E999";
-        UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role", "non.exist@example.com", 1, LocalDate.now(), null);
+        UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role", "non.exist@example.com", 1, LocalDate.now(), null, PayType.HOURLY);
         when(repository.findById(empId)).thenReturn(Optional.empty());
         assertThrows(EmployeeNotFoundException.class, () -> service.updateEmployee(empId, update));
     }

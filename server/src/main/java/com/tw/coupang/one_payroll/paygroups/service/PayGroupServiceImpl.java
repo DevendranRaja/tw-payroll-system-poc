@@ -63,7 +63,7 @@ public class PayGroupServiceImpl implements PayGroupService {
                 .baseTaxRate(resolve(request.getBaseTaxRate(), existing.getBaseTaxRate()))
                 .benefitRate(resolve(request.getBenefitRate(), existing.getBenefitRate()))
                 .deductionRate(resolve(request.getDeductionRate(), existing.getDeductionRate()))
-                .createdAt(existing.getCreatedAt())
+                .holidayRate(resolve(request.getHolidayRate(), existing.getHolidayRate()))
                 .build();
 
         updated = payGroupRepository.save(updated);
@@ -100,7 +100,9 @@ public class PayGroupServiceImpl implements PayGroupService {
                 .baseTaxRate(entity.getBaseTaxRate())
                 .benefitRate(entity.getBenefitRate())
                 .deductionRate(entity.getDeductionRate())
+                .holidayRate(entity.getHolidayRate())
                 .createdAt(entity.getCreatedAt())
+                .updatedAt(entity.getUpdatedAt())
                 .build();
     }
 
@@ -111,6 +113,7 @@ public class PayGroupServiceImpl implements PayGroupService {
                 .baseTaxRate(request.getBaseTaxRate())
                 .benefitRate(request.getBenefitRate())
                 .deductionRate(request.getDeductionRate())
+                .holidayRate(request.getHolidayRate())
                 .build();
     }
 

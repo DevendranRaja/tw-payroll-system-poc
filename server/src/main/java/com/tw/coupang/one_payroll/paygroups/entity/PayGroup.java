@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 import java.math.BigDecimal;
@@ -46,7 +47,15 @@ public class PayGroup {
     @Builder.Default
     private BigDecimal deductionRate = BigDecimal.valueOf(2.50);
 
+    @Column(name = "holiday_rate", precision = 4, scale = 2)
+    @Builder.Default
+    private BigDecimal holidayRate = BigDecimal.valueOf(1.50);
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
 }

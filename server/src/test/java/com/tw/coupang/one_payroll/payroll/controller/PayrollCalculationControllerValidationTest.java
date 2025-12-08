@@ -49,8 +49,8 @@ class PayrollCalculationControllerValidationTest {
     }
 
     @Test
-    void calculatePayrollWhenPeriodNotInSameMonthThenReturnsBadRequest() throws Exception {
-        String invalidRequest = """
+    void calculatePayrollWhenPeriodNotInSameMonthThenCallsService() throws Exception {
+        String validRequest = """
             {
               "employeeId": "EMP001",
               "payPeriod": {
@@ -60,13 +60,20 @@ class PayrollCalculationControllerValidationTest {
             }
         """;
 
+        PayrollRunResponse payrollRunResponse = PayrollRunResponse.builder()
+                .employeeId("EMP001")
+                .payPeriodStart(LocalDate.of(2025, 11, 25))
+                .payPeriodEnd(LocalDate.of(2025, 12, 1))
+                .build();
+
+        when(payrollCalculationService.calculate(any())).thenReturn(payrollRunResponse);
+
         mockMvc.perform(post("/payroll/calculate")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(invalidRequest))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.message").value("Validation failed for one or more fields."))
-                .andExpect(jsonPath("$.details['payPeriod.startDate']").value("period must be within a single calendar cycle (same month)"));
+                        .content(validRequest))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value("PAYROLL_CALCULATION_SUCCESS"))
+                .andExpect(jsonPath("$.message").value("Payroll calculation completed successfully"));
     }
 
     @Test

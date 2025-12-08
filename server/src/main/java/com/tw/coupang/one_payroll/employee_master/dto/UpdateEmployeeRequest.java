@@ -2,6 +2,7 @@ package com.tw.coupang.one_payroll.employee_master.dto;
 
 import java.time.LocalDate;
 
+import com.tw.coupang.one_payroll.employee_master.enums.PayType;
 import jakarta.validation.constraints.Email;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -19,4 +20,5 @@ public class UpdateEmployeeRequest {
     private Integer payGroupId;
     private LocalDate joiningDate;
     private String status;
+    private PayType payType;
 }

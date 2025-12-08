@@ -2,6 +2,7 @@ package com.tw.coupang.one_payroll.employee_master.dto;
 
 import java.time.LocalDate;
 
+import com.tw.coupang.one_payroll.employee_master.enums.PayType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotBlank;
@@ -38,6 +39,9 @@ public class CreateEmployeeRequest {
 
     @FutureOrPresent(message = "Joining date must be today or in the future")
     private LocalDate joiningDate;
+
+    @NotNull(message = "payType is required")
+    private PayType payType;
 }
 
 

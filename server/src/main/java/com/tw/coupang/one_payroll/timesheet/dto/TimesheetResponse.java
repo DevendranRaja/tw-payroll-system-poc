@@ -13,7 +13,8 @@ public class TimesheetResponse {
     private Integer payPeriodId;
     private Integer noOfDaysWorked;
     private BigDecimal hoursWorked;
-    private BigDecimal holidayHours;
+    private BigDecimal holidayHoursWorked;
+    private Integer holidayDays;
     private LocalDateTime updatedAt;
     private String message;
 }
