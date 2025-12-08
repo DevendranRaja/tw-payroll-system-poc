@@ -17,6 +17,7 @@ import org.mockito.MockitoAnnotations;
 
 import org.springframework.http.ResponseEntity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
@@ -56,7 +57,7 @@ class EmployeeMasterControllerTest {
     void createEmployeeSuccess() {
         CreateEmployeeRequest request = new CreateEmployeeRequest(
                 "E003", "Alice", "Brown", "Finance", "Analyst",
-                "alice.brown@example.com", 3, LocalDate.now()
+                "alice.brown@example.com", 3, LocalDate.now(), BigDecimal.valueOf(1500)
         );
 
         EmployeeMaster created = EmployeeMaster.builder()
@@ -69,6 +70,7 @@ class EmployeeMasterControllerTest {
                 .payGroupId(request.getPayGroupId())
                 .status(EmployeeStatus.ACTIVE)
                 .joiningDate(request.getJoiningDate())
+                .baseSalary(request.getBaseSalary())
                 .build();
 
         when(employeeMasterService.createEmployee(request)).thenReturn(created);
@@ -84,7 +86,7 @@ class EmployeeMasterControllerTest {
     void createEmployeeConflictExceptionPropagatesToGlobalHandler() {
         CreateEmployeeRequest request = new CreateEmployeeRequest(
                 "E004", "Bob", "Johnson", "Sales", "Executive",
-                "bob.johnson@example.com", 4, LocalDate.now()
+                "bob.johnson@example.com", 4, LocalDate.now(), BigDecimal.valueOf(1500)
         );
 
         when(employeeMasterService.createEmployee(request))
@@ -106,7 +108,7 @@ class EmployeeMasterControllerTest {
         String empId = "E003";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest(
                 "Alice", "BrownUpdated", "Finance", "Sr Analyst",
-                "alice.brown@example.com", 3, LocalDate.now(), "INACTIVE"
+                "alice.brown@example.com", 3, LocalDate.now(), "INACTIVE", BigDecimal.valueOf(1500)
         );
 
         EmployeeMaster updated = EmployeeMaster.builder()
@@ -116,6 +118,7 @@ class EmployeeMasterControllerTest {
                 .email(update.getEmail())
                 .payGroupId(update.getPayGroupId())
                 .status(EmployeeStatus.INACTIVE)
+                .baseSalary(update.getBaseSalary())
                 .build();
 
         when(employeeMasterService.updateEmployee(empId, update)).thenReturn(updated);
@@ -131,7 +134,7 @@ class EmployeeMasterControllerTest {
         String empId = "E404";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest(
                 "Non", "Exist", "Dept", "Role",
-                "non.exist@example.com", 1, LocalDate.now(), null
+                "non.exist@example.com", 1, LocalDate.now(), null, BigDecimal.valueOf(1500)
         );
 
         when(employeeMasterService.updateEmployee(empId, update))
@@ -154,6 +157,7 @@ class EmployeeMasterControllerTest {
                 .email("alice.brown@example.com")
                 .payGroupId(3)
                 .status(EmployeeStatus.ACTIVE)
+                .baseSalary(BigDecimal.valueOf(1000))
                 .build();
 
         when(employeeMasterService.updateEmployee(empId, update)).thenReturn(updated);
@@ -179,6 +183,7 @@ class EmployeeMasterControllerTest {
                 .email("newemail@example.com")
                 .payGroupId(3)
                 .status(EmployeeStatus.ACTIVE)
+                .baseSalary(BigDecimal.valueOf(1000))
                 .build();
 
         when(employeeMasterService.updateEmployee(empId, update)).thenReturn(updated);
@@ -200,6 +205,7 @@ class EmployeeMasterControllerTest {
                 .email("sam.lee@example.com")
                 .payGroupId(2)
                 .status(EmployeeStatus.ACTIVE)
+                .baseSalary(BigDecimal.valueOf(1000))
                 .build();
 
         when(employeeMasterService.getEmployeeById(empId)).thenReturn(existing);

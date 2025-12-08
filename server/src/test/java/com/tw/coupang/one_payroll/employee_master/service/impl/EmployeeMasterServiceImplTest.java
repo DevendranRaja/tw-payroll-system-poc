@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Optional;
@@ -37,7 +38,8 @@ class EmployeeMasterServiceImplTest {
     @Test
     void createEmployeeSuccess() {
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
-                "E001", "John", "Doe", "IT", "Developer", "john.doe@example.com", 1, LocalDate.now()
+                "E001", "John", "Doe", "IT", "Developer",
+                "john.doe@example.com", 1, LocalDate.now(), BigDecimal.valueOf(1500)
         );
 
         when(repository.existsByEmail(request.getEmail())).thenReturn(false);
@@ -51,6 +53,7 @@ class EmployeeMasterServiceImplTest {
                 .payGroupId(request.getPayGroupId())
                 .status(EmployeeStatus.ACTIVE)
                 .joiningDate(request.getJoiningDate())
+                .baseSalary(request.getBaseSalary())
                 .build();
         when(repository.save(any(EmployeeMaster.class))).thenReturn(saved);
 
@@ -58,13 +61,15 @@ class EmployeeMasterServiceImplTest {
         assertNotNull(result);
         assertEquals("E001", result.getEmployeeId());
         assertEquals(EmployeeStatus.ACTIVE, result.getStatus());
+        assertEquals(1500.00, result.getBaseSalary().doubleValue());
         verify(repository, times(1)).save(any(EmployeeMaster.class));
     }
 
     @Test
     void createEmployeeEmployeeIdAlreadyExistsThrowsConflictException() {
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
-                "E002", "Jane", "Smith", "HR", "Manager", "jane.smith@example.com", 2, LocalDate.now()
+                "E002", "Jane", "Smith", "HR", "Manager",
+                "jane.smith@example.com", 2, LocalDate.now(), BigDecimal.valueOf(1500)
         );
 
         when(repository.existsByEmployeeId(request.getEmployeeId())).thenReturn(true);
@@ -77,7 +82,8 @@ class EmployeeMasterServiceImplTest {
     @Test
     void createEmployeeEmailAlreadyExistsThrowsConflictException() {
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
-                "E003", "Alice", "Brown", "Finance", "Analyst", "alice.brown@example.com", 3, LocalDate.now()
+                "E003", "Alice", "Brown", "Finance", "Analyst",
+                "alice.brown@example.com", 3, LocalDate.now(), BigDecimal.valueOf(1500)
         );
 
         when(repository.existsByEmployeeId(request.getEmployeeId())).thenReturn(false);
@@ -91,7 +97,8 @@ class EmployeeMasterServiceImplTest {
     @Test
     void updateEmployeeSuccessWithStatusChange() {
         String empId = "E001";
-        UpdateEmployeeRequest update = new UpdateEmployeeRequest("John", "DoeUpdated", "IT", "Senior Dev", "john.doe@example.com", 1, LocalDate.now(), "INACTIVE");
+        UpdateEmployeeRequest update = new UpdateEmployeeRequest("John", "DoeUpdated", "IT", "Senior Dev",
+                "john.doe@example.com", 1, LocalDate.now(), "INACTIVE", BigDecimal.valueOf(1500));
 
         EmployeeMaster existing = EmployeeMaster.builder()
                 .employeeId(empId)
@@ -100,6 +107,7 @@ class EmployeeMasterServiceImplTest {
                 .email("john.doe@example.com")
                 .payGroupId(1)
                 .status(EmployeeStatus.ACTIVE)
+                .baseSalary(BigDecimal.valueOf(1500))
                 .build();
 
         when(repository.findById(empId)).thenReturn(Optional.of(existing));
@@ -111,6 +119,7 @@ class EmployeeMasterServiceImplTest {
                 .email(update.getEmail())
                 .payGroupId(update.getPayGroupId())
                 .status(EmployeeStatus.INACTIVE)
+                .baseSalary(update.getBaseSalary())
                 .build();
         when(repository.save(any(EmployeeMaster.class))).thenReturn(saved);
 
@@ -118,12 +127,14 @@ class EmployeeMasterServiceImplTest {
         assertNotNull(result);
         assertEquals(EmployeeStatus.INACTIVE, result.getStatus());
         assertEquals(update.getLastName(), result.getLastName());
+        assertEquals(update.getBaseSalary(), result.getBaseSalary());
     }
 
     @Test
     void updateEmployeeNotFoundThrowsException() {
         String empId = "E999";
-        UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role", "non.exist@example.com", 1, LocalDate.now(), null);
+        UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role",
+                "non.exist@example.com", 1, LocalDate.now(), null, BigDecimal.valueOf(1500));
         when(repository.findById(empId)).thenReturn(Optional.empty());
         assertThrows(EmployeeNotFoundException.class, () -> service.updateEmployee(empId, update));
     }
@@ -138,6 +149,7 @@ class EmployeeMasterServiceImplTest {
                 .email("sam.lee@example.com")
                 .payGroupId(2)
                 .status(EmployeeStatus.ACTIVE)
+                .baseSalary(BigDecimal.valueOf(1500))
                 .build();
 
         when(repository.findById(empId)).thenReturn(Optional.of(existing));

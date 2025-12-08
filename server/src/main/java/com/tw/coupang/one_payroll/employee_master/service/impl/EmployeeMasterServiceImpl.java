@@ -11,6 +11,7 @@ import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -47,6 +48,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
                 .payGroupId(request.getPayGroupId())
                 .status(EmployeeStatus.ACTIVE)
                 .joiningDate(request.getJoiningDate())
+                .baseSalary(request.getBaseSalary())
                 .build();
 
         return repository.save(employee);
@@ -63,6 +65,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
         updatePayGroup(employee, request.getPayGroupId());
         updateJoiningDate(employee, request.getJoiningDate());
         updateStatus(employee, request.getStatus());
+        updateBaseSalary(employee, request.getBaseSalary());
 
         return repository.save(employee);
     }
@@ -134,5 +137,9 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
                 throw new IllegalArgumentException("Invalid status value: " + statusStr);
             }
         }
+    }
+
+    private void updateBaseSalary(EmployeeMaster employee, BigDecimal baseSalary) {
+        if (baseSalary != null && baseSalary.doubleValue() > 0) employee.setBaseSalary(baseSalary);
     }
 }

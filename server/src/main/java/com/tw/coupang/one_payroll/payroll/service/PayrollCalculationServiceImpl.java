@@ -82,7 +82,7 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
             throw new IllegalArgumentException("Base salary must be greater than zero for payroll calculation");
         }
 
-        //TODO: Refactor salary calculation for different pay cycles
+        //TODO: Refactor salary calculation for different pay cycles (prorated pay)
         final var monthlySalary = employee.getBaseSalary().multiply(BigDecimal.valueOf(30)); // assuming 30 days in a month
 
         final Map<String, BigDecimal> earningsMap = buildEarningMap(monthlySalary);
