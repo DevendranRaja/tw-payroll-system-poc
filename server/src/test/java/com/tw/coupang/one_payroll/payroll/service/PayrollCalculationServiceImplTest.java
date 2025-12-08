@@ -138,9 +138,9 @@ class PayrollCalculationServiceImplTest {
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
 
         doNothing().when(payPeriodService).checkOverlap(
-                eq(employee.getPayGroupId()),
-                eq(request.getPayPeriod().getStartDate()),
-                eq(request.getPayPeriod().getEndDate())
+                employee.getPayGroupId(),
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate()
         );
 
         doThrow(new InvalidPayPeriodException("Invalid pay period"))
@@ -189,17 +189,17 @@ class PayrollCalculationServiceImplTest {
                 payGroup);
 
         when(payPeriodRepository.findByPayGroupIdAndPeriodStartDateAndPeriodEndDate(
-                eq(employee.getPayGroupId()),
-                eq(payPeriod.getPeriodStartDate()),
-                eq(payPeriod.getPeriodEndDate())
+                employee.getPayGroupId(),
+                payPeriod.getPeriodStartDate(),
+                payPeriod.getPeriodEndDate()
         )).thenReturn(Optional.of(payPeriod));
 
         when(timesheetRepository.findByEmployeeIdAndPayPeriodId(request.getEmployeeId(), 1)).thenReturn(Optional.of(timesheet));
 
         doNothing().when(payPeriodService).checkOverlap(
-                eq(employee.getPayGroupId()),
-                eq(request.getPayPeriod().getStartDate()),
-                eq(request.getPayPeriod().getEndDate())
+                employee.getPayGroupId(),
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate()
         );
 
         final var actual = service.calculate(request);
@@ -382,9 +382,9 @@ class PayrollCalculationServiceImplTest {
         )).thenReturn(Optional.empty());
 
         doNothing().when(payPeriodService).checkOverlap(
-                eq(employee.getPayGroupId()),
-                eq(request.getPayPeriod().getStartDate()),
-                eq(request.getPayPeriod().getEndDate())
+                employee.getPayGroupId(),
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate()
         );
 
         assertThrows(PayPeriodNotFoundException.class, () -> service.calculate(request));
@@ -420,9 +420,9 @@ class PayrollCalculationServiceImplTest {
                 .thenReturn(Optional.empty());
 
         doNothing().when(payPeriodService).checkOverlap(
-                eq(employee.getPayGroupId()),
-                eq(request.getPayPeriod().getStartDate()),
-                eq(request.getPayPeriod().getEndDate())
+                employee.getPayGroupId(),
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate()
         );
 
         assertThrows(TimesheetNotFoundException.class, () -> service.calculate(request));
