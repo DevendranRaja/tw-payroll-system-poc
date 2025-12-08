@@ -1,9 +1,9 @@
 package com.tw.coupang.one_payroll.userauth.config;
 
-import com.tw.coupang.one_payroll.common.constants.SecurityConstants;
 import com.tw.coupang.one_payroll.userauth.enums.UserRole;
 import com.tw.coupang.one_payroll.userauth.filter.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,6 +14,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.annotation.web.configurers.AuthorizeHttpRequestsConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,29 +26,47 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
+@Slf4j
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserDetailsService userDetailsService;
+    private final SecurityProperties securityProperties;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
         httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(SecurityConstants.SWAGGER_WHITELIST).permitAll()
-                        .requestMatchers(SecurityConstants.AUTH_WHITELIST).permitAll()
-                        .requestMatchers(SecurityConstants.ADMIN_URLS).hasRole(String.valueOf(UserRole.ADMIN))
-                        .requestMatchers(SecurityConstants.EMPLOYEE_URLS)
-                        .hasAnyRole(String.valueOf(UserRole.ADMIN), String.valueOf(UserRole.EMPLOYEE))
-                        .anyRequest().authenticated()
-                )
+                .authorizeHttpRequests(this::configureAuthorization)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return httpSecurity.build();
+    }
+
+    private void configureAuthorization(AuthorizeHttpRequestsConfigurer<HttpSecurity>.AuthorizationManagerRequestMatcherRegistry auth)
+    {
+        if (!securityProperties.getPublicUrls().isEmpty()) {
+            log.info("Configuring {} public URLs", securityProperties.getPublicUrls().size());
+            auth.requestMatchers(securityProperties.getPublicUrls().toArray(new String[0]))
+                    .permitAll();
+        }
+
+        if (!securityProperties.getAdminUrls().isEmpty()) {
+            log.info("Configuring {} admin URLs", securityProperties.getAdminUrls().size());
+            auth.requestMatchers(securityProperties.getAdminUrls().toArray(new String[0]))
+                    .hasRole(String.valueOf(UserRole.ADMIN));
+        }
+
+        if (!securityProperties.getEmployeeUrls().isEmpty()) {
+            log.info("Configuring {} employee URLs", securityProperties.getEmployeeUrls().size());
+            auth.requestMatchers(securityProperties.getEmployeeUrls().toArray(new String[0]))
+                    .hasRole(String.valueOf(UserRole.EMPLOYEE));
+        }
+
+        auth.anyRequest().authenticated();
     }
 
     @Bean

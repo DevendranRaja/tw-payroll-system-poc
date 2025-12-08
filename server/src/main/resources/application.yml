@@ -1,6 +1,8 @@
 spring:
   application:
     name: one-payroll
+  config:
+    import: classpath:security-config.yml
   datasource:
     url: jdbc:postgresql://localhost:5432/tw_payroll
     username: admin

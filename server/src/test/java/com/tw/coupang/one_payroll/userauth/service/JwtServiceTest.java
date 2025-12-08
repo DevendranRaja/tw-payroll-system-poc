@@ -1,8 +1,7 @@
-package com.tw.coupang.one_payroll.userauth;
+package com.tw.coupang.one_payroll.userauth.service;
 
 
 import com.tw.coupang.one_payroll.userauth.exception.JwtTokenParsingException;
-import com.tw.coupang.one_payroll.userauth.service.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
