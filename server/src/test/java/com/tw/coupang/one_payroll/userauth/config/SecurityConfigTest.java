@@ -58,7 +58,7 @@ public class SecurityConfigTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(loginJson))
                         .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("admin01"));
+                .andExpect(jsonPath("$.userId").value("admin01"));
     }
 
     @Test

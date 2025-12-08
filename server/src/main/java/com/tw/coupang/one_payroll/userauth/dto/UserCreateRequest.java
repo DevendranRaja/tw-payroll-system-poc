@@ -3,9 +3,11 @@ package com.tw.coupang.one_payroll.userauth.dto;
 import com.tw.coupang.one_payroll.userauth.enums.UserRole;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
 import lombok.Data;
 
 @Data
+@Builder
 public class UserCreateRequest {
     @NotBlank
     private String userId;
