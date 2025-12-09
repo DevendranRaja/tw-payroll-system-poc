@@ -4,9 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchRequest;
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchResponse;
 import com.tw.coupang.one_payroll.integration.service.MockIntegrationService;
+import com.tw.coupang.one_payroll.userauth.config.SecurityConfig;
+import com.tw.coupang.one_payroll.userauth.filter.JwtAuthenticationFilter;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -20,7 +25,16 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(PayrollIntegrationController.class)
+@WebMvcTest(
+        controllers = PayrollIntegrationController.class,
+        excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
+                        SecurityConfig.class,
+                        JwtAuthenticationFilter.class
+                })
+        }
+)
+@AutoConfigureMockMvc(addFilters = false)
 class PayrollIntegrationControllerTest {
 
     @Autowired

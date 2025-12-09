@@ -9,12 +9,20 @@ import com.tw.coupang.one_payroll.payslip.dto.YtdSummaryForPdfDto;
 import com.tw.coupang.one_payroll.payslip.dto.YtdSummaryResponse;
 import com.tw.coupang.one_payroll.payslip.entity.Payslip;
 import com.tw.coupang.one_payroll.payslip.repository.PayslipRepository;
+import com.tw.coupang.one_payroll.userauth.entity.UserAuth;
+import com.tw.coupang.one_payroll.userauth.enums.UserRole;
+import com.tw.coupang.one_payroll.userauth.service.UserInfoDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -24,7 +32,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+@SpringBootTest
+@EnableMethodSecurity
+@ActiveProfiles("test")
 class YtdSummaryServiceImplTest
 {
     private EmployeeMaster employee;
@@ -38,7 +48,7 @@ class YtdSummaryServiceImplTest
     @Mock
     private EmployeeMasterRepository employeeMasterRepository;
 
-    @InjectMocks
+    @Autowired
     YtdSummaryServiceImpl ytdSummaryService;
 
     @BeforeEach
@@ -75,6 +85,10 @@ class YtdSummaryServiceImplTest
                 Map.of(
                         "tax", new BigDecimal("500.00")
                 ), new BigDecimal("100.00")));
+
+        ReflectionTestUtils.setField(ytdSummaryService,"payslipRepository", payslipRepository);
+        ReflectionTestUtils.setField(ytdSummaryService, "employeeMasterRepository", employeeMasterRepository);
+        SecurityContextHolder.clearContext();
     }
 
     // Helper method to create test payslips
@@ -92,11 +106,29 @@ class YtdSummaryServiceImplTest
                 .build();
     }
 
+    private void authenticate(String employeeId) {
+        UserAuth userAuth = new UserAuth();
+        userAuth.setUserId(employeeId);
+        userAuth.setEmployeeId(employeeId);
+        userAuth.setRole(UserRole.EMPLOYEE);
+
+        UserInfoDetails userDetails = new UserInfoDetails(userAuth);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        userDetails.getPassword(),
+                        userDetails.getAuthorities()
+                )
+        );
+    }
+
     @Test
     void shouldThrowExceptionWhenEmployeeIdIsMissing()
     {
         when(employeeMasterRepository.findById(employeeId))
                 .thenReturn(Optional.empty());
+
+        authenticate(employeeId);
 
         assertThrows(EmployeeNotFoundException.class,
                 () -> ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year));
@@ -108,6 +140,8 @@ class YtdSummaryServiceImplTest
         employee.setStatus(EmployeeStatus.INACTIVE);
         when(employeeMasterRepository.findById(employeeId))
                 .thenReturn(Optional.of(employee));
+
+        authenticate(employeeId);
 
         assertThrows(EmployeeNotFoundException.class,
                 () -> ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year));
@@ -122,6 +156,8 @@ class YtdSummaryServiceImplTest
 
         when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
                 .thenReturn(mockPayslips);
+
+        authenticate(employeeId);
 
         YtdSummaryForPdfDto ytdSummary = ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year);
 
@@ -141,6 +177,8 @@ class YtdSummaryServiceImplTest
 
         when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
                 .thenReturn(mockPayslips);
+
+        authenticate(employeeId);
 
         YtdSummaryForPdfDto ytdSummary = ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year);
 
@@ -176,6 +214,8 @@ class YtdSummaryServiceImplTest
         when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
                 .thenReturn(mockPayslips);
 
+        authenticate(employeeId);
+
         YtdSummaryForPdfDto ytdSummary = ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year);
         YtdSummaryResponse ytdTotals = ytdSummary.ytdTotals();
 
@@ -199,6 +239,8 @@ class YtdSummaryServiceImplTest
         when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
                 .thenReturn(Collections.emptyList());
 
+        authenticate(employeeId);
+
         YtdSummaryForPdfDto ytdSummary = ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year);
 
         assertNotNull(ytdSummary);
@@ -216,6 +258,8 @@ class YtdSummaryServiceImplTest
         when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
                 .thenReturn(mockPayslips);
 
+        authenticate(employeeId);
+
         YtdSummaryResponse ytdSummary = ytdSummaryService.getYtdSummaryDetails(employeeId, year);
 
         assertNotNull(ytdSummary);
@@ -225,6 +269,32 @@ class YtdSummaryServiceImplTest
         assertEquals(new BigDecimal("300.00"), ytdSummary.totalBenefit());
 
         verify(payslipRepository).findByEmployeeIdAndYear(employeeId, year);
+    }
+
+    @Test
+    void shouldReturnAccessDeniedWhenEmployeeAccessesOthersYtdDetails() {
+        when(employeeMasterRepository.findById(employeeId))
+                .thenReturn(Optional.of(employee));
+
+        when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
+                .thenReturn(mockPayslips);
+
+        authenticate("E002");
+
+        assertThrows(AccessDeniedException.class, () -> ytdSummaryService.getYtdSummaryDetails(employeeId, year));
+    }
+
+    @Test
+    void shouldReturnAccessDeniedWhenEmployeeAccessesOthersYtdBreakdown() {
+        when(employeeMasterRepository.findById(employeeId))
+                .thenReturn(Optional.of(employee));
+
+        when(payslipRepository.findByEmployeeIdAndYear(employeeId, year))
+                .thenReturn(mockPayslips);
+
+        authenticate("E002");
+
+        assertThrows(AccessDeniedException.class, () -> ytdSummaryService.getYtdSummaryWithBreakdown(employeeId, year));
     }
 
 }

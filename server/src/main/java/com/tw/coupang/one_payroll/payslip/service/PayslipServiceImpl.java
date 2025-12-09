@@ -12,6 +12,7 @@ import com.tw.coupang.one_payroll.payslip.entity.Payslip;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payslip.repository.PayslipRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,7 @@ public class PayslipServiceImpl implements PayslipService
         this.payslipRepository = payslipRepository;
     }
 
+    @PreAuthorize("#employeeId == authentication.principal.employeeId")
     @Override
     @Transactional
     public PayslipMetadataDTO generatePayslipMetadata(String employeeId, String payPeriod)
@@ -99,6 +101,7 @@ public class PayslipServiceImpl implements PayslipService
         log.info("Payslip entity saved for employee: {}", payslipMetadata.getEmployeeId());
     }
 
+    @PreAuthorize("#employeeId == authentication.principal.employeeId")
     @Override
     @Transactional(readOnly = true)
     public PayslipResponse getPayslipMetadata(String employeeId, String payPeriod)

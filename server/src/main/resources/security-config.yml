@@ -1,0 +1,15 @@
+security:
+  public-urls:
+    - /auth/**
+    - /swagger-ui/**
+    - /v3/api-docs/**
+
+  admin-urls:
+    - /employee/**
+    - /employees/**
+    - /pay-groups/**
+    - /integration/payroll/**
+
+  employee-urls:
+    - /employee/**
+    - /payslip-ess/**

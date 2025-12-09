@@ -12,6 +12,9 @@ import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payperiod.exception.OverlappingPayPeriodException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
 import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
+import com.tw.coupang.one_payroll.userauth.exception.JwtTokenParsingException;
+import com.tw.coupang.one_payroll.userauth.exception.UserIdAlreadyExistsException;
+import com.tw.coupang.one_payroll.userauth.exception.AuthenticationException;
 import com.tw.coupang.one_payroll.timesheet.exception.InvalidTimesheetException;
 import com.tw.coupang.one_payroll.timesheet.exception.TimesheetNotFoundException;
 import jakarta.validation.ConstraintViolationException;
@@ -19,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -33,6 +37,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final String VALIDATION_ERROR_CODE = "VALIDATION_ERROR";
+    private static final String EXCEPTION_REASON = "reason";
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse> handleInvalidBody(MethodArgumentNotValidException ex) {
@@ -265,11 +270,11 @@ public class GlobalExceptionHandler {
         if ("Payroll not ready".equals(ex.getMessage())) {
             ApiErrorResponse response = ApiErrorResponse.failure(
                     "INVALID_REQUEST", "Payroll is not ready yet for the requested employee and period.",
-                    Map.of("reason", "PAYROLL_NOT_READY"));
+                    Map.of(EXCEPTION_REASON, "PAYROLL_NOT_READY"));
             return ResponseEntity.badRequest().body(response);
         } else {
             ApiErrorResponse response = ApiErrorResponse.failure("INTERNAL_ERROR", ex.getMessage(),
-                    Map.of("reason", "ILLEGAL_STATE"));
+                    Map.of(EXCEPTION_REASON, "ILLEGAL_STATE"));
             return ResponseEntity.badRequest().body(response);
         }
 
@@ -283,5 +288,49 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(TimesheetNotFoundException.class)
     public ResponseEntity<String> handleTimesheetNotFound(TimesheetNotFoundException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(UserIdAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse> handleUserIdExists(UserIdAlreadyExistsException ex) {
+        log.warn("UserId already exists: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "USERID_ALREADY_EXISTS",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ApiResponse> handleAuthentication(AuthenticationException ex) {
+        log.warn("Authentication failed: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "INVALID_CREDENTIALS",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    @ExceptionHandler(JwtTokenParsingException.class)
+    public ResponseEntity<ApiErrorResponse> handleJwtException(JwtTokenParsingException ex)
+    {
+        log.warn("Exception occurred while parsing/validating token: {}", ex.getMessage());
+
+        ApiErrorResponse response = ApiErrorResponse.failure("INVALID_TOKEN", ex.getMessage(), null);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDenied(AccessDeniedException ex)
+    {
+        log.warn("Unauthorized Access: {}", ex.getMessage());
+        ApiErrorResponse response = ApiErrorResponse.failure("ACCESS_DENIED", ex.getMessage(),
+                Map.of(EXCEPTION_REASON, "You are not allowed to access this resource"));
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 }

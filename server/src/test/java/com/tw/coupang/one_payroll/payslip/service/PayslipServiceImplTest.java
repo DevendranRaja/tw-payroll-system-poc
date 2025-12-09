@@ -12,13 +12,21 @@ import com.tw.coupang.one_payroll.payslip.dto.PayslipResponse;
 import com.tw.coupang.one_payroll.payslip.entity.Payslip;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payslip.repository.PayslipRepository;
+import com.tw.coupang.one_payroll.userauth.entity.UserAuth;
+import com.tw.coupang.one_payroll.userauth.enums.UserRole;
+import com.tw.coupang.one_payroll.userauth.service.UserInfoDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -31,7 +39,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(MockitoExtension.class)
+
+@SpringBootTest
+@EnableMethodSecurity
+@ActiveProfiles("test")
 class PayslipServiceImplTest {
 
     private EmployeeMaster employee;
@@ -42,7 +53,7 @@ class PayslipServiceImplTest {
     private LocalDate payPeriodEndOfMonth;
     private Payslip expectedPaySlip;
 
-    @InjectMocks
+    @Autowired
     private PayslipServiceImpl payslipService;
 
     @Mock
@@ -56,7 +67,6 @@ class PayslipServiceImplTest {
 
     @Mock
     private PayslipRepository payslipRepository;
-
 
     @BeforeEach
     void setUp() {
@@ -111,7 +121,7 @@ class PayslipServiceImplTest {
                 .createdAt(LocalDateTime.now())
                 .build();
 
-         expectedPaySlip = Payslip.builder()
+        expectedPaySlip = Payslip.builder()
                 .payslipId(1L)
                 .employeeId("E001")
                 .payrollId(1)
@@ -124,6 +134,27 @@ class PayslipServiceImplTest {
                 .filePath("/E001/OCT2025.pdf")
                 .build();
 
+        ReflectionTestUtils.setField(payslipService, "payrollRunRepository", payrollRunRepository);
+        ReflectionTestUtils.setField(payslipService, "employeeMasterRepository", employeeMasterRepository);
+        ReflectionTestUtils.setField(payslipService,"metadataBuilder", metadataBuilder);
+        ReflectionTestUtils.setField(payslipService,"payslipRepository", payslipRepository);
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authenticate(String employeeId) {
+        UserAuth userAuth = new UserAuth();
+        userAuth.setUserId(employeeId);
+        userAuth.setEmployeeId(employeeId);
+        userAuth.setRole(UserRole.EMPLOYEE);
+
+        UserInfoDetails userDetails = new UserInfoDetails(userAuth);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        userDetails.getPassword(),
+                        userDetails.getAuthorities()
+                )
+        );
     }
 
     @Test
@@ -134,14 +165,18 @@ class PayslipServiceImplTest {
         when(employeeMasterRepository.findById(employeeId))
                 .thenReturn(Optional.of(employee));
 
+        authenticate(employeeId);
+
         assertThrows(IllegalStateException.class,
                 () -> payslipService.generatePayslipMetadata(employeeId, payPeriod));
     }
 
     @Test
-    void shouldThrowExceptionWhenEmployeeIdIsMissing() {
+    void shouldThrowExceptionWhenEmployeeIsMissing() {
         when(employeeMasterRepository.findById(employeeId))
                 .thenReturn(Optional.empty());
+
+        authenticate(employeeId);
 
         assertThrows(EmployeeNotFoundException.class,
                 () -> payslipService.generatePayslipMetadata(employeeId, payPeriod));
@@ -154,6 +189,8 @@ class PayslipServiceImplTest {
         employee.setStatus(EmployeeStatus.INACTIVE);
         when(employeeMasterRepository.findById(employeeId))
                 .thenReturn(Optional.of(employee));
+
+        authenticate(employeeId);
 
         assertThrows(EmployeeNotFoundException.class,
                 () -> payslipService.generatePayslipMetadata(employeeId, payPeriod));
@@ -181,6 +218,8 @@ class PayslipServiceImplTest {
         when(payslipRepository.save(any(Payslip.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
+        authenticate(employeeId);
+
         PayslipMetadataDTO payslipMetadata = payslipService.generatePayslipMetadata(employeeId, payPeriod);
 
         assertNotNull(payslipMetadata);
@@ -196,26 +235,28 @@ class PayslipServiceImplTest {
 
     @Test
     void shouldGenerateNewPayslipData() {
-       when(employeeMasterRepository.findById(employeeId))
-               .thenReturn(Optional.of(employee));
+        when(employeeMasterRepository.findById(employeeId))
+                .thenReturn(Optional.of(employee));
 
-       when(payrollRunRepository.findPayrollForEmployeeIdAndPayPeriod(employeeId, payPeriod))
-               .thenReturn(Optional.of(payroll));
+        when(payrollRunRepository.findPayrollForEmployeeIdAndPayPeriod(employeeId, payPeriod))
+                .thenReturn(Optional.of(payroll));
 
-       when(metadataBuilder.buildPayslipMetadata(employee,payroll,payPeriodEndOfMonth))
-               .thenReturn(mockMetadata);
+        when(metadataBuilder.buildPayslipMetadata(employee,payroll,payPeriodEndOfMonth))
+                .thenReturn(mockMetadata);
 
-       when(payslipRepository.findByEmployeeIdAndPayPeriod(employeeId, payPeriodEndOfMonth))
-               .thenReturn(Optional.empty());
+        when(payslipRepository.findByEmployeeIdAndPayPeriod(employeeId, payPeriodEndOfMonth))
+                .thenReturn(Optional.empty());
 
-       when(payslipRepository.save(any(Payslip.class)))
-               .thenAnswer(invocation -> invocation.getArgument(0));
+        when(payslipRepository.save(any(Payslip.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-         PayslipMetadataDTO payslipMetadata = payslipService.generatePayslipMetadata(employeeId, payPeriod);
+        authenticate(employeeId);
 
-         assertNotNull(payslipMetadata);
-         assertEquals("E001", payslipMetadata.getEmployeeId());
-         assertEquals("Jin Park", payslipMetadata.getEmployeeName());
+        PayslipMetadataDTO payslipMetadata = payslipService.generatePayslipMetadata(employeeId, payPeriod);
+
+        assertNotNull(payslipMetadata);
+        assertEquals("E001", payslipMetadata.getEmployeeId());
+        assertEquals("Jin Park", payslipMetadata.getEmployeeName());
         assertEquals(new BigDecimal("5000.00"), payslipMetadata.getGrossPay());
 
         verify(employeeMasterRepository).findById(employeeId);
@@ -230,6 +271,8 @@ class PayslipServiceImplTest {
         when(payslipRepository.findByEmployeeIdAndYearMonth(employeeId,payPeriod))
                 .thenReturn(Optional.empty());
 
+        authenticate(employeeId);
+
         assertThrows(PayslipNotFoundException.class,
                 () -> payslipService.getPayslipMetadata(employeeId,payPeriod));
     }
@@ -240,6 +283,8 @@ class PayslipServiceImplTest {
         when(payslipRepository.findByEmployeeIdAndYearMonth(employeeId,payPeriod))
                 .thenReturn(Optional.of(expectedPaySlip));
 
+        authenticate(employeeId);
+
         PayslipResponse payslipResponse = payslipService.getPayslipMetadata(employeeId, payPeriod);
 
         assertNotNull(payslipResponse);
@@ -249,4 +294,27 @@ class PayslipServiceImplTest {
 
         verify(payslipRepository).findByEmployeeIdAndYearMonth(employeeId, payPeriod);
     }
+
+    @Test
+    void shouldReturnAccessDeniedWhenEmployeeAccessesOthersGetMetadata()
+    {
+        when(payslipRepository.findByEmployeeIdAndYearMonth(employeeId,payPeriod))
+                .thenReturn(Optional.of(expectedPaySlip));
+
+        authenticate("E002");
+
+        assertThrows(AccessDeniedException.class, () -> payslipService.getPayslipMetadata(employeeId, payPeriod));
+    }
+
+    @Test
+    void shouldReturnAccessDeniedWhenEmployeeAccessesOthersPayslip()
+    {
+        when(payslipRepository.findByEmployeeIdAndYearMonth(employeeId,payPeriod))
+                .thenReturn(Optional.of(expectedPaySlip));
+
+        authenticate("E002");
+
+        assertThrows(AccessDeniedException.class, () -> payslipService.generatePayslipMetadata(employeeId, payPeriod));
+    }
+
 }

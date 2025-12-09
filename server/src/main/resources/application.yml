@@ -1,6 +1,8 @@
 spring:
   application:
     name: one-payroll
+  config:
+    import: classpath:security-config.yml
   datasource:
     url: jdbc:postgresql://localhost:5432/tw_payroll
     username: admin
@@ -23,3 +25,8 @@ server:
 integration:
   payroll:
     submit-url: http://localhost:8080/tw-payroll-system/api/integration/payroll/submit
+
+jwt:
+  secret: "6Cqv7P0/Y62z5FbBg/WSx4GgT5l4zM9QzK2Jb8z47lU="
+  issuer: one-payroll
+  expiration: -1

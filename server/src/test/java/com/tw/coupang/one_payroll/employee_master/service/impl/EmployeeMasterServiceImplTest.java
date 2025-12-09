@@ -7,11 +7,21 @@ import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.employee_master.repository.EmployeeMasterRepository;
+import com.tw.coupang.one_payroll.userauth.entity.UserAuth;
+import com.tw.coupang.one_payroll.userauth.enums.UserRole;
+import com.tw.coupang.one_payroll.userauth.service.UserInfoDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -20,22 +30,44 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@SpringBootTest
+@EnableMethodSecurity
+@ActiveProfiles("test")
 class EmployeeMasterServiceImplTest {
 
     @Mock
     private EmployeeMasterRepository repository;
 
-    @InjectMocks
+    @Autowired
     private EmployeeMasterServiceImpl service;
 
     @SuppressWarnings("resource")
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(service, "repository", repository);
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authenticate(UserRole role, String employeeId) {
+        UserAuth userAuth = new UserAuth();
+        userAuth.setUserId(employeeId);
+        userAuth.setEmployeeId(employeeId);
+        userAuth.setRole(role);
+
+        UserInfoDetails userDetails = new UserInfoDetails(userAuth);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        userDetails.getPassword(),
+                        userDetails.getAuthorities()
+                )
+        );
     }
 
     @Test
     void createEmployeeSuccess() {
+        authenticate(UserRole.ADMIN, "admin");
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
                 "E001", "John", "Doe", "IT", "Developer", "john.doe@example.com", 1, LocalDate.now()
         );
@@ -63,6 +95,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void createEmployeeEmployeeIdAlreadyExistsThrowsConflictException() {
+        authenticate(UserRole.ADMIN, "admin");
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
                 "E002", "Jane", "Smith", "HR", "Manager", "jane.smith@example.com", 2, LocalDate.now()
         );
@@ -76,6 +109,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void createEmployeeEmailAlreadyExistsThrowsConflictException() {
+        authenticate(UserRole.ADMIN, "admin");
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
                 "E003", "Alice", "Brown", "Finance", "Analyst", "alice.brown@example.com", 3, LocalDate.now()
         );
@@ -90,6 +124,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void updateEmployeeSuccessWithStatusChange() {
+        authenticate(UserRole.ADMIN, "admin");
         String empId = "E001";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest("John", "DoeUpdated", "IT", "Senior Dev", "john.doe@example.com", 1, LocalDate.now(), "INACTIVE");
 
@@ -122,6 +157,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void updateEmployeeNotFoundThrowsException() {
+        authenticate(UserRole.ADMIN, "admin");
         String empId = "E999";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role", "non.exist@example.com", 1, LocalDate.now(), null);
         when(repository.findById(empId)).thenReturn(Optional.empty());
@@ -142,6 +178,8 @@ class EmployeeMasterServiceImplTest {
 
         when(repository.findById(empId)).thenReturn(Optional.of(existing));
 
+        authenticate(UserRole.ADMIN, "admin");
+
         EmployeeMaster result = service.getEmployeeById(empId);
 
         assertNotNull(result);
@@ -152,11 +190,15 @@ class EmployeeMasterServiceImplTest {
     void getEmployeeByIdNotFoundThrows() {
         String empId = "E404";
         when(repository.findById(empId)).thenReturn(Optional.empty());
+
+        authenticate(UserRole.ADMIN, "admin");
+
         assertThrows(EmployeeNotFoundException.class, () -> service.getEmployeeById(empId));
     }
 
     @Test
     void getEmployeesByDepartmentReturnsActiveOnlyWhenIncludeInactiveFalse() {
+        authenticate(UserRole.ADMIN, "admin");
         String dept = "Finance";
         EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
         when(repository.findByDepartmentIgnoreCaseAndStatus(dept, EmployeeStatus.ACTIVE)).thenReturn(Arrays.asList(a));
@@ -170,6 +212,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void getEmployeesByDepartmentReturnsAllWhenIncludeInactiveTrue() {
+        authenticate(UserRole.ADMIN, "admin");
         String dept = "Finance";
         EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
         EmployeeMaster b = EmployeeMaster.builder().employeeId("E202").department(dept).status(EmployeeStatus.INACTIVE).build();
@@ -183,11 +226,13 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void getEmployeesByDepartmentEmptyWhenNoDeptProvided() {
+        authenticate(UserRole.ADMIN, "admin");
         assertThrows(NullPointerException.class, () -> service.getEmployeesByDepartment(null, false));
     }
 
     @Test
     void deleteEmployeeSuccessMarksInactive() {
+        authenticate(UserRole.ADMIN, "admin");
         String id = "E300";
         EmployeeMaster existing = EmployeeMaster.builder()
                 .employeeId(id)
@@ -208,11 +253,23 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void deleteEmployeeNotFoundThrows() {
+        authenticate(UserRole.ADMIN, "admin");
         String id = "E404";
         when(repository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(EmployeeNotFoundException.class, () -> service.deleteEmployee(id));
         verify(repository, never()).save(any(EmployeeMaster.class));
+    }
+
+    @Test
+    void getEmployeeByIdAsOtherEmployeeAccessDenied() {
+        String empId = "E001";
+        EmployeeMaster existing = EmployeeMaster.builder().employeeId(empId).build();
+        when(repository.findById(empId)).thenReturn(Optional.of(existing));
+
+        authenticate(UserRole.EMPLOYEE, "E002");
+
+        assertThrows(AccessDeniedException.class, () -> service.getEmployeeById(empId));
     }
 
 }

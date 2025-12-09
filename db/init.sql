@@ -6,7 +6,7 @@ CREATE TYPE employee_status AS ENUM ('ACTIVE', 'INACTIVE');
 CREATE TYPE pay_cycle_type AS ENUM ('WEEKLY', 'BIWEEKLY', 'MONTHLY');
 CREATE TYPE payroll_status AS ENUM ('PROCESSED', 'FAILED', 'SUBMITTED', 'SUBMISSION_FAILED');
 CREATE TYPE integration_status AS ENUM ('PENDING', 'SUCCESS', 'FAILED');
-
+CREATE TYPE user_role AS ENUM ('ADMIN', 'EMPLOYEE');
 -------------------------------------------------------
 -- Trigger function for auto-updating updated_at
 -------------------------------------------------------
@@ -213,6 +213,30 @@ CREATE INDEX idx_timesheet_employee ON timesheet_summary(employee_id);
 CREATE INDEX idx_timesheet_period ON timesheet_summary(pay_period_id);
 
 -------------------------------------------------------
+-- RBAC: user_auth
+-------------------------------------------------------
+
+
+CREATE TABLE user_auth (
+   user_id VARCHAR(50) PRIMARY KEY,
+   password_hash VARCHAR(255) NOT NULL,
+   role user_role NOT NULL,
+   employee_id VARCHAR(10),
+
+
+   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+
+   FOREIGN KEY (employee_id) REFERENCES employee_master(employee_id)
+);
+
+
+CREATE TRIGGER trg_user_auth_update
+BEFORE UPDATE ON user_auth
+FOR EACH ROW
+EXECUTE FUNCTION update_timestamp();
+-------------------------------------------------------
 -- INSERT DATA
 -------------------------------------------------------
 
@@ -234,6 +258,25 @@ INSERT INTO employee_master (
 ('E008', 'Eunji', 'Kang', 'Engineering', 'QA Engineer', 'eunji.kang@company.com', 1, 'ACTIVE', '2022-06-20'),
 ('E009', 'Daniel', 'Cho', 'Sales', 'Sales Lead', 'daniel.cho@company.com', 3, 'ACTIVE', '2021-11-15'),
 ('E010', 'Grace', 'Lim', 'Legal', 'Compliance Officer', 'grace.lim@company.com', 3, 'ACTIVE', '2020-09-30');
+
+---- Admin user (password: admin123)
+INSERT INTO user_auth (
+   user_id, password_hash, role, employee_id
+) VALUES (
+   'admin01',
+   '$2a$10$RH/jVchITl6LrWvms0V9oupO56mgPs472ObLZ3yQJMkwB9aQwIGE6',
+   'ADMIN',
+   'E001'
+);
+
+---- Employee users (password: emp123)
+INSERT INTO user_auth (
+   user_id, password_hash, role, employee_id
+)
+VALUES
+('user01', '$2a$12$xhO6ppOluWK0917wPbN9kumwOEorP2Rc18RV83BoRhWLFfK2H6ojG', 'EMPLOYEE', 'E001'),
+('user02', '$2a$12$h.EWgSBIXurNDjqcRogZX.otjElK3i8yTcaC9Q0V3Mg0VirqjWkqu', 'EMPLOYEE', 'E002'),
+('user03', '$2a$12$mbn7gEfnbH58FPIK6camm.fK6JRd9ZWQ0o1Icb8YRWnI/wKV4jZFG', 'EMPLOYEE', 'E003');
 
 INSERT INTO payroll_run (
     employee_id, pay_period_start, pay_period_end, gross_pay, tax_deduction, benefit_addition, net_pay
@@ -285,4 +328,12 @@ INSERT INTO timesheet_summary
 (employee_id, pay_period_id, no_of_days_worked, hours_worked, holiday_hours)
 VALUES
 ('E001', 1, 22, 176.00, 8.00),
-('E002', 2, 20, 160.00, 0.00);
+('E002', 2, 20, 160.00, 0.00),
+('E003', 3, 21, 168.00, 4.00),
+('E004', 4, 22, 176.00, 8.00),
+('E005', 5, 20, 160.00, 0.00),
+('E006', 6, 5, 40.00, 0.00),
+('E007', 7, 4, 32.00, 0.00),
+('E008', 8, 22, 176.00, 8.00),
+('E009', 9, 21, 168.00, 4.00),
+('E010', 10, 20, 160.00, 0.00);
