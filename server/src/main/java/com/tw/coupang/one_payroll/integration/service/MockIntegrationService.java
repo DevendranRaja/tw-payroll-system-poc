@@ -77,7 +77,7 @@ public class MockIntegrationService {
         batchRepo.save(batch);
 
         //Save Logs
-        saveBatchLogs(batch.getBatchRefId(), employeeIds, finalStatus);
+        saveBatchLogs(batch.getBatchRefId(), employeeIds, finalStatus, errorMessage);
 
         //Return Response
         return new PayrollBatchResponse(
@@ -88,13 +88,14 @@ public class MockIntegrationService {
         );
     }
 
-    private void saveBatchLogs(String batchRefId, List<String> employeeIds, String status) {
+    private void saveBatchLogs(String batchRefId, List<String> employeeIds, String status, String errorMessage) {
         List<PayrollBatchLog> logs = employeeIds.stream()
                 .map(empId -> PayrollBatchLog.builder()
                         .batchRefId(batchRefId)
                         .employeeId(empId)
                         .status(status)
                         .timestamp(LocalDateTime.now())
+                        .logMessage(errorMessage)
                         .build())
                 .collect(Collectors.toList());
         logRepo.saveAll(logs);

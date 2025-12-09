@@ -18,9 +18,9 @@ jobs:
           COMMITS=$(git log origin/${{ github.base_ref }}..HEAD --pretty=%s)
 
           echo "$COMMITS" | while read line; do
-            if ! [[ "$line" =~ ^\[PAY-[0-9]+\]\: ]]; then
+            if ! [[ "$line" =~ ^\[CP-[0-9]+\]\: ]]; then
               echo "Invalid commit message: $line"
-              echo "Commit messages must start with: PAY-123: description"
+              echo "Commit messages must start with: CP-123: description"
               exit 1
             fi
           done

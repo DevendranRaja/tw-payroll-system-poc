@@ -5,6 +5,7 @@ import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictExce
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.integration.exception.BatchNotFoundException;
+import com.tw.coupang.one_payroll.integration.exception.MandatoryFieldMissingException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
@@ -14,6 +15,8 @@ import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
 import com.tw.coupang.one_payroll.userauth.exception.JwtTokenParsingException;
 import com.tw.coupang.one_payroll.userauth.exception.UserIdAlreadyExistsException;
 import com.tw.coupang.one_payroll.userauth.exception.AuthenticationException;
+import com.tw.coupang.one_payroll.timesheet.exception.InvalidTimesheetException;
+import com.tw.coupang.one_payroll.timesheet.exception.TimesheetNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -198,6 +201,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(response);
     }
 
+    @ExceptionHandler(MandatoryFieldMissingException.class)
+    public ResponseEntity<ApiResponse> handleMandatoryFieldMissingException(MandatoryFieldMissingException ex) {
+
+        log.warn(" Mandatory Field Missing: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "MANDATORY_FIELD_MISSING",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
     @ExceptionHandler(EmployeeInactiveException.class)
     public ResponseEntity<ApiResponse> handleInactiveEmployee(EmployeeInactiveException ex) {
         log.warn("Inactive employee: {}", ex.getMessage());
@@ -260,6 +277,16 @@ public class GlobalExceptionHandler {
             return ResponseEntity.badRequest().body(response);
         }
 
+    }
+
+    @ExceptionHandler(InvalidTimesheetException.class)
+    public ResponseEntity<String> handleInvalidTimesheet(InvalidTimesheetException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(TimesheetNotFoundException.class)
+    public ResponseEntity<String> handleTimesheetNotFound(TimesheetNotFoundException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(UserIdAlreadyExistsException.class)

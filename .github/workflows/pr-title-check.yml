@@ -13,11 +13,11 @@ jobs:
         with:
           script: |
             const title = context.payload.pull_request.title;
-            const pattern = /^\[(PAY-\d+\]):\s.+$/;
+            const pattern = /^\[(CP-\d+\]):\s.+$/;
 
             if (!pattern.test(title)) {
               core.setFailed(`Invalid PR title format.
-              Required: [PAY-123]: Meaningful description
+              Required: [CP-123]: Meaningful description
               Actual: ${title}`);
             } else {
               console.log("✅ PR title format is valid.");
