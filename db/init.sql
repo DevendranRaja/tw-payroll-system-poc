@@ -184,8 +184,8 @@ CREATE INDEX idx_pay_period_range ON pay_period(range);
 ----------------------------------------------------
 
 CREATE TABLE earning_type (
-    earning_type_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
+    earning_type_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
     description VARCHAR(255)
 );
 
@@ -194,12 +194,14 @@ CREATE TABLE earning_type (
 ------------------------------------------------------
 
 CREATE TABLE payroll_earnings (
-    payroll_earnings_id INT AUTO_INCREMENT PRIMARY KEY,
+    payroll_earnings_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     payroll_id INT NOT NULL,
     earning_type_id INT NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (payroll_id) REFERENCES payroll_run(payroll_id),
-    FOREIGN KEY (earning_type_id) REFERENCES earning_type(earning_type_id)
+    FOREIGN KEY (earning_type_id) REFERENCES earning_type(earning_type_id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 --------------------------------------------------------
@@ -207,8 +209,8 @@ CREATE TABLE payroll_earnings (
 --------------------------------------------------------
 
 CREATE TABLE deduction_type (
-    deduction_type_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL,
+    deduction_type_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    name VARCHAR(50) NOT NULL UNIQUE,
     description VARCHAR(255)
 );
 
@@ -217,18 +219,20 @@ CREATE TABLE deduction_type (
 -------------------------------------------------------
 
 CREATE TABLE payroll_deductions (
-    payroll_deduction_id INT AUTO_INCREMENT PRIMARY KEY,
+    payroll_deduction_id INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     payroll_id INT NOT NULL,
     deduction_type_id INT NOT NULL,
     amount DECIMAL(10,2) NOT NULL,
     FOREIGN KEY (payroll_id) REFERENCES payroll_run(payroll_id),
-    FOREIGN KEY (deduction_type_id) REFERENCES deduction_type(deduction_type_id)
+    FOREIGN KEY (deduction_type_id) REFERENCES deduction_type(deduction_type_id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -------------------------------------------------------
 
 ALTER TABLE employee_master
-ADD COLUMN base_salary DECIMAL(10,2) NOT NULL
+ADD COLUMN base_salary DECIMAL(10,2) NOT NULL DEFAULT 0.00
 
 
 -------------------------------------------------------

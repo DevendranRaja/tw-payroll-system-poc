@@ -1,4 +1,4 @@
-package com.tw.coupang.one_payroll.payroll.service;
+package com.tw.coupang.one_payroll.payroll.service.impl;
 
 import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
@@ -13,6 +13,9 @@ import com.tw.coupang.one_payroll.payroll.entity.PayrollDeductions;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollEarnings;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payroll.repository.*;
+import com.tw.coupang.one_payroll.payroll.service.DeductionComponentStrategy;
+import com.tw.coupang.one_payroll.payroll.service.EarningComponentStrategy;
+import com.tw.coupang.one_payroll.payroll.service.PayrollCalculationService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,12 +23,13 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
-import static com.tw.coupang.one_payroll.common.utils.MathsUtils.percentOf;
+import static com.tw.coupang.one_payroll.payroll.enums.PayrollComponentType.BASIC_SALARY;
+import static com.tw.coupang.one_payroll.payroll.enums.PayrollComponentType.INCOME_TAX;
 import static com.tw.coupang.one_payroll.payroll.enums.PayrollStatus.PROCESSED;
 import static java.math.BigDecimal.ZERO;
 import static java.math.RoundingMode.HALF_UP;
@@ -36,15 +40,6 @@ import static java.math.RoundingMode.HALF_UP;
 @Transactional
 public class PayrollCalculationServiceImpl implements PayrollCalculationService {
 
-    private static final BigDecimal PF_RATE = BigDecimal.valueOf(0.12); // 12%
-    private static final BigDecimal PROFESSIONAL_TAX_RATE = BigDecimal.valueOf(200); // flat
-    private static final String INCOME_TAX = "Income Tax";
-    private static final String PROVIDENT_FUND = "Provident Fund";
-    private static final String PROFESSIONAL_TAX = "Professional Tax";
-    private static final String BASIC_SALARY = "Basic Salary";
-    private static final String HRA = "HRA";
-    private static final String BONUS = "Bonus";
-
     private final EmployeeMasterService employeeMasterService;
     private final PayGroupValidator payGroupValidator;
     private final PayrollRunRepository payrollRunRepository;
@@ -53,6 +48,9 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
     private final PayrollEarningsRepository payrollEarningsRepository;
     private final DeductionTypeRepository deductionTypeRepository;
     private final PayrollDeductionsRepository payrollDeductionsRepository;
+    private final EarningsStrategyRegistry earningsRegistry;
+    private final DeductionStrategyRegistry deductionRegistry;
+    private final GrossToNetPipelineProcessor grossToNetPipelineProcessor;
 
     @Override
     public PayrollRunResponse calculate(PayrollCalculationRequest request) {
@@ -82,16 +80,38 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
             throw new IllegalArgumentException("Base salary must be greater than zero for payroll calculation");
         }
 
+        final var numberOfDays = endDate.toEpochDay() - startDate.toEpochDay() + 1;
         //TODO: Refactor salary calculation for different pay cycles
-        final var monthlySalary = employee.getBaseSalary().multiply(BigDecimal.valueOf(30)); // assuming 30 days in a month
+        final var monthlySalary = employee.getBaseSalary().multiply(BigDecimal.valueOf(numberOfDays));
 
-        final Map<String, BigDecimal> earningsMap = buildEarningMap(monthlySalary);
+        // Basic Salary Calculation
+        final var basicSalary = earningsRegistry.getAll().stream()
+                .filter(s -> s.getCode().equals(BASIC_SALARY.getValue()))
+                .findFirst()
+                .orElseThrow()
+                .calculate(monthlySalary, ZERO);
+
+        //Earnings Calculation
+        final var earningsMap =
+                earningsRegistry.getAll().stream()
+                        .collect(Collectors.toMap(
+                                EarningComponentStrategy::getCode,
+                                s -> s.calculate(monthlySalary, basicSalary)
+                        ));
+
         BigDecimal grossPay = earningsMap.values().stream()
                 .reduce(ZERO, BigDecimal::add).setScale(2, HALF_UP);
-        final Map<String, BigDecimal> deductionsMap = buildDeductionMap(
-                earningsMap.get(BASIC_SALARY), grossPay, payGroup);
+
+        //Deductions Calculation
+        Map<String, BigDecimal> deductionsMap =
+                deductionRegistry.getAll().stream()
+                        .collect(Collectors.toMap(
+                                DeductionComponentStrategy::getCode,
+                                s -> s.calculate(grossPay, basicSalary, payGroup)
+                        ));
 
         final var payrollRun = payrollGrossToNetPayCalculation(grossPay, deductionsMap, payGroup, request);
+
         payrollRunRepository.save(payrollRun);
 
         // -------- Persist Earnings --------
@@ -119,31 +139,19 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
                                                       final Map<String, BigDecimal> deductionsMap,
                                                       final PayGroup payGroup,
                                                       final PayrollCalculationRequest request) {
-        if (grossPay.compareTo(ZERO) <= 0) {
-            throw new IllegalArgumentException("Gross pay must be greater than zero to calculate net pay");
-        }
+        PayrollContext contextInit = new PayrollContext(grossPay, ZERO, ZERO, ZERO, deductionsMap, payGroup);
 
-        final var otherDeductions = percentOf(payGroup.getDeductionRate(), grossPay);
-        BigDecimal totalDeductions = deductionsMap.values().stream()
-                .reduce(ZERO, BigDecimal::add).add(otherDeductions).setScale(2, HALF_UP);
-        if (totalDeductions.doubleValue() >= grossPay.doubleValue()) {
-            throw new IllegalStateException("Total deductions exceed or equal gross pay, cannot compute net pay");
-        }
-
-        final var benefits = percentOf(payGroup.getBenefitRate(), grossPay);
-
-        final var netPay = grossPay.subtract(totalDeductions).add(benefits).setScale(2, HALF_UP);
+        final var context = grossToNetPipelineProcessor.process(contextInit);
 
         return PayrollRun.builder().employeeId(request.getEmployeeId())
                 .payPeriodStart(request.getPayPeriod().getStartDate())
                 .payPeriodEnd(request.getPayPeriod().getEndDate())
                 .grossPay(grossPay)
-                .netPay(netPay)
-                .taxDeduction(deductionsMap.get(INCOME_TAX))
-                .benefitAddition(benefits)
+                .netPay(context.getNetPay())
+                .taxDeduction(deductionsMap.get(INCOME_TAX.getValue()))
+                .benefitAddition(context.getBenefits())
                 .status(PROCESSED)
                 .build();
-
     }
 
     private void persistEarnings(final Map<String, BigDecimal> earningMap,
@@ -198,35 +206,6 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
         if (!deductionList.isEmpty()) {
             payrollDeductionsRepository.saveAll(deductionList);
         }
-    }
-
-    private Map<String, BigDecimal> buildEarningMap(final BigDecimal monthlySalary) {
-
-        final Map<String, BigDecimal> map = new HashMap<>();
-
-        final var basic = percentOf(monthlySalary, BigDecimal.valueOf(40));
-        final var hra = percentOf(basic, BigDecimal.valueOf(50));
-        final var bonus = percentOf(basic, BigDecimal.valueOf(5)); // bonus part can be refactored for variable bonus
-
-        map.put(BASIC_SALARY, basic);
-        map.put(HRA, hra);
-        map.put(BONUS, bonus);
-        return map;
-    }
-
-    private Map<String, BigDecimal> buildDeductionMap(final BigDecimal basic,
-                                                      final BigDecimal gross,
-                                                      final PayGroup payGroup) {
-        Map<String, BigDecimal> map = new HashMap<>();
-
-        final var tax = percentOf(payGroup.getBaseTaxRate(), gross);
-        final var providentFund = basic.multiply(PF_RATE).setScale(2, HALF_UP);
-        final var professionalTax = PROFESSIONAL_TAX_RATE.setScale(2, HALF_UP);
-
-        map.put(INCOME_TAX, tax);
-        map.put(PROVIDENT_FUND, providentFund);
-        map.put(PROFESSIONAL_TAX, professionalTax);
-        return map;
     }
 
     @Override

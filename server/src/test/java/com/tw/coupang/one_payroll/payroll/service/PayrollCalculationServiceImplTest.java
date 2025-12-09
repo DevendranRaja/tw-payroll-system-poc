@@ -13,8 +13,12 @@ import com.tw.coupang.one_payroll.payperiod.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
 import com.tw.coupang.one_payroll.payperiod.validator.PayPeriodCycleValidator;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
-import com.tw.coupang.one_payroll.payroll.entity.*;
+import com.tw.coupang.one_payroll.payroll.entity.DeductionType;
+import com.tw.coupang.one_payroll.payroll.entity.EarningType;
+import com.tw.coupang.one_payroll.payroll.entity.PayrollEarnings;
+import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payroll.repository.*;
+import com.tw.coupang.one_payroll.payroll.service.impl.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -34,19 +38,11 @@ import static java.math.BigDecimal.ZERO;
 import static java.math.BigDecimal.valueOf;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static java.util.Map.of;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class PayrollCalculationServiceImplTest {
-
-    private static final String INCOME_TAX = "Income Tax";
-    private static final String PROVIDENT_FUND = "Provident Fund";
-    private static final String PROFESSIONAL_TAX = "Professional Tax";
-    private static final String BASIC_SALARY = "Basic Salary";
-    private static final String HRA = "HRA";
-    private static final String BONUS = "Bonus";
 
     @InjectMocks
     private PayrollCalculationServiceImpl service;
@@ -74,6 +70,15 @@ class PayrollCalculationServiceImplTest {
 
     @Mock
     private PayPeriodCycleValidator payPeriodCycleValidator;
+
+    @Mock
+    private GrossToNetPipelineProcessor grossToNetPipelineProcessor;
+
+    @Mock
+    private EarningsStrategyRegistry earningsRegistry;
+
+    @Mock
+    private DeductionStrategyRegistry deductionRegistry;
 
     @Test
     void shouldThrowEmployeeNotFoundWhenEmployeeMissing() {
@@ -157,14 +162,17 @@ class PayrollCalculationServiceImplTest {
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
         when(earningTypeRepository.findAll()).thenReturn(mockEarningTypes());
         when(deductionTypeRepository.findAll()).thenReturn(mockDeductionTypes());
-
-        when(payrollRunRepository.save(any(PayrollRun.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        payrollMocks();
 
         doNothing().when(payPeriodCycleValidator).validatePayPeriodAgainstPayGroup(
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup);
+
+        PayrollContext context = new PayrollContext(valueOf(27900), valueOf(5150), valueOf(1400),
+                        valueOf(23866), deductionMap(), payGroup);
+
+        when(grossToNetPipelineProcessor.process(any())).thenReturn(context);
 
         //when
         final var actual = service.calculate(request);
@@ -191,70 +199,86 @@ class PayrollCalculationServiceImplTest {
     }
 
     @Test
-    void shouldPersistCorrectEarningAmounts() {
-        //given
-        PayrollCalculationRequest request = buildRequest("EMP1");
-        EmployeeMaster employee = buildEmployeeObjectWithBasePay(valueOf(1500.00));
+    void shouldInvokeGrossToNetPipeline() {
+
+        PayrollCalculationRequest request = buildRequest("EMP100");
+        EmployeeMaster employee = buildEmployeeObjectWithBasePay(valueOf(1500));
         PayGroup payGroup = buildPayGroup();
 
-        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
-        when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
+        when(employeeMasterService.getEmployeeById(any())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(any())).thenReturn(payGroup);
         when(earningTypeRepository.findAll()).thenReturn(mockEarningTypes());
         when(deductionTypeRepository.findAll()).thenReturn(mockDeductionTypes());
+        payrollMocks();
 
-        when(payrollRunRepository.save(any(PayrollRun.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        PayrollContext ctx =
+                new PayrollContext(valueOf(27900), ZERO, ZERO, valueOf(26000), deductionMap(), payGroup);
 
-        //when
-        service.calculate(buildRequest("EMP1"));
+        when(grossToNetPipelineProcessor.process(any())).thenReturn(ctx);
 
-        //then
-        final ArgumentCaptor<List<PayrollEarnings>> captor = ArgumentCaptor.forClass(List.class);
-        verify(payrollEarningsRepository).saveAll(captor.capture());
+        service.calculate(request);
 
-        List<PayrollEarnings> list = captor.getValue();
-
-        assertEquals(3, list.size());
-
-        assertEquals(BASIC_SALARY, list.get(0).getEarningType().getName());
-        assertEquals(18000.00, list.get(0).getAmount().doubleValue());
-        assertEquals(HRA, list.get(1).getEarningType().getName());
-        assertEquals(9000.00, list.get(1).getAmount().doubleValue());
-        assertEquals(BONUS, list.get(2).getEarningType().getName());
-        assertEquals(900.00, list.get(2).getAmount().doubleValue());
+        verify(grossToNetPipelineProcessor, times(1)).process(any());
     }
 
     @Test
-    void shouldPersistCorrectDeductionAmounts() {
-        //given
-        PayrollCalculationRequest request = buildRequest("EMP1");
-        EmployeeMaster employee = buildEmployeeObjectWithBasePay(valueOf(1500.00));
+    void shouldFailIfPipelineThrowsException() {
+
+        PayrollCalculationRequest request = buildRequest("EMP_FAIL");
+        EmployeeMaster employee = buildEmployeeObjectWithBasePay(valueOf(1500));
         PayGroup payGroup = buildPayGroup();
 
-        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
-        when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
+        when(employeeMasterService.getEmployeeById(any())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(any())).thenReturn(payGroup);
+        payrollMocks();
+
+        when(grossToNetPipelineProcessor.process(any()))
+                .thenThrow(new IllegalStateException("PF exceeds cap"));
+
+        assertThrows(IllegalStateException.class, () -> service.calculate(request));
+        verifyNoInteractions(payrollEarningsRepository);
+        verifyNoInteractions(payrollDeductionsRepository);
+    }
+
+    @Test
+    void shouldFailIfPipelineReturnsNullContext() {
+
+        PayrollCalculationRequest request = buildRequest("EMP_NULL");
+        EmployeeMaster employee = buildEmployeeObjectWithBasePay(valueOf(1200));
+        PayGroup payGroup = buildPayGroup();
+
+        when(employeeMasterService.getEmployeeById(any())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(any())).thenReturn(payGroup);
+        payrollMocks();
+
+        when(grossToNetPipelineProcessor.process(any())).thenReturn(null);
+
+        assertThrows(NullPointerException.class, () -> service.calculate(request));
+        verifyNoInteractions(payrollEarningsRepository);
+        verifyNoInteractions(payrollDeductionsRepository);
+    }
+
+    @Test
+    void shouldUsePipelineNetPayValueNotInternalCalculation() {
+
+        PayrollCalculationRequest request = buildRequest("EMP_OVERRIDE");
+        EmployeeMaster employee = buildEmployeeObjectWithBasePay(valueOf(2000));
+        PayGroup payGroup = buildPayGroup();
+
+        when(employeeMasterService.getEmployeeById(any())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(any())).thenReturn(payGroup);
         when(earningTypeRepository.findAll()).thenReturn(mockEarningTypes());
         when(deductionTypeRepository.findAll()).thenReturn(mockDeductionTypes());
+        payrollMocks();
 
-        when(payrollRunRepository.save(any(PayrollRun.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        PayrollContext ctx = new PayrollContext(
+                valueOf(50000), valueOf(10000), valueOf(900), valueOf(12345), deductionMap(), payGroup);
 
-        //when
-        service.calculate(buildRequest("EMP1"));
+        when(grossToNetPipelineProcessor.process(any())).thenReturn(ctx);
 
-        //then
-        final ArgumentCaptor<List<PayrollDeductions>> captor = ArgumentCaptor.forClass(List.class);
-        verify(payrollDeductionsRepository).saveAll(captor.capture());
+        final var response = service.calculate(request);
 
-        List<PayrollDeductions> list = captor.getValue();
-
-        assertEquals(3, list.size());
-        assertEquals(INCOME_TAX, list.get(0).getDeductionType().getName());
-        assertEquals(2790.00, list.get(0).getAmount().doubleValue());
-        assertEquals(PROVIDENT_FUND, list.get(1).getDeductionType().getName());
-        assertEquals(2160.00, list.get(1).getAmount().doubleValue());
-        assertEquals(PROFESSIONAL_TAX, list.get(2).getDeductionType().getName());
-        assertEquals(200.00, list.get(2).getAmount().doubleValue());
+        assertEquals(12345.00, response.netPay().doubleValue());
     }
 
     @Test
@@ -281,9 +305,12 @@ class PayrollCalculationServiceImplTest {
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
         when(earningTypeRepository.findAll()).thenReturn(emptyList());
         when(deductionTypeRepository.findAll()).thenReturn(mockDeductionTypes());
+        payrollMocks();
 
-        when(payrollRunRepository.save(any(PayrollRun.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        PayrollContext ctx =
+                new PayrollContext(valueOf(50000), valueOf(10000), ZERO, valueOf(12345), deductionMap(), payGroup);
+
+        when(grossToNetPipelineProcessor.process(any())).thenReturn(ctx);
 
         //when
         service.calculate(request);
@@ -304,9 +331,12 @@ class PayrollCalculationServiceImplTest {
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
         when(earningTypeRepository.findAll()).thenReturn(mockEarningTypes());
         when(deductionTypeRepository.findAll()).thenReturn(emptyList());
+        payrollMocks();
 
-        when(payrollRunRepository.save(any(PayrollRun.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+        PayrollContext ctx =
+                new PayrollContext(valueOf(50000), valueOf(10000), ZERO, valueOf(12345), deductionMap(), payGroup);
+
+        when(grossToNetPipelineProcessor.process(any())).thenReturn(ctx);
 
         //when
         service.calculate(request);
@@ -314,27 +344,6 @@ class PayrollCalculationServiceImplTest {
         //then
         verify(payrollDeductionsRepository, never()).saveAll(anyList());
         verify(payrollEarningsRepository).saveAll(anyList());
-    }
-
-    @Test
-    void shouldHandleVeryLargeSalaryWithoutOverflow() {
-        //given
-        PayrollCalculationRequest request = buildRequest("EMP_RICH");
-        EmployeeMaster employee = buildEmployeeObjectWithBasePay(new BigDecimal("1000000"));
-        PayGroup payGroup = buildPayGroup();
-
-        when(employeeMasterService.getEmployeeById(any())).thenReturn(employee);
-        when(payGroupValidator.validatePayGroupExists(any())).thenReturn(payGroup);
-        when(earningTypeRepository.findAll()).thenReturn(mockEarningTypes());
-        when(deductionTypeRepository.findAll()).thenReturn(mockDeductionTypes());
-        when(payrollRunRepository.save(any())).thenAnswer(i -> i.getArgument(0));
-
-        //when
-        final var response = service.calculate(request);
-
-        //then
-        assertNotNull(response);
-        assertTrue(response.netPay().doubleValue() > 0);
     }
 
     @Test
@@ -353,7 +362,12 @@ class PayrollCalculationServiceImplTest {
         when(payGroupValidator.validatePayGroupExists(any())).thenReturn(payGroup);
         when(earningTypeRepository.findAll()).thenReturn(typesWithoutBonus);
         when(deductionTypeRepository.findAll()).thenReturn(mockDeductionTypes());
-        when(payrollRunRepository.save(any())).thenAnswer(i -> i.getArgument(0));
+        payrollMocks();
+
+        PayrollContext ctx = new PayrollContext(
+                valueOf(27900.00), valueOf(5150), valueOf(900), valueOf(23866.00), deductionMap(), payGroup);
+
+        when(grossToNetPipelineProcessor.process(any())).thenReturn(ctx);
 
         //when
         service.calculate(request);
@@ -375,111 +389,15 @@ class PayrollCalculationServiceImplTest {
         when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
         when(payrollRunRepository.save(any())).thenThrow(new RuntimeException("DB Down"));
+        payrollMocks();
+        PayrollContext ctx =
+                new PayrollContext(valueOf(50000), valueOf(10000), ZERO, valueOf(12345), deductionMap(), payGroup);
+
+        when(grossToNetPipelineProcessor.process(any())).thenReturn(ctx);
 
         //when + then
         assertThrows(RuntimeException.class, () -> service.calculate(request));
     }
-
-    @Test
-    void testZeroGrossPayReturnsZeroNet() {
-        // given
-        PayGroup payGroup = PayGroup.builder()
-                .baseTaxRate(valueOf(10))
-                .benefitRate(valueOf(5))
-                .deductionRate(valueOf(2))
-                .build();
-
-        Map<String, BigDecimal> deductions = of(
-                "Income Tax", ZERO,
-                "Provident Fund", ZERO,
-                "Professional Tax", ZERO
-        );
-        PayrollCalculationRequest request = buildRequest("EMP1");
-
-        // when
-        final var exception = assertThrows(IllegalArgumentException.class, () ->
-                service.payrollGrossToNetPayCalculation(ZERO, deductions, payGroup, request));
-
-        // then
-        assertEquals("Gross pay must be greater than zero to calculate net pay", exception.getMessage());
-    }
-
-    @Test
-    void testNullRatesTreatedAsZero() {
-        // given
-        PayGroup payGroup = PayGroup.builder()
-                .baseTaxRate(null)
-                .benefitRate(null)
-                .deductionRate(null)
-                .build();
-
-        Map<String, BigDecimal> deductions = of(
-                "Income Tax", BigDecimal.ZERO,
-                "Provident Fund", BigDecimal.ZERO,
-                "Professional Tax", BigDecimal.ZERO
-        );
-
-        PayrollCalculationRequest request = buildRequest("EMP1");
-
-        // when
-        PayrollRun payrollRun = service.payrollGrossToNetPayCalculation(valueOf(20000), deductions, payGroup, request);
-
-        // then
-        assertEquals(20000.00, payrollRun.getNetPay().doubleValue());
-    }
-
-
-    @Test
-    void testTotalDeductionsExceedsGrossPay() {
-        // given
-        PayGroup payGroup = PayGroup.builder()
-                .baseTaxRate(valueOf(100)) // unused directly
-                .benefitRate(BigDecimal.ZERO)
-                .deductionRate(valueOf(100))  // 100% deduction of gross
-                .build();
-
-        Map<String, BigDecimal> deductions = of(
-                "Income Tax", BigDecimal.ZERO,
-                "Provident Fund", BigDecimal.ZERO,
-                "Professional Tax", BigDecimal.ZERO
-        );
-
-        PayrollCalculationRequest request = buildRequest("EMP1");
-        final var grossPay = valueOf(30000);
-
-        // when
-        final var exception = assertThrows(IllegalStateException.class, () -> service.payrollGrossToNetPayCalculation(
-                grossPay, deductions, payGroup, request));
-
-        // then
-        assertEquals("Total deductions exceed or equal gross pay, cannot compute net pay", exception.getMessage());
-    }
-
-    @Test
-    void testBenefitGreaterThanTaxDoesNotExceedGross() {
-        // given
-        PayGroup payGroup = PayGroup.builder()
-                .baseTaxRate(valueOf(5))
-                .benefitRate(valueOf(10))   // +10%
-                .deductionRate(BigDecimal.ZERO)
-                .build();
-
-        Map<String, BigDecimal> deductions = of(
-                "Income Tax", BigDecimal.ZERO,
-                "Provident Fund", BigDecimal.ZERO,
-                "Professional Tax", BigDecimal.ZERO
-        );
-
-        PayrollCalculationRequest request = buildRequest("EMP1");
-
-        // when
-        PayrollRun payrollRun = service.payrollGrossToNetPayCalculation(
-                valueOf(10000), deductions, payGroup, request);
-
-        // then
-        assertEquals(11000.00, payrollRun.getNetPay().doubleValue());
-    }
-
 
     @Test
     void testGetPayrollShouldReturnAllPayrollRun() {
@@ -519,6 +437,20 @@ class PayrollCalculationServiceImplTest {
         assertTrue(payrollRunResponses.isEmpty());
     }
 
+    private void payrollMocks() {
+        when(earningsRegistry.getAll()).thenReturn(List.of(
+                new BasicSalaryStrategy(),
+                new HRAStrategy(),
+                new BonusStrategy()
+        ));
+
+        when(deductionRegistry.getAll()).thenReturn(List.of(
+                new IncomeTaxStrategy(),
+                new ProvidentFundStrategy(),
+                new ProfessionalTaxStrategy()
+        ));
+    }
+
     private List<EarningType> mockEarningTypes() {
         return List.of(
                 new EarningType(1, "Basic Salary", ""),
@@ -532,6 +464,14 @@ class PayrollCalculationServiceImplTest {
                 new DeductionType(1, "Income Tax", ""),
                 new DeductionType(2, "Provident Fund", ""),
                 new DeductionType(3, "Professional Tax", "")
+        );
+    }
+
+    private Map<String, BigDecimal> deductionMap() {
+        return Map.of(
+                "Income Tax", valueOf(2500),
+                "Provident Fund", valueOf(1800),
+                "Professional Tax", valueOf(200)
         );
     }
 
