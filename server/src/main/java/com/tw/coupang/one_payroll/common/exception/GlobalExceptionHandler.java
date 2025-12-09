@@ -37,6 +37,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final String VALIDATION_ERROR_CODE = "VALIDATION_ERROR";
+    private static final String EXCEPTION_REASON = "reason";
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse> handleInvalidBody(MethodArgumentNotValidException ex) {
@@ -269,11 +270,11 @@ public class GlobalExceptionHandler {
         if ("Payroll not ready".equals(ex.getMessage())) {
             ApiErrorResponse response = ApiErrorResponse.failure(
                     "INVALID_REQUEST", "Payroll is not ready yet for the requested employee and period.",
-                    Map.of("reason", "PAYROLL_NOT_READY"));
+                    Map.of(EXCEPTION_REASON, "PAYROLL_NOT_READY"));
             return ResponseEntity.badRequest().body(response);
         } else {
             ApiErrorResponse response = ApiErrorResponse.failure("INTERNAL_ERROR", ex.getMessage(),
-                    Map.of("reason", "ILLEGAL_STATE"));
+                    Map.of(EXCEPTION_REASON, "ILLEGAL_STATE"));
             return ResponseEntity.badRequest().body(response);
         }
 
@@ -329,7 +330,7 @@ public class GlobalExceptionHandler {
     {
         log.warn("Unauthorized Access: {}", ex.getMessage());
         ApiErrorResponse response = ApiErrorResponse.failure("ACCESS_DENIED", ex.getMessage(),
-                Map.of("reason", "You are not allowed to access this resource"));
+                Map.of(EXCEPTION_REASON, "You are not allowed to access this resource"));
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 }
