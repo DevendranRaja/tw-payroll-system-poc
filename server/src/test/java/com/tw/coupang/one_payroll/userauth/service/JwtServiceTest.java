@@ -20,6 +20,7 @@ public class JwtServiceTest
     private JwtService jwtService;
 
     private UserDetails employeeTestUser;
+    private String testToken;
 
     @BeforeEach
     void setUp()
@@ -35,16 +36,22 @@ public class JwtServiceTest
                 .password("password")
                 .roles("EMPLOYEE")
                 .build();
+
+        testToken = generateToken();
+    }
+
+    private String generateToken() {
+        return jwtService.generateToken("User1", "E001", "EMPLOYEE");
     }
 
     @Test
     void generateTokenShouldIncludeClaimsAndUsername() {
-        String token = jwtService.generateToken("User1", "E001", "EMPLOYEE");
-        assertNotNull(token);
 
-        String username = jwtService.extractUsername(token);
-        String employeeId = jwtService.extractEmployeeId(token);
-        String role = jwtService.extractRole(token);
+        assertNotNull(testToken);
+
+        String username = jwtService.extractUsername(testToken);
+        String employeeId = jwtService.extractEmployeeId(testToken);
+        String role = jwtService.extractRole(testToken);
 
         assertEquals("User1", username);
         assertEquals("E001", employeeId);
@@ -52,21 +59,14 @@ public class JwtServiceTest
     }
 
     @Test
-    void isTokenValidShouldReturnTrueForValidToken() {
-        String token = jwtService.generateToken("User1", "E001", "EMPLOYEE");
-        assertTrue(jwtService.isTokenValid(token, employeeTestUser));
-    }
-
-    @Test
     void isTokenValidShouldReturnFalseForInvalidUsername() {
-        String token = jwtService.generateToken("User1", "E001", "EMPLOYEE");
 
         UserDetails otherUser = User.builder()
                 .username("User2")
                 .password("password")
                 .roles("EMPLOYEE")
                 .build();
-        assertFalse(jwtService.isTokenValid(token, otherUser));
+        assertFalse(jwtService.isTokenValid(testToken, otherUser));
     }
 
     @Test
@@ -79,17 +79,17 @@ public class JwtServiceTest
     void tokenShouldExpireWhenExpirationIsGreaterThanZero() throws InterruptedException
     {
         ReflectionTestUtils.setField(jwtService, "jwtExpiration", 100);
-        String token = jwtService.generateToken("User1", "E001", "EMPLOYEE");
 
+        // Regenerate token with new expiration
+        String tokenWithExpiration = generateToken();
         Thread.sleep(200);
-        assertFalse(jwtService.isTokenValid(token, employeeTestUser));
+        assertFalse(jwtService.isTokenValid(tokenWithExpiration, employeeTestUser));
     }
 
     @Test
-    void tokenShouldNeverExpireWhenExpirationIsNegative()
+    void tokenShouldNeverExpireWhenExpirationIsNegativeAndReturnTrue()
     {
-        String token = jwtService.generateToken("User1", "E001", "EMPLOYEE");
-        assertTrue(jwtService.isTokenValid(token, employeeTestUser));
+        assertTrue(jwtService.isTokenValid(testToken, employeeTestUser));
     }
 
 }
