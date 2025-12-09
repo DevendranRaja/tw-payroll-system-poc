@@ -2,17 +2,22 @@ package com.tw.coupang.one_payroll.integration.controller;
 
 import com.tw.coupang.one_payroll.integration.dto.PayrollBatchLogResponse;
 import com.tw.coupang.one_payroll.integration.service.PayrollBatchLogService;
+import com.tw.coupang.one_payroll.userauth.config.SecurityConfig;
+import com.tw.coupang.one_payroll.userauth.filter.JwtAuthenticationFilter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDateTime;
@@ -29,7 +34,16 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(PayrollBatchLogController.class)
+@WebMvcTest(
+        controllers = PayrollBatchLogController.class,
+        excludeFilters = {
+                @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, classes = {
+                        SecurityConfig.class,
+                        JwtAuthenticationFilter.class
+                })
+        }
+)
+@AutoConfigureMockMvc(addFilters = false)
 @Import(com.tw.coupang.one_payroll.common.exception.GlobalExceptionHandler.class)
 @DisplayName("PayrollBatchLogController Tests")
 class PayrollBatchLogControllerTest {
@@ -37,7 +51,7 @@ class PayrollBatchLogControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockBean
+    @MockitoBean
     private PayrollBatchLogService payrollBatchLogService;
 
     private PayrollBatchLogResponse mockResponse;
