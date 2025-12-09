@@ -7,11 +7,20 @@ import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.employee_master.repository.EmployeeMasterRepository;
+import com.tw.coupang.one_payroll.userauth.entity.UserAuth;
+import com.tw.coupang.one_payroll.userauth.enums.UserRole;
+import com.tw.coupang.one_payroll.userauth.service.UserInfoDetails;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -20,18 +29,38 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@SpringBootTest
+@EnableMethodSecurity
 class EmployeeMasterServiceImplTest {
 
     @Mock
     private EmployeeMasterRepository repository;
 
-    @InjectMocks
+    @Autowired
     private EmployeeMasterServiceImpl service;
 
     @SuppressWarnings("resource")
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        ReflectionTestUtils.setField(service, "repository", repository);
+        SecurityContextHolder.clearContext();
+    }
+
+    private void authenticate(UserRole role, String employeeId) {
+        UserAuth userAuth = new UserAuth();
+        userAuth.setUserId(employeeId);
+        userAuth.setEmployeeId(employeeId);
+        userAuth.setRole(role);
+
+        UserInfoDetails userDetails = new UserInfoDetails(userAuth);
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken(
+                        userDetails,
+                        userDetails.getPassword(),
+                        userDetails.getAuthorities()
+                )
+        );
     }
 
     @Test
@@ -142,6 +171,8 @@ class EmployeeMasterServiceImplTest {
 
         when(repository.findById(empId)).thenReturn(Optional.of(existing));
 
+        authenticate(UserRole.ADMIN, "admin");
+
         EmployeeMaster result = service.getEmployeeById(empId);
 
         assertNotNull(result);
@@ -152,6 +183,9 @@ class EmployeeMasterServiceImplTest {
     void getEmployeeByIdNotFoundThrows() {
         String empId = "E404";
         when(repository.findById(empId)).thenReturn(Optional.empty());
+
+        authenticate(UserRole.ADMIN, "admin");
+
         assertThrows(EmployeeNotFoundException.class, () -> service.getEmployeeById(empId));
     }
 
@@ -213,6 +247,17 @@ class EmployeeMasterServiceImplTest {
 
         assertThrows(EmployeeNotFoundException.class, () -> service.deleteEmployee(id));
         verify(repository, never()).save(any(EmployeeMaster.class));
+    }
+
+    @Test
+    void getEmployeeByIdAsOtherEmployeeAccessDenied() {
+        String empId = "E001";
+        EmployeeMaster existing = EmployeeMaster.builder().employeeId(empId).build();
+        when(repository.findById(empId)).thenReturn(Optional.of(existing));
+
+        authenticate(UserRole.EMPLOYEE, "E002");
+
+        assertThrows(AccessDeniedException.class, () -> service.getEmployeeById(empId));
     }
 
 }

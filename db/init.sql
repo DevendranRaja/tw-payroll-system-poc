@@ -276,7 +276,7 @@ INSERT INTO user_auth (
 VALUES
 ('user01', '$2a$12$xhO6ppOluWK0917wPbN9kumwOEorP2Rc18RV83BoRhWLFfK2H6ojG', 'EMPLOYEE', 'E001'),
 ('user02', '$2a$12$h.EWgSBIXurNDjqcRogZX.otjElK3i8yTcaC9Q0V3Mg0VirqjWkqu', 'EMPLOYEE', 'E002'),
-('user03', '$2a$12$mbn7gEfnbH58FPIK6camm.fK6JRd9ZWQ0o1Icb8YRWnI/wKV4jZFG', 'EMPLOYEE', 'E002');
+('user03', '$2a$12$mbn7gEfnbH58FPIK6camm.fK6JRd9ZWQ0o1Icb8YRWnI/wKV4jZFG', 'EMPLOYEE', 'E003');
 
 INSERT INTO payroll_run (
     employee_id, pay_period_start, pay_period_end, gross_pay, tax_deduction, benefit_addition, net_pay

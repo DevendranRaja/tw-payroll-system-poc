@@ -8,6 +8,7 @@ import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictExce
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.employee_master.repository.EmployeeMasterRepository;
 import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -66,7 +67,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
 
         return repository.save(employee);
     }
-
+    @PreAuthorize("hasRole('ADMIN') or #employeeId.equals(authentication.principal.employeeId)")
     @Override
     @Transactional(readOnly = true)
     public EmployeeMaster getEmployeeById(String employeeId) {
