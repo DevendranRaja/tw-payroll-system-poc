@@ -11,10 +11,12 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.Base64;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(MockitoExtension.class)
-public class JwtServiceTest
+class JwtServiceTest
 {
     @InjectMocks
     private JwtService jwtService;
@@ -76,20 +78,29 @@ public class JwtServiceTest
     }
 
     @Test
-    void tokenShouldExpireWhenExpirationIsGreaterThanZero() throws InterruptedException
-    {
+    void tokenShouldExpireWhenExpirationIsGreaterThanZero() {
         ReflectionTestUtils.setField(jwtService, "jwtExpiration", 100);
-
-        // Regenerate token with new expiration
-        String tokenWithExpiration = generateToken();
-        Thread.sleep(200);
-        assertFalse(jwtService.isTokenValid(tokenWithExpiration, employeeTestUser));
+        String validToken = generateToken();
+        String expiredToken = forceTokenExpired(validToken);
+        assertFalse(jwtService.isTokenValid(expiredToken, employeeTestUser));
     }
 
     @Test
     void tokenShouldNeverExpireWhenExpirationIsNegativeAndReturnTrue()
     {
         assertTrue(jwtService.isTokenValid(testToken, employeeTestUser));
+    }
+    private String forceTokenExpired(String token) {
+        String[] parts = token.split("\\.");
+        String header = parts[0];
+        String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
+
+        payload = payload.replaceFirst("\"exp\":\\d+", "\"exp\":1");
+
+        String newPayload = Base64.getUrlEncoder().withoutPadding()
+                .encodeToString(payload.getBytes());
+
+        return header + "." + newPayload + "." + parts[2];
     }
 
 }
