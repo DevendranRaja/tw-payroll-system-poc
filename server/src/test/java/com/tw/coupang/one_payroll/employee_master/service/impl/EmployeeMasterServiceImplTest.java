@@ -65,6 +65,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void createEmployeeSuccess() {
+        authenticate(UserRole.ADMIN, "admin");
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
                 "E001", "John", "Doe", "IT", "Developer", "john.doe@example.com", 1, LocalDate.now()
         );
@@ -92,6 +93,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void createEmployeeEmployeeIdAlreadyExistsThrowsConflictException() {
+        authenticate(UserRole.ADMIN, "admin");
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
                 "E002", "Jane", "Smith", "HR", "Manager", "jane.smith@example.com", 2, LocalDate.now()
         );
@@ -105,6 +107,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void createEmployeeEmailAlreadyExistsThrowsConflictException() {
+        authenticate(UserRole.ADMIN, "admin");
         CreateEmployeeRequest request =  new CreateEmployeeRequest(
                 "E003", "Alice", "Brown", "Finance", "Analyst", "alice.brown@example.com", 3, LocalDate.now()
         );
@@ -119,6 +122,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void updateEmployeeSuccessWithStatusChange() {
+        authenticate(UserRole.ADMIN, "admin");
         String empId = "E001";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest("John", "DoeUpdated", "IT", "Senior Dev", "john.doe@example.com", 1, LocalDate.now(), "INACTIVE");
 
@@ -151,6 +155,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void updateEmployeeNotFoundThrowsException() {
+        authenticate(UserRole.ADMIN, "admin");
         String empId = "E999";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest("Non", "Exist", "Dept", "Role", "non.exist@example.com", 1, LocalDate.now(), null);
         when(repository.findById(empId)).thenReturn(Optional.empty());
@@ -191,6 +196,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void getEmployeesByDepartmentReturnsActiveOnlyWhenIncludeInactiveFalse() {
+        authenticate(UserRole.ADMIN, "admin");
         String dept = "Finance";
         EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
         when(repository.findByDepartmentIgnoreCaseAndStatus(dept, EmployeeStatus.ACTIVE)).thenReturn(Arrays.asList(a));
@@ -204,6 +210,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void getEmployeesByDepartmentReturnsAllWhenIncludeInactiveTrue() {
+        authenticate(UserRole.ADMIN, "admin");
         String dept = "Finance";
         EmployeeMaster a = EmployeeMaster.builder().employeeId("E201").department(dept).status(EmployeeStatus.ACTIVE).build();
         EmployeeMaster b = EmployeeMaster.builder().employeeId("E202").department(dept).status(EmployeeStatus.INACTIVE).build();
@@ -217,11 +224,13 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void getEmployeesByDepartmentEmptyWhenNoDeptProvided() {
+        authenticate(UserRole.ADMIN, "admin");
         assertThrows(NullPointerException.class, () -> service.getEmployeesByDepartment(null, false));
     }
 
     @Test
     void deleteEmployeeSuccessMarksInactive() {
+        authenticate(UserRole.ADMIN, "admin");
         String id = "E300";
         EmployeeMaster existing = EmployeeMaster.builder()
                 .employeeId(id)
@@ -242,6 +251,7 @@ class EmployeeMasterServiceImplTest {
 
     @Test
     void deleteEmployeeNotFoundThrows() {
+        authenticate(UserRole.ADMIN, "admin");
         String id = "E404";
         when(repository.findById(id)).thenReturn(Optional.empty());
 

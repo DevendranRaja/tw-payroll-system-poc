@@ -26,6 +26,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
         this.repository = repository;
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     @Transactional
     public EmployeeMaster createEmployee(CreateEmployeeRequest request) {
@@ -53,6 +54,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
         return repository.save(employee);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     @Transactional
     public EmployeeMaster updateEmployee(String employeeId, UpdateEmployeeRequest request) {
@@ -75,6 +77,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
                 .orElseThrow(() -> new EmployeeNotFoundException(EMPLOYEE_NOT_FOUND_PREFIX + employeeId + EMPLOYEE_NOT_FOUND_SUFFIX));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     @Transactional(readOnly = true)
     public List<EmployeeMaster> getEmployeesByDepartment(String department, boolean includeInactive) {
@@ -84,6 +87,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
         return repository.findByDepartmentIgnoreCaseAndStatus(department.trim(), EmployeeStatus.ACTIVE);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Override
     @Transactional
     public void deleteEmployee(String employeeId) {
