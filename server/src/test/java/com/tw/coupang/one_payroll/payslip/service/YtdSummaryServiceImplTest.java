@@ -21,6 +21,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
@@ -33,6 +34,7 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @EnableMethodSecurity
+@ActiveProfiles("test")
 class YtdSummaryServiceImplTest
 {
     private EmployeeMaster employee;

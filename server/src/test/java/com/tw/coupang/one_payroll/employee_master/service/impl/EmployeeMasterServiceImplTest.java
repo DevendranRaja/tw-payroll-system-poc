@@ -20,6 +20,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDate;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @EnableMethodSecurity
+@ActiveProfiles("test")
 class EmployeeMasterServiceImplTest {
 
     @Mock
