@@ -1,4 +1,4 @@
-package com.tw.coupang.one_payroll.payroll.service;
+package com.tw.coupang.one_payroll.payroll.service.impl;
 
 import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
@@ -13,6 +13,7 @@ import com.tw.coupang.one_payroll.payroll.entity.PayrollDeductions;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollEarnings;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payroll.repository.*;
+import com.tw.coupang.one_payroll.payroll.service.PayrollCalculationService;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -82,8 +83,9 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
             throw new IllegalArgumentException("Base salary must be greater than zero for payroll calculation");
         }
 
+        final var numberOfDays = endDate.toEpochDay() - startDate.toEpochDay() + 1;
         //TODO: Refactor salary calculation for different pay cycles
-        final var monthlySalary = employee.getBaseSalary().multiply(BigDecimal.valueOf(30)); // assuming 30 days in a month
+        final var monthlySalary = employee.getBaseSalary().multiply(BigDecimal.valueOf(numberOfDays));
 
         final Map<String, BigDecimal> earningsMap = buildEarningMap(monthlySalary);
         BigDecimal grossPay = earningsMap.values().stream()
