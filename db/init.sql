@@ -32,8 +32,8 @@ CREATE TABLE employee_master (
     email VARCHAR(100) UNIQUE NOT NULL,
     pay_group_id INT NOT NULL,
     status employee_status DEFAULT 'ACTIVE',
-    pay_type pay_type NOT NULL,
     joining_date DATE,
+    pay_type pay_type NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -172,7 +172,7 @@ CREATE TABLE pay_period (
     period_start_date DATE NOT NULL,
     period_end_date DATE NOT NULL,
 
-    range VARCHAR(30) NOT NULL,
+    range VARCHAR(50) NOT NULL,
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -229,16 +229,16 @@ INSERT INTO pay_group (group_name, payment_cycle, base_tax_rate, benefit_rate, d
 INSERT INTO employee_master (
     employee_id, first_name, last_name, department, designation, email, pay_group_id, status, joining_date, pay_type
 ) VALUES
-('E001', 'Jin', 'Park', 'Finance', 'Analyst', 'jin.park@company.com', 1, 'ACTIVE', '2021-02-12', "SALARIED"),
-('E002', 'Mina', 'Choi', 'HR', 'HR Manager', 'mina.cho@company.com', 1, 'ACTIVE', '2020-08-01', "SALARIED"),
-('E003', 'Ravi', 'Kumar', 'Engineering', 'Backend Dev', 'ravi.kumar@company.com', 1, 'ACTIVE', '2022-05-15', "SALARIED"),
-('E004', 'Sujin', 'Lee', 'Engineering', 'Frontend Dev', 'sujin.lee@company.com', 1, 'ACTIVE', '2022-10-05', "SALARIED"),
-('E005', 'Alex', 'Kim', 'Finance', 'Accountant', 'alex.kim@company.com', 1, 'ACTIVE', '2021-07-20', "SALARIED"),
-('E006', 'Rohan', 'Sharma', 'Operations', 'Supervisor', 'rohan.sharma@company.com', 2, 'ACTIVE', '2023-01-12', "HOURLY"),
-('E007', 'Yuna', 'Han', 'Support', 'CSR', 'yuna.han@company.com', 2, 'ACTIVE', '2023-03-09', "HOURLY"),
-('E008', 'Eunji', 'Kang', 'Engineering', 'QA Engineer', 'eunji.kang@company.com', 1, 'ACTIVE', '2022-06-20', "SALARIED"),
-('E009', 'Daniel', 'Cho', 'Sales', 'Sales Lead', 'daniel.cho@company.com', 3, 'ACTIVE', '2021-11-15', "SALARIED"),
-('E010', 'Grace', 'Lim', 'Legal', 'Compliance Officer', 'grace.lim@company.com', 3, 'ACTIVE', '2020-09-30', "SALARIED");
+('E001', 'Jin', 'Park', 'Finance', 'Analyst', 'jin.park@company.com', 1, 'ACTIVE', '2021-02-12', 'SALARIED'),
+('E002', 'Mina', 'Choi', 'HR', 'HR Manager', 'mina.cho@company.com', 1, 'ACTIVE', '2020-08-01', 'SALARIED'),
+('E003', 'Ravi', 'Kumar', 'Engineering', 'Backend Dev', 'ravi.kumar@company.com', 1, 'ACTIVE', '2022-05-15', 'SALARIED'),
+('E004', 'Sujin', 'Lee', 'Engineering', 'Frontend Dev', 'sujin.lee@company.com', 1, 'ACTIVE', '2022-10-05', 'SALARIED'),
+('E005', 'Alex', 'Kim', 'Finance', 'Accountant', 'alex.kim@company.com', 1, 'ACTIVE', '2021-07-20', 'SALARIED'),
+('E006', 'Rohan', 'Sharma', 'Operations', 'Supervisor', 'rohan.sharma@company.com', 2, 'ACTIVE', '2023-01-12', 'HOURLY'),
+('E007', 'Yuna', 'Han', 'Support', 'CSR', 'yuna.han@company.com', 2, 'ACTIVE', '2023-03-09', 'HOURLY'),
+('E008', 'Eunji', 'Kang', 'Engineering', 'QA Engineer', 'eunji.kang@company.com', 1, 'ACTIVE', '2022-06-20', 'SALARIED'),
+('E009', 'Daniel', 'Cho', 'Sales', 'Sales Lead', 'daniel.cho@company.com', 3, 'ACTIVE', '2021-11-15', 'SALARIED'),
+('E010', 'Grace', 'Lim', 'Legal', 'Compliance Officer', 'grace.lim@company.com', 3, 'ACTIVE', '2020-09-30', 'SALARIED');
 
 INSERT INTO payroll_run (
     employee_id, pay_period_start, pay_period_end, gross_pay, tax_deduction, benefit_addition, net_pay
@@ -277,17 +277,28 @@ VALUES
 ('Payroll Calculation', 'E007', 'Invalid pay group ID reference'),
 ('Bank Integration', 'E005', 'Bank account verification failed');
 
-INSERT INTO pay_period (pay_group_id, period_start_date, period_end_date, range)
+INSERT INTO pay_period (pay_period_id, pay_group_id, period_start_date, period_end_date, range)
 VALUES
-(1, '2025-01-01', '2025-01-31', 'JAN-2025'),
-(1, '2025-02-01', '2025-02-28', 'FEB-2025'),
-(2, '2025-06-01', '2025-06-07', '01-07 JUN25'),
-(2, '2025-06-08', '2025-06-14', '08-14 JUN25'),
-(2, '2025-06-15', '2025-06-21', '15-21 JUN25'),
-(2, '2025-06-22', '2025-06-28', '22-28 JUN25');
+(1, 1, '2025-01-01', '2025-01-31', '2025-01-01/2025-01-31'),
+(2, 1, '2025-02-01', '2025-02-28', '2025-02-01/2025-02-28'),
+(3, 2, '2025-06-01', '2025-06-07', '2025-06-01/2025-06-07'),
+(4, 2, '2025-06-08', '2025-06-14', '2025-06-08/2025-06-14'),
+(5, 2, '2025-06-15', '2025-06-21', '2025-06-15/2025-06-21'),
+(6, 2, '2025-06-22', '2025-06-28', '2025-06-22/2025-06-28');
 
 INSERT INTO timesheet_summary
-(employee_id, pay_period_id, no_of_days_worked, hours_worked, holiday_hours)
+(employee_id, pay_period_id, no_of_days_worked, hours_worked, holiday_hours_worked, holiday_days)
 VALUES
-('E001', 1, 22, 176.00, 8.00),
-('E002', 2, 20, 160.00, 0.00);
+-- Salaried employees (E001-E005, E008-E010)
+('E001', 1, 22, 0, 0, 0),
+('E002', 2, 20, 0, 0, 2),
+('E003', 1, 18, 0, 0, 4),
+('E004', 2, 20, 0, 0, 2),
+('E005', 1, 15, 0, 0, 7),
+('E008', 2, 22, 0, 0, 0),
+('E009', 1, 20, 0, 0, 2),
+('E010', 2, 21, 0, 0, 1),
+
+-- Hourly / Contract employees (E006-E007)
+('E006', 3, 0, 40.00, 8.00, 0),
+('E007', 4, 0, 120.00, 16.00, 0);

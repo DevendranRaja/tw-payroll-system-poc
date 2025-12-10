@@ -3,6 +3,7 @@ package com.tw.coupang.one_payroll.timesheet.service;
 import com.tw.coupang.one_payroll.timesheet.dto.TimesheetRequest;
 import com.tw.coupang.one_payroll.timesheet.dto.TimesheetResponse;
 import com.tw.coupang.one_payroll.timesheet.entity.TimesheetSummary;
+import com.tw.coupang.one_payroll.timesheet.exception.TimesheetNotFoundException;
 import com.tw.coupang.one_payroll.timesheet.helper.TimesheetValidator;
 import com.tw.coupang.one_payroll.timesheet.repository.TimesheetRepository;
 import org.junit.jupiter.api.Test;
@@ -88,5 +89,47 @@ class TimesheetServiceTest {
         assertNotNull(response);
         assertEquals("Timesheet updated successfully", response.getMessage());
         assertEquals(new BigDecimal("50"), response.getHoursWorked()); // Verify update
+    }
+
+    @Test
+    void getTimesheetWhenExistsShouldReturnTimesheet() {
+        String employeeId = "EMP123";
+        Integer payPeriodId = 1;
+
+        TimesheetSummary summary = TimesheetSummary.builder()
+                .id(100L)
+                .employeeId(employeeId)
+                .payPeriodId(payPeriodId)
+                .hoursWorked(BigDecimal.TEN)
+                .holidayDays(2)
+                .holidayHoursWorked(BigDecimal.ZERO)
+                .build();
+
+        when(timesheetRepository.findByEmployeeIdAndPayPeriodId(employeeId, payPeriodId))
+                .thenReturn(Optional.of(summary));
+
+        TimesheetSummary result = timesheetService.getTimesheet(employeeId, payPeriodId);
+
+        assertNotNull(result);
+        assertEquals(employeeId, result.getEmployeeId());
+        assertEquals(payPeriodId, result.getPayPeriodId());
+        assertEquals(BigDecimal.TEN, result.getHoursWorked());
+    }
+
+    @Test
+    void getTimesheetWhenNotExistsShouldThrowException() {
+        String employeeId = "EMP123";
+        Integer payPeriodId = 1;
+
+        when(timesheetRepository.findByEmployeeIdAndPayPeriodId(employeeId, payPeriodId))
+                .thenReturn(Optional.empty());
+
+        TimesheetNotFoundException exception = assertThrows(
+                TimesheetNotFoundException.class,
+                () -> timesheetService.getTimesheet(employeeId, payPeriodId)
+        );
+
+        assertTrue(exception.getMessage().contains(employeeId));
+        assertTrue(exception.getMessage().contains(payPeriodId.toString()));
     }
 }

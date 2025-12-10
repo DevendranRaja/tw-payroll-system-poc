@@ -40,4 +40,14 @@ public interface PayrollRunRepository extends JpaRepository<PayrollRun, Integer>
 
     List<PayrollRun> findTop5ByStatusNot(PayrollStatus status);
 
+    @Query("""
+           select case when count(p) > 0 then true else false end
+           from PayrollRun p
+           where p.employeeId = :employeeId
+             and p.payPeriodStart <= :endDate
+             and p.payPeriodEnd >= :startDate
+           """)
+    boolean existsPayrollRunByEmployeeAndPeriod(@Param("employeeId") String employeeId,
+                                                @Param("startDate") LocalDate startDate,
+                                                @Param("endDate") LocalDate endDate);
 }

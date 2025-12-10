@@ -12,7 +12,7 @@ import java.time.temporal.ChronoUnit;
 @Component
 public class PayPeriodCycleValidator {
 
-    public void validatePayPeriodAgainstPayGroup(LocalDate startDate, LocalDate endDate, PayGroup payGroup) {
+    public void validatePayPeriodsAgainstPayGroup(LocalDate startDate, LocalDate endDate, PayGroup payGroup) {
         try {
             switch (payGroup.getPaymentCycle()) {
                 case MONTHLY -> validateMonthlyCycle(startDate, endDate);

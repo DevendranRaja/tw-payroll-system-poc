@@ -11,15 +11,24 @@ import java.util.Optional;
 public interface PayPeriodRepository extends JpaRepository<PayPeriod, Integer> {
 
     @Query("""
-        select case when count(p) > 0 then true else false end
-        from PayPeriod p
-        where p.payGroupId = :payGroupId
-          and p.periodStartDate <= :periodEndDate
-          and p.periodEndDate >= :periodEndDate
-    """)
+           select case when count(p) > 0 then true else false end
+           from PayPeriod p
+           where p.payGroupId = :payGroupId
+             and p.periodStartDate <= :periodEndDate
+             and p.periodEndDate >= :periodStartDate
+           """)
     boolean existsOverlappingPeriod(@Param("payGroupId") Integer payGroupId,
                                     @Param("periodStartDate") LocalDate periodStartDate,
                                     @Param("periodEndDate") LocalDate periodEndDate);
 
-    Optional<PayPeriod> findByPayGroupIdAndPeriodStartDateAndPeriodEndDate(Integer payGroupId, LocalDate periodStartDate, LocalDate periodEndDate);
+    @Query("""
+           select p.id
+           from PayPeriod p
+           where p.payGroupId = :payGroupId
+             and p.periodStartDate = :periodStartDate
+             and p.periodEndDate = :periodEndDate
+           """)
+    Optional<Integer> findPayPeriodId(@Param("payGroupId") Integer payGroupId,
+                                      @Param("periodStartDate") LocalDate periodStartDate,
+                                      @Param("periodEndDate") LocalDate periodEndDate);
 }

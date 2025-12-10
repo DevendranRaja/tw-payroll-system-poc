@@ -12,17 +12,20 @@ import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
 import com.tw.coupang.one_payroll.payperiod.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payperiod.exception.PayPeriodNotFoundException;
-import com.tw.coupang.one_payroll.payperiod.repository.PayPeriodRepository;
 import com.tw.coupang.one_payroll.payperiod.service.PayPeriodService;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
 import com.tw.coupang.one_payroll.payroll.exception.InvalidPayrollStateException;
+import com.tw.coupang.one_payroll.payroll.exception.PayrollRunAlreadyExistsException;
 import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
 import com.tw.coupang.one_payroll.payperiod.exception.InvalidPayPeriodException;
 import com.tw.coupang.one_payroll.payperiod.validator.PayPeriodCycleValidator;
+import com.tw.coupang.one_payroll.payroll.service.calculator.proration.ProrationCalculatorFactory;
+import com.tw.coupang.one_payroll.payroll.service.calculator.proration.ProrationPayCalculator;
+import com.tw.coupang.one_payroll.payroll.validator.PayrollValidator;
 import com.tw.coupang.one_payroll.timesheet.entity.TimesheetSummary;
 import com.tw.coupang.one_payroll.timesheet.exception.TimesheetNotFoundException;
-import com.tw.coupang.one_payroll.timesheet.repository.TimesheetRepository;
+import com.tw.coupang.one_payroll.timesheet.service.TimesheetService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,7 +38,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import static com.tw.coupang.one_payroll.payroll.enums.PayrollStatus.FAILED;
 import static com.tw.coupang.one_payroll.payroll.enums.PayrollStatus.PROCESSED;
@@ -47,6 +49,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
@@ -72,13 +76,19 @@ class PayrollCalculationServiceImplTest {
     private PayPeriodCycleValidator payPeriodCycleValidator;
 
     @Mock
-    private PayPeriodRepository payPeriodRepository;
+    private PayrollValidator payrollValidator;
 
     @Mock
-    private TimesheetRepository timesheetRepository;
+    private TimesheetService timesheetService;
 
     @Mock
     private PayPeriodService payPeriodService;
+
+    @Mock
+    private ProrationCalculatorFactory prorationCalculatorFactory;
+
+    @Mock
+    private ProrationPayCalculator prorationPayCalculator;
 
     private static final BigDecimal HOLIDAY_RATE = BigDecimal.valueOf(1.5);
 
@@ -136,15 +146,9 @@ class PayrollCalculationServiceImplTest {
         when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
 
-        doNothing().when(payPeriodService).checkOverlap(
-                employee.getPayGroupId(),
-                request.getPayPeriod().getStartDate(),
-                request.getPayPeriod().getEndDate()
-        );
-
         doThrow(new InvalidPayPeriodException("Invalid pay period"))
                 .when(payPeriodCycleValidator)
-                .validatePayPeriodAgainstPayGroup(
+                .validatePayPeriodsAgainstPayGroup(
                         request.getPayPeriod().getStartDate(),
                         request.getPayPeriod().getEndDate(),
                         payGroup);
@@ -153,7 +157,7 @@ class PayrollCalculationServiceImplTest {
 
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
         verify(payGroupValidator).validatePayGroupExists(2);
-        verify(payPeriodCycleValidator).validatePayPeriodAgainstPayGroup(
+        verify(payPeriodCycleValidator).validatePayPeriodsAgainstPayGroup(
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup);
@@ -165,16 +169,12 @@ class PayrollCalculationServiceImplTest {
         PayrollCalculationRequest request = buildRequest("EMP456");
         EmployeeMaster employee = buildEmployeeObjectWithActiveStatus(PayType.valueOf(payTypeString));
         PayGroup payGroup = buildPayGroup(HOLIDAY_RATE);
-        com.tw.coupang.one_payroll.payperiod.entity.PayPeriod payPeriod = com.tw.coupang.one_payroll.payperiod.entity.PayPeriod.builder()
-                .id(1)
-                .payGroupId(1)
-                .periodStartDate(request.getPayPeriod().getStartDate())
-                .periodEndDate(request.getPayPeriod().getEndDate())
-                .build();
+        final Integer payPeriodId = 1;
+        final BigDecimal proratedPay = BigDecimal.valueOf(2000);
 
         TimesheetSummary timesheet = TimesheetSummary.builder()
                 .employeeId(request.getEmployeeId())
-                .payPeriodId(1)
+                .payPeriodId(payPeriodId)
                 .noOfDaysWorked(20)
                 .hoursWorked(BigDecimal.valueOf(160))
                 .build();
@@ -182,24 +182,20 @@ class PayrollCalculationServiceImplTest {
         when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
         when(payGroupValidator.validatePayGroupExists(2)).thenReturn(payGroup);
 
-        doNothing().when(payPeriodCycleValidator).validatePayPeriodAgainstPayGroup(
+        doNothing().when(payPeriodCycleValidator).validatePayPeriodsAgainstPayGroup(
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup);
 
-        when(payPeriodRepository.findByPayGroupIdAndPeriodStartDateAndPeriodEndDate(
-                employee.getPayGroupId(),
-                payPeriod.getPeriodStartDate(),
-                payPeriod.getPeriodEndDate()
-        )).thenReturn(Optional.of(payPeriod));
-
-        when(timesheetRepository.findByEmployeeIdAndPayPeriodId(request.getEmployeeId(), 1)).thenReturn(Optional.of(timesheet));
-
-        doNothing().when(payPeriodService).checkOverlap(
-                employee.getPayGroupId(),
+        when(payPeriodService.getPayPeriodId(employee.getPayGroupId(),
                 request.getPayPeriod().getStartDate(),
-                request.getPayPeriod().getEndDate()
-        );
+                request.getPayPeriod().getEndDate()))
+                .thenReturn(payPeriodId);
+
+        when(timesheetService.getTimesheet(request.getEmployeeId(), payPeriodId)).thenReturn(timesheet);
+
+        when(prorationCalculatorFactory.getCalculator(employee.getPayType())).thenReturn(prorationPayCalculator);
+        when(prorationPayCalculator.calculate(any(), any(), any())).thenReturn(proratedPay);
 
         final var actual = service.calculate(request);
 
@@ -207,11 +203,13 @@ class PayrollCalculationServiceImplTest {
         assertEquals(payGroup.getId(), actual.payGroupId());
         verify(employeeMasterService).getEmployeeById(request.getEmployeeId());
         verify(payGroupValidator).validatePayGroupExists(2);
-        verify(payPeriodCycleValidator).validatePayPeriodAgainstPayGroup(
+        verify(payPeriodCycleValidator).validatePayPeriodsAgainstPayGroup(
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup);
-        verify(timesheetRepository).findByEmployeeIdAndPayPeriodId(request.getEmployeeId(), 1);
+        verify(timesheetService).getTimesheet(request.getEmployeeId(), payPeriodId);
+        verify(prorationCalculatorFactory).getCalculator(employee.getPayType());
+        verify(prorationPayCalculator).calculate(any(), any(), any());
 
         final ArgumentCaptor<PayrollRun> captor = ArgumentCaptor.forClass(PayrollRun.class);
         verify(payrollRunRepository).save(captor.capture());
@@ -219,6 +217,7 @@ class PayrollCalculationServiceImplTest {
         assertEquals(PROCESSED, captor.getValue().getStatus());
         assertEquals(request.getPayPeriod().getStartDate(), captor.getValue().getPayPeriodStart());
         assertEquals(request.getPayPeriod().getEndDate(), captor.getValue().getPayPeriodEnd());
+        assertEquals(proratedPay, captor.getValue().getGrossPay());
     }
 
     @Test
@@ -368,23 +367,14 @@ class PayrollCalculationServiceImplTest {
 
         when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
         when(payGroupValidator.validatePayGroupExists(employee.getPayGroupId())).thenReturn(payGroup);
-        doNothing().when(payPeriodCycleValidator).validatePayPeriodAgainstPayGroup(
+        doNothing().when(payPeriodCycleValidator).validatePayPeriodsAgainstPayGroup(
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup
         );
 
-        when(payPeriodRepository.findByPayGroupIdAndPeriodStartDateAndPeriodEndDate(
-                employee.getPayGroupId(),
-                request.getPayPeriod().getStartDate(),
-                request.getPayPeriod().getEndDate()
-        )).thenReturn(Optional.empty());
-
-        doNothing().when(payPeriodService).checkOverlap(
-                employee.getPayGroupId(),
-                request.getPayPeriod().getStartDate(),
-                request.getPayPeriod().getEndDate()
-        );
+        when(payPeriodService.getPayPeriodId(employee.getPayGroupId(), request.getPayPeriod().getStartDate(), request.getPayPeriod().getEndDate()))
+                .thenThrow(new PayPeriodNotFoundException(employee.getPayGroupId(), request.getPayPeriod().getStartDate(), request.getPayPeriod().getEndDate()));
 
         assertThrows(PayPeriodNotFoundException.class, () -> service.calculate(request));
     }
@@ -403,26 +393,16 @@ class PayrollCalculationServiceImplTest {
 
         when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
         when(payGroupValidator.validatePayGroupExists(employee.getPayGroupId())).thenReturn(payGroup);
-        doNothing().when(payPeriodCycleValidator).validatePayPeriodAgainstPayGroup(
+        doNothing().when(payPeriodCycleValidator).validatePayPeriodsAgainstPayGroup(
                 request.getPayPeriod().getStartDate(),
                 request.getPayPeriod().getEndDate(),
                 payGroup
         );
 
-        when(payPeriodRepository.findByPayGroupIdAndPeriodStartDateAndPeriodEndDate(
-                employee.getPayGroupId(),
-                request.getPayPeriod().getStartDate(),
-                request.getPayPeriod().getEndDate()
-        )).thenReturn(Optional.of(payPeriod));
+        when(payPeriodService.getPayPeriodId(employee.getPayGroupId(), request.getPayPeriod().getStartDate(), request.getPayPeriod().getEndDate())).thenReturn(payPeriod.getId());
 
-        when(timesheetRepository.findByEmployeeIdAndPayPeriodId(employee.getEmployeeId(), payPeriod.getId()))
-                .thenReturn(Optional.empty());
-
-        doNothing().when(payPeriodService).checkOverlap(
-                employee.getPayGroupId(),
-                request.getPayPeriod().getStartDate(),
-                request.getPayPeriod().getEndDate()
-        );
+        when(timesheetService.getTimesheet(employee.getEmployeeId(), payPeriod.getId()))
+                .thenThrow(new TimesheetNotFoundException(employee.getEmployeeId(), payPeriod.getId()));
 
         assertThrows(TimesheetNotFoundException.class, () -> service.calculate(request));
     }
@@ -437,7 +417,112 @@ class PayrollCalculationServiceImplTest {
         when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
         when(payGroupValidator.validatePayGroupExists(employee.getPayGroupId())).thenReturn(payGroup);
 
+        doThrow(new InvalidPayrollStateException("Joining date after pay period"))
+                .when(payrollValidator)
+                .validateEmployeeJoiningDateAgainstPayPeriods(
+                        employee,
+                        request.getPayPeriod().getStartDate(),
+                        request.getPayPeriod().getEndDate()
+                );
+
         assertThrows(InvalidPayrollStateException.class, () -> service.calculate(request));
+    }
+
+    @Test
+    void shouldThrowPayrollRunAlreadyExistsExceptionWhenDuplicatePayroll() {
+        PayrollCalculationRequest request = buildRequest("EMP456");
+        EmployeeMaster employee = buildEmployeeObjectWithActiveStatus(PayType.HOURLY);
+        PayGroup payGroup = buildPayGroup(HOLIDAY_RATE);
+
+        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(employee.getPayGroupId())).thenReturn(payGroup);
+        doNothing().when(payPeriodCycleValidator).validatePayPeriodsAgainstPayGroup(
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate(),
+                payGroup
+        );
+
+        when(payrollRunRepository.existsPayrollRunByEmployeeAndPeriod(
+                employee.getEmployeeId(),
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate()))
+                .thenReturn(true);
+
+        assertThrows(PayrollRunAlreadyExistsException.class,
+                () -> service.calculate(request));
+    }
+
+    @Test
+    void shouldReturnDefaultHolidayRateWhenPayGroupHolidayRateIsNull() {
+        PayrollCalculationRequest request = buildRequest("EMP456");
+        EmployeeMaster employee = buildEmployeeObjectWithActiveStatus(PayType.SALARIED);
+        employee.setPayType(PayType.SALARIED);
+
+        PayGroup payGroup = buildPayGroup(null);
+        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(employee.getPayGroupId())).thenReturn(payGroup);
+
+        doNothing().when(payPeriodCycleValidator).validatePayPeriodsAgainstPayGroup(
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate(),
+                payGroup
+        );
+
+        when(payrollRunRepository.existsPayrollRunByEmployeeAndPeriod(any(), any(), any()))
+                .thenReturn(false);
+
+        when(payPeriodService.getPayPeriodId(employee.getPayGroupId(),
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate()))
+                .thenReturn(1);
+
+        TimesheetSummary timesheet = TimesheetSummary.builder()
+                .employeeId(employee.getEmployeeId())
+                .payPeriodId(1)
+                .hoursWorked(BigDecimal.TEN)
+                .noOfDaysWorked(20)
+                .build();
+
+        when(timesheetService.getTimesheet(employee.getEmployeeId(), 1)).thenReturn(timesheet);
+        when(prorationCalculatorFactory.getCalculator(employee.getPayType())).thenReturn(prorationPayCalculator);
+        when(prorationPayCalculator.calculate(any(), any(), any())).thenReturn(BigDecimal.valueOf(1000));
+
+        final var result = service.calculate(request);
+
+        assertNotNull(result);
+        assertEquals(employee.getEmployeeId(), result.employeeId());
+    }
+
+    @Test
+    void shouldCallProrationCalculatorCorrectlyForHourlyEmployee() {
+        PayrollCalculationRequest request = buildRequest("EMP456");
+        EmployeeMaster employee = buildEmployeeObjectWithActiveStatus(PayType.HOURLY);
+        PayGroup payGroup = buildPayGroup(HOLIDAY_RATE);
+
+        when(employeeMasterService.getEmployeeById(request.getEmployeeId())).thenReturn(employee);
+        when(payGroupValidator.validatePayGroupExists(employee.getPayGroupId())).thenReturn(payGroup);
+        doNothing().when(payPeriodCycleValidator).validatePayPeriodsAgainstPayGroup(
+                request.getPayPeriod().getStartDate(),
+                request.getPayPeriod().getEndDate(),
+                payGroup
+        );
+
+        when(payrollRunRepository.existsPayrollRunByEmployeeAndPeriod(any(), any(), any())).thenReturn(false);
+        when(payPeriodService.getPayPeriodId(anyInt(), any(), any())).thenReturn(1);
+
+        TimesheetSummary timesheet = TimesheetSummary.builder().employeeId(employee.getEmployeeId())
+                .payPeriodId(1)
+                .hoursWorked(BigDecimal.TEN)
+                .noOfDaysWorked(20)
+                .build();
+
+        when(timesheetService.getTimesheet(employee.getEmployeeId(), 1)).thenReturn(timesheet);
+        when(prorationCalculatorFactory.getCalculator(employee.getPayType())).thenReturn(prorationPayCalculator);
+        when(prorationPayCalculator.calculate(any(), any(), any())).thenReturn(BigDecimal.valueOf(1500));
+
+        service.calculate(request);
+
+        verify(prorationPayCalculator).calculate(any(), any(), any());
     }
 
     private PayrollCalculationRequest buildRequest(String employeeId) {

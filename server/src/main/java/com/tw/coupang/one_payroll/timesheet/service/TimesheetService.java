@@ -3,6 +3,7 @@ package com.tw.coupang.one_payroll.timesheet.service;
 import com.tw.coupang.one_payroll.timesheet.dto.TimesheetRequest;
 import com.tw.coupang.one_payroll.timesheet.dto.TimesheetResponse;
 import com.tw.coupang.one_payroll.timesheet.entity.TimesheetSummary;
+import com.tw.coupang.one_payroll.timesheet.exception.TimesheetNotFoundException;
 import com.tw.coupang.one_payroll.timesheet.helper.TimesheetValidator;
 import com.tw.coupang.one_payroll.timesheet.repository.TimesheetRepository;
 import lombok.RequiredArgsConstructor;
@@ -58,6 +59,12 @@ public class TimesheetService {
         TimesheetSummary saved = timesheetRepository.save(timesheet);
 
         return mapToResponse(saved, operationMessage);
+    }
+
+    public TimesheetSummary getTimesheet(String employeeId, Integer payPeriodId) {
+        return timesheetRepository
+                .findByEmployeeIdAndPayPeriodId(employeeId, payPeriodId)
+                .orElseThrow(() -> new TimesheetNotFoundException(employeeId, payPeriodId));
     }
 
     private TimesheetResponse mapToResponse(TimesheetSummary entity, String msg) {

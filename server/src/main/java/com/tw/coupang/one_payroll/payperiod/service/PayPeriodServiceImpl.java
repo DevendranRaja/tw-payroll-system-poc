@@ -6,6 +6,7 @@ import com.tw.coupang.one_payroll.payperiod.dto.request.PayPeriodCreateRequest;
 import com.tw.coupang.one_payroll.payperiod.dto.response.PayPeriodResponse;
 import com.tw.coupang.one_payroll.payperiod.entity.PayPeriod;
 import com.tw.coupang.one_payroll.payperiod.exception.OverlappingPayPeriodException;
+import com.tw.coupang.one_payroll.payperiod.exception.PayPeriodNotFoundException;
 import com.tw.coupang.one_payroll.payperiod.repository.PayPeriodRepository;
 import com.tw.coupang.one_payroll.payperiod.validator.PayPeriodCycleValidator;
 import lombok.extern.slf4j.Slf4j;
@@ -20,14 +21,14 @@ public class PayPeriodServiceImpl implements PayPeriodService {
 
     private final PayPeriodRepository payPeriodRepository;
     private final PayGroupValidator payGroupValidator;
-    private final PayPeriodCycleValidator calculatorValidator;
+    private final PayPeriodCycleValidator payPeriodCycleValidator;
 
     public PayPeriodServiceImpl(PayPeriodRepository payPeriodRepository,
                                 PayGroupValidator payGroupValidator,
-                                PayPeriodCycleValidator calculatorValidator) {
+                                PayPeriodCycleValidator payPeriodCycleValidator) {
         this.payPeriodRepository = payPeriodRepository;
         this.payGroupValidator = payGroupValidator;
-        this.calculatorValidator = calculatorValidator;
+        this.payPeriodCycleValidator = payPeriodCycleValidator;
     }
 
     @Transactional
@@ -40,7 +41,7 @@ public class PayPeriodServiceImpl implements PayPeriodService {
         PayGroup payGroup = payGroupValidator.validatePayGroupExists(request.getPayGroupId());
 
         log.debug("Validating pay period cycle for payGroupId={}", payGroup.getId());
-        calculatorValidator.validatePayPeriodAgainstPayGroup(startDate, endDate, payGroup);
+        payPeriodCycleValidator.validatePayPeriodsAgainstPayGroup(startDate, endDate, payGroup);
 
         checkOverlap(payGroup.getId(), startDate, endDate);
 
@@ -53,8 +54,14 @@ public class PayPeriodServiceImpl implements PayPeriodService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
     @Override
-    public void checkOverlap(Integer payGroupId, LocalDate start, LocalDate end) {
+    public Integer getPayPeriodId(Integer payGroupId, LocalDate startDate, LocalDate endDate) {
+        return payPeriodRepository.findPayPeriodId(payGroupId, startDate, endDate)
+                .orElseThrow(() -> new PayPeriodNotFoundException(payGroupId, startDate, endDate));
+    }
+
+    private void checkOverlap(Integer payGroupId, LocalDate start, LocalDate end) {
         boolean exists = payPeriodRepository.existsOverlappingPeriod(payGroupId, start, end);
         if (exists) {
             throw new OverlappingPayPeriodException("Pay period overlaps with existing period(s) for payGroupId=" + payGroupId);

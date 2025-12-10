@@ -7,6 +7,7 @@ import com.tw.coupang.one_payroll.payperiod.dto.request.PayPeriod;
 import com.tw.coupang.one_payroll.payperiod.dto.request.PayPeriodCreateRequest;
 import com.tw.coupang.one_payroll.payperiod.dto.response.PayPeriodResponse;
 import com.tw.coupang.one_payroll.payperiod.exception.OverlappingPayPeriodException;
+import com.tw.coupang.one_payroll.payperiod.exception.PayPeriodNotFoundException;
 import com.tw.coupang.one_payroll.payperiod.repository.PayPeriodRepository;
 import com.tw.coupang.one_payroll.payperiod.validator.PayPeriodCycleValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -97,7 +99,7 @@ class PayPeriodServiceImplTest {
                 .build();
 
         when(payGroupValidator.validatePayGroupExists(payGroup.getId())).thenReturn(payGroup);
-        doThrow(new RuntimeException("Invalid cycle")).when(calculatorValidator).validatePayPeriodAgainstPayGroup(start, end, payGroup);
+        doThrow(new RuntimeException("Invalid cycle")).when(calculatorValidator).validatePayPeriodsAgainstPayGroup(start, end, payGroup);
 
         RuntimeException exception = assertThrows(RuntimeException.class,
                 () -> payPeriodService.create(request));
@@ -141,7 +143,7 @@ class PayPeriodServiceImplTest {
         assertEquals(end, captured.getPeriodEndDate());
         assertEquals(start + "/" + end, captured.getRange());
 
-        verify(calculatorValidator).validatePayPeriodAgainstPayGroup(start, end, payGroup);
+        verify(calculatorValidator).validatePayPeriodsAgainstPayGroup(start, end, payGroup);
     }
 
     @Test
@@ -182,7 +184,7 @@ class PayPeriodServiceImplTest {
         assertEquals(end, captured.getPeriodEndDate());
         assertEquals(start + "/" + end, captured.getRange());
 
-        verify(calculatorValidator).validatePayPeriodAgainstPayGroup(start, end, payGroup);
+        verify(calculatorValidator).validatePayPeriodsAgainstPayGroup(start, end, payGroup);
     }
 
     @Test
@@ -223,6 +225,38 @@ class PayPeriodServiceImplTest {
         assertEquals(end, captured.getPeriodEndDate());
         assertEquals(start + "/" + end, captured.getRange());
 
-        verify(calculatorValidator).validatePayPeriodAgainstPayGroup(start, end, payGroup);
+        verify(calculatorValidator).validatePayPeriodsAgainstPayGroup(start, end, payGroup);
+    }
+
+    @Test
+    void getPayPeriodIdWhenExistsShouldReturnId() {
+        Integer payGroupId = 1;
+        LocalDate start = LocalDate.of(2025, 10, 1);
+        LocalDate end = LocalDate.of(2025, 10, 31);
+
+        when(payPeriodRepository.findPayPeriodId(payGroupId, start, end))
+                .thenReturn(Optional.of(100));
+
+        Integer result = payPeriodService.getPayPeriodId(payGroupId, start, end);
+
+        assertNotNull(result);
+        assertEquals(100, result);
+    }
+
+    @Test
+    void getPayPeriodIdWhenNotExistsShouldThrowException() {
+        Integer payGroupId = 1;
+        LocalDate start = LocalDate.of(2025, 10, 1);
+        LocalDate end = LocalDate.of(2025, 10, 31);
+
+        when(payPeriodRepository.findPayPeriodId(payGroupId, start, end))
+                .thenReturn(Optional.empty());
+
+        PayPeriodNotFoundException exception = assertThrows(
+                PayPeriodNotFoundException.class,
+                () -> payPeriodService.getPayPeriodId(payGroupId, start, end)
+        );
+
+        assertTrue(exception.getMessage().contains("No pay period found"));
     }
 }

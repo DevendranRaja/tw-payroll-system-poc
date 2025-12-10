@@ -2,38 +2,35 @@ package com.tw.coupang.one_payroll.payroll.service;
 
 import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
-import com.tw.coupang.one_payroll.employee_master.enums.PayType;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeInactiveException;
 import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
 import com.tw.coupang.one_payroll.paygroups.entity.PayGroup;
 import com.tw.coupang.one_payroll.paygroups.validator.PayGroupValidator;
-import com.tw.coupang.one_payroll.payperiod.entity.PayPeriod;
-import com.tw.coupang.one_payroll.payperiod.exception.PayPeriodNotFoundException;
-import com.tw.coupang.one_payroll.payperiod.repository.PayPeriodRepository;
 import com.tw.coupang.one_payroll.payperiod.service.PayPeriodService;
 import com.tw.coupang.one_payroll.payperiod.validator.PayPeriodCycleValidator;
 import com.tw.coupang.one_payroll.payroll.dto.request.PayrollCalculationRequest;
 import com.tw.coupang.one_payroll.payroll.dto.response.PayrollRunResponse;
 import com.tw.coupang.one_payroll.payroll.entity.PayrollRun;
-import com.tw.coupang.one_payroll.payroll.exception.InvalidPayrollStateException;
+import com.tw.coupang.one_payroll.payroll.exception.PayrollRunAlreadyExistsException;
 import com.tw.coupang.one_payroll.payroll.repository.PayrollRunRepository;
+import com.tw.coupang.one_payroll.payroll.service.calculator.context.ProrationCalculatorContext;
+import com.tw.coupang.one_payroll.payroll.service.calculator.proration.ProrationCalculatorFactory;
+import com.tw.coupang.one_payroll.payroll.service.calculator.proration.ProrationPayCalculator;
+import com.tw.coupang.one_payroll.payroll.validator.PayrollValidator;
 import com.tw.coupang.one_payroll.timesheet.entity.TimesheetSummary;
-import com.tw.coupang.one_payroll.timesheet.exception.TimesheetNotFoundException;
-import com.tw.coupang.one_payroll.timesheet.repository.TimesheetRepository;
+import com.tw.coupang.one_payroll.timesheet.service.TimesheetService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
 import static com.tw.coupang.one_payroll.common.utils.MathsUtils.percentOf;
-import static com.tw.coupang.one_payroll.common.utils.MathsUtils.safe;
-import static com.tw.coupang.one_payroll.common.utils.MathsUtils.safeInt;
+import static com.tw.coupang.one_payroll.paygroups.constants.PayGroupConstants.DEFAULT_HOLIDAY_RATE;
 import static com.tw.coupang.one_payroll.payroll.enums.PayrollStatus.PROCESSED;
+import static com.tw.coupang.one_payroll.payroll.util.WorkingDaysUtil.getWeekdaysBetween;
 import static java.math.RoundingMode.HALF_UP;
 
 @Service
@@ -41,16 +38,14 @@ import static java.math.RoundingMode.HALF_UP;
 @Slf4j
 public class PayrollCalculationServiceImpl implements PayrollCalculationService {
 
-    private static final BigDecimal HOURS_PER_DAY = BigDecimal.valueOf(8);
-    private static final BigDecimal DEFAULT_HOLIDAY_RATE = BigDecimal.valueOf(1.5);
-
     private final EmployeeMasterService employeeMasterService;
     private final PayGroupValidator payGroupValidator;
     private final PayrollRunRepository payrollRunRepository;
+    private final PayrollValidator payrollValidator;
     private final PayPeriodCycleValidator payPeriodCycleValidator;
-    private final TimesheetRepository timesheetRepository;
-    private final PayPeriodRepository payPeriodRepository;
     private final PayPeriodService payPeriodService;
+    private final TimesheetService timesheetService;
+    private final ProrationCalculatorFactory prorationCalculatorFactory;
 
     @Override
     public PayrollRunResponse calculate(PayrollCalculationRequest request) {
@@ -69,26 +64,21 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
         final LocalDate startDate = request.getPayPeriod().getStartDate();
         final LocalDate endDate = request.getPayPeriod().getEndDate();
 
-        validateEmployeeJoiningDateAgainstPayPeriods(employee, startDate, endDate);
-        payPeriodService.checkOverlap(payGroupId, startDate, endDate);
+        payrollValidator.validateEmployeeJoiningDateAgainstPayPeriods(employee, startDate, endDate);
+        payPeriodCycleValidator.validatePayPeriodsAgainstPayGroup(startDate, endDate, payGroup);
+        log.info("Pay period validated for Employee ID: {}, Pay Group: {}, Period: {} to {}", employeeId, payGroup.getGroupName(), startDate, endDate);
 
-        log.info("Validated employee, pay group and pay periods for employeeId={}, payGroupId={}", employeeId, payGroupId);
-
-        payPeriodCycleValidator.validatePayPeriodAgainstPayGroup(startDate, endDate, payGroup);
-
-        log.info("Pay period validated for employeeId={} ({} → {})", employeeId, startDate, endDate);
+        validateDuplicatePayrollRun(employeeId, startDate, endDate);
 
         final var payrollRun = PayrollRun.builder();
         payrollRun.employeeId(employee.getEmployeeId())
-                .payPeriodStart(request.getPayPeriod().getStartDate())
-                .payPeriodEnd(request.getPayPeriod().getEndDate());
+                .payPeriodStart(startDate)
+                .payPeriodEnd(endDate);
 
-        final BigDecimal holidayRate = getHolidayRate(payGroup);
-        final int totalWorkingDays = getWeekdaysBetween(startDate, endDate);
-        PayPeriod payPeriod = getPayPeriodForEmployee(payGroupId, startDate, endDate);
-        TimesheetSummary timesheet = fetchTimesheet(employeeId, payPeriod.getId());
+        final Integer payPeriodId = payPeriodService.getPayPeriodId(payGroupId, startDate, endDate);
+        TimesheetSummary timesheet = timesheetService.getTimesheet(employeeId, payPeriodId);
 
-        BigDecimal proratedPay = calculateProratedGrossPay(employee, totalWorkingDays, timesheet, holidayRate);
+        BigDecimal proratedPay = calculateProrationGrossPay(employee, timesheet, getWeekdaysBetween(startDate, endDate), getHolidayRate(payGroup));
 
         //TODO: Use hours worked and pay group payment cycle to calculate gross pay
         payrollGrossToNetPayCalculation(proratedPay, payGroup, payrollRun);
@@ -97,7 +87,7 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
         //TODO: Send payrollRun data to Payslip, deductions, benefits tables.
 
         log.info("Payroll calculation completed for Employee ID: {}, Pay Period: {} to {}",
-                request.getEmployeeId(), request.getPayPeriod().getStartDate(), request.getPayPeriod().getEndDate());
+                request.getEmployeeId(), startDate, endDate);
 
         return PayrollRunResponse.builder()
                 .employeeId(payrollRunFinal.getEmployeeId())
@@ -143,94 +133,29 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
                 .toList();
     }
 
+    private void validateDuplicatePayrollRun(String employeeId, LocalDate startDate, LocalDate endDate) {
+        if (payrollRunRepository.existsPayrollRunByEmployeeAndPeriod(employeeId, startDate, endDate)) {
+            log.info("Duplicate payroll run attempted for employeeId={}, period={} to {}", employeeId, startDate, endDate);
+            throw new PayrollRunAlreadyExistsException(employeeId, startDate, endDate);
+        }
+    }
+
     private BigDecimal getHolidayRate(PayGroup payGroup) {
         return payGroup.getHolidayRate() != null
                 ? payGroup.getHolidayRate()
                 : DEFAULT_HOLIDAY_RATE;
     }
 
-    private int getWeekdaysBetween(LocalDate start, LocalDate end) {
-        int count = 0;
-        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
-            DayOfWeek dow = date.getDayOfWeek();
-            if (dow != DayOfWeek.SATURDAY && dow != DayOfWeek.SUNDAY) {
-                count++;
-            }
-        }
-        return count;
+    private BigDecimal calculateProrationGrossPay(EmployeeMaster employee, TimesheetSummary timesheet, int totalWorkingDays, BigDecimal holidayRate) {
+        final ProrationCalculatorContext context = buildProrationCalculatorContext(totalWorkingDays, holidayRate);
+        ProrationPayCalculator prorationPayCalculator = prorationCalculatorFactory.getCalculator(employee.getPayType());
+        return prorationPayCalculator.calculate(employee, timesheet, context);
     }
 
-    private PayPeriod getPayPeriodForEmployee(Integer payGroupId, LocalDate startDate, LocalDate endDate) {
-        return payPeriodRepository
-                .findByPayGroupIdAndPeriodStartDateAndPeriodEndDate(payGroupId, startDate, endDate)
-                .orElseThrow(() -> new PayPeriodNotFoundException(payGroupId, startDate, endDate));
-    }
-
-    private TimesheetSummary fetchTimesheet(String employeeId, Integer payPeriodId) {
-        return timesheetRepository
-                .findByEmployeeIdAndPayPeriodId(employeeId, payPeriodId)
-                .orElseThrow(() -> new TimesheetNotFoundException(employeeId, payPeriodId));
-    }
-
-    private BigDecimal calculateProratedGrossPay(EmployeeMaster employee, int totalWorkingDays, TimesheetSummary timesheet, BigDecimal holidayRate) {
-        final BigDecimal basePay = fetchBasePayForEmployee(employee);
-        if (employee.getPayType() == PayType.SALARIED) {
-            return calculateSalariedProratedGross(basePay, totalWorkingDays, timesheet);
-        } else {
-            return calculateContractGross(basePay, timesheet, holidayRate);
-        }
-    }
-
-    private BigDecimal fetchBasePayForEmployee(EmployeeMaster employee) {
-        BigDecimal basePayPerDay = BigDecimal.valueOf(5000);
-
-        if (employee.getPayType() == PayType.SALARIED)
-            return basePayPerDay;
-        else
-            return basePayPerDay.divide(HOURS_PER_DAY, 2, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal calculateSalariedProratedGross(BigDecimal basePayPerDay, int totalWorkingDays, TimesheetSummary timesheet) {
-        int daysWorked = safeInt(timesheet.getNoOfDaysWorked());
-        int holidayDays = safeInt(timesheet.getHolidayDays());
-
-        int effectiveDays = daysWorked + holidayDays;
-
-        BigDecimal prorated = basePayPerDay.multiply(BigDecimal.valueOf(effectiveDays))
-                .divide(BigDecimal.valueOf(totalWorkingDays), 2, RoundingMode.HALF_UP);
-
-        log.info("Salaried employee prorated pay: {} (workedDays={}, holidayDaysPaid={}, totalWorkingDays={})", prorated, daysWorked, holidayDays, totalWorkingDays);
-
-        return prorated;
-    }
-
-    private BigDecimal calculateContractGross(BigDecimal basePayPerHour, TimesheetSummary timesheet, BigDecimal holidayRate) {
-        BigDecimal hoursWorked = safe(timesheet.getHoursWorked());
-        BigDecimal extraHoursWorked = safe(timesheet.getHolidayHoursWorked());
-
-        BigDecimal gross = basePayPerHour.multiply(hoursWorked)
-                .add(basePayPerHour.multiply(holidayRate).multiply(extraHoursWorked))
-                .setScale(2, RoundingMode.HALF_UP);
-
-        log.info("Hourly/Contract employee prorated pay: {} (hoursWorked={}, extraHoursWorked={})", gross, hoursWorked, extraHoursWorked);
-
-        return gross;
-    }
-
-    private void validateEmployeeJoiningDateAgainstPayPeriods(EmployeeMaster employee, LocalDate periodStart, LocalDate periodEnd) {
-
-        LocalDate joiningDate = employee.getJoiningDate();
-
-        if (joiningDate.isAfter(periodEnd)) {
-            throw new InvalidPayrollStateException(
-                    String.format(
-                            "Employee %s joined on %s which is after the pay period %s to %s",
-                            employee.getEmployeeId(),
-                            joiningDate,
-                            periodStart,
-                            periodEnd
-                    )
-            );
-        }
+    private ProrationCalculatorContext buildProrationCalculatorContext(int totalWorkingDays, BigDecimal holidayRate) {
+        return ProrationCalculatorContext.builder()
+                .totalWorkingDays(totalWorkingDays)
+                .holidayRate(holidayRate)
+                .build();
     }
 }

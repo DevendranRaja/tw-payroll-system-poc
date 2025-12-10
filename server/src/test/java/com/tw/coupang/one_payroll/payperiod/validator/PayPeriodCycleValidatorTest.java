@@ -30,11 +30,11 @@ class PayPeriodCycleValidatorTest {
 
         if (shouldPass) {
             assertDoesNotThrow(
-                    () -> validator.validatePayPeriodAgainstPayGroup(start, end, payGroup)
+                    () -> validator.validatePayPeriodsAgainstPayGroup(start, end, payGroup)
             );
         } else {
             assertThrows(InvalidPayPeriodException.class,
-                    () -> validator.validatePayPeriodAgainstPayGroup(start, end, payGroup)
+                    () -> validator.validatePayPeriodsAgainstPayGroup(start, end, payGroup)
             );
         }
     }

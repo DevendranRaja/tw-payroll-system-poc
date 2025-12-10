@@ -47,7 +47,7 @@ public class PayPeriod {
     @Column(name = "period_end_date", nullable = false)
     private LocalDate periodEndDate;
 
-    @Column(name = "range", nullable = false, length = 20)
+    @Column(name = "range", nullable = false, length = 50)
     private String range;
 
     @CreationTimestamp

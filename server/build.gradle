@@ -73,7 +73,9 @@ sonarqube {
             **/enums/**,
             **/repository/**,
             **/request/**,
-            **/response/**
+            **/response/**,
+            **/context/**,
+            **/constants/**
         """
 	}
 }
@@ -98,7 +100,9 @@ jacocoTestReport {
                     '**/enums/**',
                     '**/repository/**',
                     '**/request/**',
-                    '**/response/**'
+                    '**/response/**',
+                    '**/context/**',
+                    '**/constants/**'
             ])
         }))
     }

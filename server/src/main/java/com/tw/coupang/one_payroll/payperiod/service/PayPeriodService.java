@@ -8,5 +8,5 @@ import java.time.LocalDate;
 public interface PayPeriodService {
     PayPeriodResponse create(PayPeriodCreateRequest createPayPeriodRequest);
 
-    void checkOverlap(Integer payGroupId, LocalDate start, LocalDate end);
+    Integer getPayPeriodId(Integer payGroupId, LocalDate startDate, LocalDate endDate);
 }
