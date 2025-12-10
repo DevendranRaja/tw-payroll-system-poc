@@ -51,6 +51,7 @@ class PayGroupServiceImplTest {
                 .baseTaxRate(request.getBaseTaxRate())
                 .benefitRate(request.getBenefitRate())
                 .deductionRate(request.getDeductionRate())
+                .holidayRate(BigDecimal.valueOf(1.50))
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -93,6 +94,7 @@ class PayGroupServiceImplTest {
                 .baseTaxRate(BigDecimal.TEN)
                 .benefitRate(BigDecimal.ONE)
                 .deductionRate(BigDecimal.ONE)
+                .holidayRate(BigDecimal.valueOf(1.50))
                 .build();
 
         assertThrows(NullPointerException.class, () -> payGroupService.create(request));
@@ -106,6 +108,7 @@ class PayGroupServiceImplTest {
                 .baseTaxRate(BigDecimal.valueOf(12))
                 .benefitRate(BigDecimal.valueOf(6))
                 .deductionRate(BigDecimal.valueOf(3))
+                .holidayRate(BigDecimal.valueOf(2.00))
                 .build();
 
         PayGroup existing = PayGroup.builder()
@@ -116,6 +119,7 @@ class PayGroupServiceImplTest {
                 .benefitRate(BigDecimal.ONE)
                 .deductionRate(BigDecimal.ONE)
                 .createdAt(LocalDateTime.now())
+                .holidayRate(BigDecimal.valueOf(1.50))
                 .build();
 
         when(payGroupValidator.validatePayGroupExists(1)).thenReturn(existing);
@@ -128,7 +132,9 @@ class PayGroupServiceImplTest {
                 .baseTaxRate(BigDecimal.valueOf(12))
                 .benefitRate(BigDecimal.valueOf(6))
                 .deductionRate(BigDecimal.valueOf(3))
+                .holidayRate(BigDecimal.valueOf(2.00))
                 .createdAt(existing.getCreatedAt())
+                .updatedAt(LocalDateTime.now())
                 .build();
 
         when(payGroupRepository.save(any())).thenReturn(updated);
@@ -176,6 +182,7 @@ class PayGroupServiceImplTest {
                 .baseTaxRate(BigDecimal.TEN)
                 .benefitRate(BigDecimal.ONE)
                 .deductionRate(BigDecimal.ONE)
+                .holidayRate(BigDecimal.valueOf(2.00))
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -186,6 +193,7 @@ class PayGroupServiceImplTest {
                 .baseTaxRate(BigDecimal.TEN)
                 .benefitRate(BigDecimal.ONE)
                 .deductionRate(BigDecimal.ONE)
+                .holidayRate(BigDecimal.valueOf(1.00))
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -210,6 +218,7 @@ class PayGroupServiceImplTest {
                 .baseTaxRate(BigDecimal.TEN)
                 .benefitRate(BigDecimal.ONE)
                 .deductionRate(BigDecimal.ONE)
+                .holidayRate(BigDecimal.valueOf(2.00))
                 .createdAt(LocalDateTime.now())
                 .build();
 
@@ -243,6 +252,7 @@ class PayGroupServiceImplTest {
                 .baseTaxRate(BigDecimal.valueOf(10.00))
                 .benefitRate(BigDecimal.valueOf(5.00))
                 .deductionRate(BigDecimal.valueOf(2.50))
+                .holidayRate(BigDecimal.valueOf(1.50))
                 .build();
     }
 }

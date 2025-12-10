@@ -4,6 +4,7 @@ import com.tw.coupang.one_payroll.employee_master.dto.CreateEmployeeRequest;
 import com.tw.coupang.one_payroll.employee_master.dto.UpdateEmployeeRequest;
 import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.enums.PayType;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.employee_master.repository.EmployeeMasterRepository;
@@ -47,6 +48,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
                 .payGroupId(request.getPayGroupId())
                 .status(EmployeeStatus.ACTIVE)
                 .joiningDate(request.getJoiningDate())
+                .payType(request.getPayType())
                 .build();
 
         return repository.save(employee);
@@ -63,6 +65,7 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
         updatePayGroup(employee, request.getPayGroupId());
         updateJoiningDate(employee, request.getJoiningDate());
         updateStatus(employee, request.getStatus());
+        updatePayType(employee, request.getPayType());
 
         return repository.save(employee);
     }
@@ -134,5 +137,9 @@ public class EmployeeMasterServiceImpl implements EmployeeMasterService {
                 throw new IllegalArgumentException("Invalid status value: " + statusStr);
             }
         }
+    }
+
+    private void updatePayType(EmployeeMaster employee, PayType payType) {
+        if (payType != null) employee.setPayType(payType);
     }
 }

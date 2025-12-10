@@ -8,6 +8,9 @@ import com.tw.coupang.one_payroll.integration.exception.BatchNotFoundException;
 import com.tw.coupang.one_payroll.integration.exception.MandatoryFieldMissingException;
 import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException;
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
+import com.tw.coupang.one_payroll.payperiod.exception.PayPeriodNotFoundException;
+import com.tw.coupang.one_payroll.payroll.exception.InvalidPayrollStateException;
+import com.tw.coupang.one_payroll.payroll.exception.PayrollRunAlreadyExistsException;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payperiod.exception.OverlappingPayPeriodException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
@@ -281,7 +284,50 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(TimesheetNotFoundException.class)
-    public ResponseEntity<String> handleTimesheetNotFound(TimesheetNotFoundException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.NOT_FOUND);
+    public ResponseEntity<ApiResponse> handleTimesheetNotFound(TimesheetNotFoundException ex) {
+        log.warn("Timesheet not found: {}", ex.getMessage());
+        ApiResponse response = ApiResponse.failure(
+                "TIMESHEET_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(PayPeriodNotFoundException.class)
+    public ResponseEntity<ApiResponse> handlePayPeriodNotFound(PayPeriodNotFoundException ex) {
+        log.warn("Pay period not found: {}", ex.getMessage());
+        ApiResponse response = ApiResponse.failure(
+                "PAY_PERIOD_NOT_FOUND",
+                ex.getMessage(),
+                null
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(InvalidPayrollStateException.class)
+    public ResponseEntity<ApiResponse> handleInvalidPayrollState(InvalidPayrollStateException ex) {
+        log.warn("Invalid payroll state: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "INVALID_PAYROLL_STATE",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(PayrollRunAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse> handlePayrollRunAlreadyExists(PayrollRunAlreadyExistsException ex) {
+        log.warn("Payroll run already exists: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "PAYROLL_RUN_ALREADY_EXISTS",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 }

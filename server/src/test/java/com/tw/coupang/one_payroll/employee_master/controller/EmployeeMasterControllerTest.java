@@ -4,6 +4,7 @@ import com.tw.coupang.one_payroll.employee_master.dto.CreateEmployeeRequest;
 import com.tw.coupang.one_payroll.employee_master.dto.UpdateEmployeeRequest;
 import com.tw.coupang.one_payroll.employee_master.entity.EmployeeMaster;
 import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
+import com.tw.coupang.one_payroll.employee_master.enums.PayType;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeConflictException;
 import com.tw.coupang.one_payroll.employee_master.exception.EmployeeNotFoundException;
 import com.tw.coupang.one_payroll.employee_master.service.EmployeeMasterService;
@@ -56,7 +57,7 @@ class EmployeeMasterControllerTest {
     void createEmployeeSuccess() {
         CreateEmployeeRequest request = new CreateEmployeeRequest(
                 "E003", "Alice", "Brown", "Finance", "Analyst",
-                "alice.brown@example.com", 3, LocalDate.now()
+                "alice.brown@example.com", 3, LocalDate.now(), PayType.SALARIED
         );
 
         EmployeeMaster created = EmployeeMaster.builder()
@@ -84,7 +85,7 @@ class EmployeeMasterControllerTest {
     void createEmployeeConflictExceptionPropagatesToGlobalHandler() {
         CreateEmployeeRequest request = new CreateEmployeeRequest(
                 "E004", "Bob", "Johnson", "Sales", "Executive",
-                "bob.johnson@example.com", 4, LocalDate.now()
+                "bob.johnson@example.com", 4, LocalDate.now(), PayType.HOURLY
         );
 
         when(employeeMasterService.createEmployee(request))
@@ -106,7 +107,7 @@ class EmployeeMasterControllerTest {
         String empId = "E003";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest(
                 "Alice", "BrownUpdated", "Finance", "Sr Analyst",
-                "alice.brown@example.com", 3, LocalDate.now(), "INACTIVE"
+                "alice.brown@example.com", 3, LocalDate.now(), "INACTIVE", PayType.SALARIED
         );
 
         EmployeeMaster updated = EmployeeMaster.builder()
@@ -131,7 +132,7 @@ class EmployeeMasterControllerTest {
         String empId = "E404";
         UpdateEmployeeRequest update = new UpdateEmployeeRequest(
                 "Non", "Exist", "Dept", "Role",
-                "non.exist@example.com", 1, LocalDate.now(), null
+                "non.exist@example.com", 1, LocalDate.now(), null, PayType.SALARIED
         );
 
         when(employeeMasterService.updateEmployee(empId, update))

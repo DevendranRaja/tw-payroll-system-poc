@@ -14,4 +14,7 @@ public class MathsUtils {
         if (percent == null) return BigDecimal.ZERO;
         return amount.multiply(percent).divide(BigDecimal.valueOf(100), 2, HALF_UP);
     }
+
+    public static BigDecimal safe(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
+    public static int safeInt(Integer v) { return v == null ? 0 : v; }
 }

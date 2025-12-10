@@ -88,9 +88,7 @@ class PayPeriodValidatorTest {
     }
 
     @Test
-    void invalidWhenDifferentMonths() {
-        mockViolationFlow();
-
+    void validWhenDifferentMonths() {
         PayrollCalculationRequest req = PayrollCalculationRequest.builder()
                 .employeeId("EMP400")
                 .payPeriod(
@@ -101,10 +99,7 @@ class PayPeriodValidatorTest {
                 )
                 .build();
 
-        assertFalse(validator.isValid(req, context));
-
-        verify(context).disableDefaultConstraintViolation();
-        verify(context).buildConstraintViolationWithTemplate("period must be within a single calendar cycle (same month)");
+        assertTrue(validator.isValid(req, context));
     }
 
     @Test

@@ -46,7 +46,7 @@ class PayPeriodControllerValidationTest {
     }
 
     @Test
-    void createPayPeriodWhenPayPeriodNotInSameMonthThenReturnsBadRequest() throws Exception {
+    void createPayPeriodWhenPayPeriodNotInSameMonthThenReturnsCreated() throws Exception {
         String requestBody = """
             {
               "payGroupId": 1,
@@ -57,14 +57,16 @@ class PayPeriodControllerValidationTest {
             }
         """;
 
+        when(payPeriodService.create(any()))
+                .thenReturn(PayPeriodResponse.builder().id(100).build());
+
         mockMvc.perform(post("/pay-periods")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.details['payPeriod.startDate']").value(
-                        "period must be within a single calendar cycle (same month)"
-                ));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.code").value("PAY_PERIOD_CREATED"))
+                .andExpect(jsonPath("$.message").value("Pay period created successfully"))
+                .andExpect(jsonPath("$.details.id").value(100));
     }
 
     @Test

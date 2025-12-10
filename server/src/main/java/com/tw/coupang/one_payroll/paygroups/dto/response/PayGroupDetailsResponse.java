@@ -17,5 +17,7 @@ public class PayGroupDetailsResponse {
     private BigDecimal baseTaxRate;
     private BigDecimal benefitRate;
     private BigDecimal deductionRate;
+    private BigDecimal holidayRate;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }

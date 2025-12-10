@@ -3,7 +3,9 @@ package com.tw.coupang.one_payroll.employee_master.entity;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import com.tw.coupang.one_payroll.employee_master.enums.PayType;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcType;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.tw.coupang.one_payroll.employee_master.enums.EmployeeStatus;
@@ -19,6 +21,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.dialect.PostgreSQLEnumJdbcType;
 
 @Entity
 @Table(name = "employee_master")
@@ -57,6 +60,11 @@ public class EmployeeMaster {
     @Column(name = "joining_date")
     private LocalDate joiningDate;
 
+    @Enumerated(EnumType.STRING)
+    @JdbcType(PostgreSQLEnumJdbcType.class)
+    @Column(name = "pay_type", nullable = false)
+    private PayType payType;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
@@ -65,4 +73,3 @@ public class EmployeeMaster {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 }
-

@@ -3,6 +3,7 @@ package com.tw.coupang.one_payroll.timesheet.service;
 import com.tw.coupang.one_payroll.timesheet.dto.TimesheetRequest;
 import com.tw.coupang.one_payroll.timesheet.dto.TimesheetResponse;
 import com.tw.coupang.one_payroll.timesheet.entity.TimesheetSummary;
+import com.tw.coupang.one_payroll.timesheet.exception.TimesheetNotFoundException;
 import com.tw.coupang.one_payroll.timesheet.helper.TimesheetValidator;
 import com.tw.coupang.one_payroll.timesheet.repository.TimesheetRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,14 +31,16 @@ public class TimesheetService {
 
         TimesheetSummary timesheet;
         String operationMessage;
-        BigDecimal holidayHrs = request.getHolidayHours() != null ? request.getHolidayHours() : BigDecimal.ZERO;
+        BigDecimal holidayHrsWorked = request.getHolidayHoursWorked() != null ? request.getHolidayHoursWorked() : BigDecimal.ZERO;
+        Integer holidayDays = request.getHolidayDays() != null ? request.getHolidayDays() : 0;
 
         if (existingEntry.isPresent()) {
             // UPDATE
             timesheet = existingEntry.get();
             timesheet.setNoOfDaysWorked(request.getNoOfDaysWorked());
             timesheet.setHoursWorked(request.getHoursWorked());
-            timesheet.setHolidayHours(holidayHrs);
+            timesheet.setHolidayHoursWorked(holidayHrsWorked);
+            timesheet.setHolidayDays(holidayDays);
             operationMessage = "Timesheet updated successfully";
         } else {
             // CREATE
@@ -46,7 +49,8 @@ public class TimesheetService {
                     .payPeriodId(request.getPayPeriodId())
                     .noOfDaysWorked(request.getNoOfDaysWorked())
                     .hoursWorked(request.getHoursWorked())
-                    .holidayHours(holidayHrs)
+                    .holidayHoursWorked(holidayHrsWorked)
+                    .holidayDays(holidayDays)
                     .build();
             operationMessage = "Timesheet created successfully";
         }
@@ -57,6 +61,12 @@ public class TimesheetService {
         return mapToResponse(saved, operationMessage);
     }
 
+    public TimesheetSummary getTimesheet(String employeeId, Integer payPeriodId) {
+        return timesheetRepository
+                .findByEmployeeIdAndPayPeriodId(employeeId, payPeriodId)
+                .orElseThrow(() -> new TimesheetNotFoundException(employeeId, payPeriodId));
+    }
+
     private TimesheetResponse mapToResponse(TimesheetSummary entity, String msg) {
         return TimesheetResponse.builder()
                 .id(entity.getId())
@@ -64,7 +74,8 @@ public class TimesheetService {
                 .payPeriodId(entity.getPayPeriodId())
                 .hoursWorked(entity.getHoursWorked())
                 .noOfDaysWorked(entity.getNoOfDaysWorked())
-                .holidayHours(entity.getHolidayHours())
+                .holidayHoursWorked(entity.getHolidayHoursWorked())
+                .holidayDays(entity.getHolidayDays())
                 .updatedAt(entity.getUpdatedAt())
                 .message(msg)
                 .build();
