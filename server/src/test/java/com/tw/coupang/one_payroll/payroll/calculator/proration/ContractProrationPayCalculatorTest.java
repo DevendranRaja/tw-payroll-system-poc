@@ -47,10 +47,9 @@ class ContractProrationPayCalculatorTest {
         timesheet.setHoursWorked(BigDecimal.valueOf(16));
         timesheet.setHolidayHoursWorked(BigDecimal.ZERO);
 
-        BigDecimal expectedBasePayPerHour = BigDecimal.valueOf(5000)
-                .divide(BigDecimal.valueOf(8), 2, HALF_UP);
+        BigDecimal basePayPerHour = BigDecimal.valueOf(500);
 
-        BigDecimal expectedPay = expectedBasePayPerHour.multiply(timesheet.getHoursWorked()).setScale(2, HALF_UP);
+        BigDecimal expectedPay = basePayPerHour.multiply(timesheet.getHoursWorked()).setScale(2, HALF_UP);
 
         BigDecimal actualPay = contractProrationPayCalculator.calculate(employee, timesheet, context);
 
@@ -62,7 +61,7 @@ class ContractProrationPayCalculatorTest {
         timesheet.setHoursWorked(BigDecimal.valueOf(16));
         timesheet.setHolidayHoursWorked(BigDecimal.valueOf(8));
 
-        BigDecimal basePayPerHour = BigDecimal.valueOf(5000).divide(BigDecimal.valueOf(8), 2, HALF_UP);
+        BigDecimal basePayPerHour = BigDecimal.valueOf(500);
         BigDecimal expectedPay = basePayPerHour.multiply(timesheet.getHoursWorked())
                 .add(basePayPerHour.multiply(context.holidayRate()).multiply(timesheet.getHolidayHoursWorked()))
                 .setScale(2, HALF_UP);

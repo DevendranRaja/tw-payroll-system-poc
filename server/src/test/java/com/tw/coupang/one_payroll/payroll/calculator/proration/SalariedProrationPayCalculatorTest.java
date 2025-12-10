@@ -46,8 +46,8 @@ class SalariedProrationPayCalculatorTest {
         timesheet.setNoOfDaysWorked(10);
         timesheet.setHolidayDays(0);
 
-        BigDecimal basePayPerDay = BigDecimal.valueOf(5000);
-        BigDecimal expectedPay = basePayPerDay
+        BigDecimal basePayPerMonth = BigDecimal.valueOf(50000);
+        BigDecimal expectedPay = basePayPerMonth
                 .multiply(BigDecimal.valueOf(10))
                 .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
 
@@ -61,8 +61,8 @@ class SalariedProrationPayCalculatorTest {
         timesheet.setNoOfDaysWorked(10);
         timesheet.setHolidayDays(2);
 
-        BigDecimal basePayPerDay = BigDecimal.valueOf(5000);
-        BigDecimal expectedPay = basePayPerDay
+        BigDecimal basePayPerMonth = BigDecimal.valueOf(50000);
+        BigDecimal expectedPay = basePayPerMonth
                 .multiply(BigDecimal.valueOf(12))
                 .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
 
@@ -76,8 +76,8 @@ class SalariedProrationPayCalculatorTest {
         timesheet.setNoOfDaysWorked(null);
         timesheet.setHolidayDays(null);
 
-        BigDecimal basePayPerDay = BigDecimal.valueOf(5000);
-        BigDecimal expectedPay = basePayPerDay
+        BigDecimal basePayPerMonth = BigDecimal.valueOf(50000);
+        BigDecimal expectedPay = basePayPerMonth
                 .multiply(BigDecimal.ZERO)
                 .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
 
@@ -91,8 +91,8 @@ class SalariedProrationPayCalculatorTest {
         timesheet.setNoOfDaysWorked(7);
         timesheet.setHolidayDays(3);
 
-        BigDecimal basePayPerDay = BigDecimal.valueOf(5000);
-        BigDecimal expectedPay = basePayPerDay
+        BigDecimal basePayPerMonth = BigDecimal.valueOf(50000);
+        BigDecimal expectedPay = basePayPerMonth
                 .multiply(BigDecimal.valueOf(10))
                 .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
 
