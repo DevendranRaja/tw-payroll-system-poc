@@ -7,6 +7,8 @@ import com.tw.coupang.one_payroll.timesheet.entity.TimesheetSummary;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -41,44 +43,20 @@ class SalariedProrationPayCalculatorTest {
                 .build();
     }
 
-    @Test
-    void shouldCalculateProratedPayForWorkedDays() {
-        timesheet.setNoOfDaysWorked(10);
-        timesheet.setHolidayDays(0);
+    @ParameterizedTest
+    @CsvSource({
+            "10, 0, 10",
+            "10, 2, 12",
+            "0,  0, 0"
+    })
+    void shouldCalculateProratedPay(int workedDays, int holidayDays, int expectedEffectiveDays) {
+        timesheet.setNoOfDaysWorked(workedDays == 0 ? null : workedDays);
+        timesheet.setHolidayDays(holidayDays == 0 ? null : holidayDays);
 
         BigDecimal basePayPerMonth = BigDecimal.valueOf(50000);
+
         BigDecimal expectedPay = basePayPerMonth
-                .multiply(BigDecimal.valueOf(10))
-                .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
-
-        BigDecimal actualPay = salariedProrationPayCalculator.calculate(employee, timesheet, context);
-
-        assertEquals(expectedPay, actualPay);
-    }
-
-    @Test
-    void shouldIncludeHolidayDaysInCalculation() {
-        timesheet.setNoOfDaysWorked(10);
-        timesheet.setHolidayDays(2);
-
-        BigDecimal basePayPerMonth = BigDecimal.valueOf(50000);
-        BigDecimal expectedPay = basePayPerMonth
-                .multiply(BigDecimal.valueOf(12))
-                .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
-
-        BigDecimal actualPay = salariedProrationPayCalculator.calculate(employee, timesheet, context);
-
-        assertEquals(expectedPay, actualPay);
-    }
-
-    @Test
-    void shouldHandleNullDaysGracefully() {
-        timesheet.setNoOfDaysWorked(null);
-        timesheet.setHolidayDays(null);
-
-        BigDecimal basePayPerMonth = BigDecimal.valueOf(50000);
-        BigDecimal expectedPay = basePayPerMonth
-                .multiply(BigDecimal.ZERO)
+                .multiply(BigDecimal.valueOf(expectedEffectiveDays))
                 .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
 
         BigDecimal actualPay = salariedProrationPayCalculator.calculate(employee, timesheet, context);
