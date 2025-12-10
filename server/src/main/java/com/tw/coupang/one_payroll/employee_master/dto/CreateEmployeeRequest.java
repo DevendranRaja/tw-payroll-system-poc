@@ -1,5 +1,6 @@
 package com.tw.coupang.one_payroll.employee_master.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.Email;
@@ -38,6 +39,9 @@ public class CreateEmployeeRequest {
 
     @FutureOrPresent(message = "Joining date must be today or in the future")
     private LocalDate joiningDate;
+
+    @NotNull
+    private BigDecimal baseSalary;
 }
 
 

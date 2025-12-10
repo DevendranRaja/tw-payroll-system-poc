@@ -1,5 +1,6 @@
 package com.tw.coupang.one_payroll.employee_master.dto;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import jakarta.validation.constraints.Email;
@@ -19,4 +20,5 @@ public class UpdateEmployeeRequest {
     private Integer payGroupId;
     private LocalDate joiningDate;
     private String status;
+    private BigDecimal baseSalary;
 }

@@ -179,6 +179,58 @@ ALTER TABLE pay_period ADD CONSTRAINT uk_pay_period_group_start_end UNIQUE (pay_
 CREATE INDEX idx_pay_period_group ON pay_period(pay_group_id);
 CREATE INDEX idx_pay_period_range ON pay_period(range);
 
+----------------------------------------------------
+-- Earning type
+----------------------------------------------------
+
+CREATE TABLE earning_type (
+    earning_type_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    description VARCHAR(255)
+);
+
+------------------------------------------------------
+-- Payroll earnings
+------------------------------------------------------
+
+CREATE TABLE payroll_earnings (
+    payroll_earnings_id INT AUTO_INCREMENT PRIMARY KEY,
+    payroll_id INT NOT NULL,
+    earning_type_id INT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (payroll_id) REFERENCES payroll_run(payroll_id),
+    FOREIGN KEY (earning_type_id) REFERENCES earning_type(earning_type_id)
+);
+
+--------------------------------------------------------
+-- Deduction type
+--------------------------------------------------------
+
+CREATE TABLE deduction_type (
+    deduction_type_id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    description VARCHAR(255)
+);
+
+-------------------------------------------------------
+-- Payroll deductions
+-------------------------------------------------------
+
+CREATE TABLE payroll_deductions (
+    payroll_deduction_id INT AUTO_INCREMENT PRIMARY KEY,
+    payroll_id INT NOT NULL,
+    deduction_type_id INT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (payroll_id) REFERENCES payroll_run(payroll_id),
+    FOREIGN KEY (deduction_type_id) REFERENCES deduction_type(deduction_type_id)
+);
+
+-------------------------------------------------------
+
+ALTER TABLE employee_master
+ADD COLUMN base_salary DECIMAL(10,2) NOT NULL
+
+
 -------------------------------------------------------
 -- timesheet_summary
 -------------------------------------------------------
@@ -280,6 +332,45 @@ VALUES
 (2, '2025-06-08', '2025-06-14', '08-14 JUN25'),
 (2, '2025-06-15', '2025-06-21', '15-21 JUN25'),
 (2, '2025-06-22', '2025-06-28', '22-28 JUN25');
+
+INSERT INTO earning_type (name, description) VALUES
+('Basic Salary', 'Monthly basic salary component'),
+('HRA', 'House Rent Allowance'),
+('Bonus', 'Performance-based bonus payment'),
+('Shift Allowance', 'Allowance for night shifts worked');
+
+INSERT INTO payroll_earnings (payroll_id, earning_type_id, amount) VALUES
+(1, 1, 4000.00),
+(1, 2, 800.00),
+(1, 3, 200.00),
+(2, 1, 5500.00),
+(2, 2, 1200.00),
+(2, 3, 300.00);
+
+INSERT INTO deduction_type (name, description) VALUES
+('Provident Fund', 'Employee provident fund contribution'),
+('Professional Tax', 'Monthly professional tax deduction'),
+('Income Tax', 'Monthly income tax deduction');
+
+INSERT INTO payroll_deductions (payroll_id, deduction_type_id, amount) VALUES
+(1, 1, 250.00),
+(1, 2, 100.00),
+(1, 3, 150.00),
+(2, 1, 350.00),
+(2, 2, 100.00),
+(2, 3, 200.00);
+
+UPDATE employee_master SET base_salary = 5000 WHERE employee_id = 'E001';
+UPDATE employee_master SET base_salary = 7000 WHERE employee_id = 'E002';
+UPDATE employee_master SET base_salary = 6000 WHERE employee_id = 'E003';
+UPDATE employee_master SET base_salary = 5800 WHERE employee_id = 'E004';
+UPDATE employee_master SET base_salary = 6200 WHERE employee_id = 'E005';
+UPDATE employee_master SET base_salary = 1200 WHERE employee_id = 'E006';
+UPDATE employee_master SET base_salary = 1000 WHERE employee_id = 'E007';
+UPDATE employee_master SET base_salary = 5500 WHERE employee_id = 'E008';
+UPDATE employee_master SET base_salary = 8500 WHERE employee_id = 'E009';
+UPDATE employee_master SET base_salary = 9000 WHERE employee_id = 'E010';
+
 
 INSERT INTO timesheet_summary
 (employee_id, pay_period_id, no_of_days_worked, hours_worked, holiday_hours)
