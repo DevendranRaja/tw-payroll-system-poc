@@ -19,14 +19,13 @@ public class SalariedProrationPayCalculator implements ProrationPayCalculator {
     public BigDecimal calculate(EmployeeMaster employee, TimesheetSummary timesheet, ProrationCalculatorContext context) {
         log.info("Calculating salaried prorated pay for employeeId: {}, timesheetId: {}", employee.getEmployeeId(), timesheet.getId());
 
+        BigDecimal basePayPerMonth = BigDecimal.valueOf(50000); // TODO: Monthly basePay - Mock value, shall be replaced with actual basePay from EmployeeMaster
+
         int daysWorked = safeInt(timesheet.getNoOfDaysWorked());
         int holidayDays = safeInt(timesheet.getHolidayDays());
+        int effectiveDaysWorked = daysWorked + holidayDays;
 
-        BigDecimal basePayPerDay = BigDecimal.valueOf(5000); // TODO: Mock value, shall be replaced with actual salary from EmployeeMaster
-
-        int effectiveDays = daysWorked + holidayDays;
-
-        return basePayPerDay.multiply(BigDecimal.valueOf(effectiveDays))
-                .divide(BigDecimal.valueOf(context.totalWorkingDays()), 2, HALF_UP);
+        return basePayPerMonth.multiply(BigDecimal.valueOf(effectiveDaysWorked))
+                .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
     }
 }

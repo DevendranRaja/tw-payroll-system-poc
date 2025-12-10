@@ -37,7 +37,7 @@ class SalariedProrationPayCalculatorTest {
                 .build();
 
         context = ProrationCalculatorContext.builder()
-                .totalWorkingDays(22)
+                .totalWorkingDaysInPayPeriod(22)
                 .build();
     }
 
@@ -49,7 +49,7 @@ class SalariedProrationPayCalculatorTest {
         BigDecimal basePayPerDay = BigDecimal.valueOf(5000);
         BigDecimal expectedPay = basePayPerDay
                 .multiply(BigDecimal.valueOf(10))
-                .divide(BigDecimal.valueOf(context.totalWorkingDays()), 2, HALF_UP);
+                .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
 
         BigDecimal actualPay = salariedProrationPayCalculator.calculate(employee, timesheet, context);
 
@@ -64,7 +64,7 @@ class SalariedProrationPayCalculatorTest {
         BigDecimal basePayPerDay = BigDecimal.valueOf(5000);
         BigDecimal expectedPay = basePayPerDay
                 .multiply(BigDecimal.valueOf(12))
-                .divide(BigDecimal.valueOf(context.totalWorkingDays()), 2, HALF_UP);
+                .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
 
         BigDecimal actualPay = salariedProrationPayCalculator.calculate(employee, timesheet, context);
 
@@ -79,7 +79,7 @@ class SalariedProrationPayCalculatorTest {
         BigDecimal basePayPerDay = BigDecimal.valueOf(5000);
         BigDecimal expectedPay = basePayPerDay
                 .multiply(BigDecimal.ZERO)
-                .divide(BigDecimal.valueOf(context.totalWorkingDays()), 2, HALF_UP);
+                .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
 
         BigDecimal actualPay = salariedProrationPayCalculator.calculate(employee, timesheet, context);
 
@@ -94,7 +94,7 @@ class SalariedProrationPayCalculatorTest {
         BigDecimal basePayPerDay = BigDecimal.valueOf(5000);
         BigDecimal expectedPay = basePayPerDay
                 .multiply(BigDecimal.valueOf(10))
-                .divide(BigDecimal.valueOf(context.totalWorkingDays()), 2, HALF_UP);
+                .divide(BigDecimal.valueOf(context.totalWorkingDaysInPayPeriod()), 2, HALF_UP);
 
         BigDecimal actualPay = salariedProrationPayCalculator.calculate(employee, timesheet, context);
 

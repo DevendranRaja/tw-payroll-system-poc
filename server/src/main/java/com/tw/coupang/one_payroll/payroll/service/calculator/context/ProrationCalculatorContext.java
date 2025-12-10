@@ -5,4 +5,4 @@ import lombok.Builder;
 import java.math.BigDecimal;
 
 @Builder
-public record ProrationCalculatorContext(Integer totalWorkingDays, BigDecimal holidayRate) { }
+public record ProrationCalculatorContext(Integer totalWorkingDaysInPayPeriod, BigDecimal holidayRate) { }

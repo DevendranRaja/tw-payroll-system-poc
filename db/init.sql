@@ -160,6 +160,9 @@ CREATE TABLE payroll_batch_log (
     FOREIGN KEY (batch_ref_id) REFERENCES payroll_batch(batch_ref_id)
 );
 
+ALTER TABLE payroll_batch_log
+ADD COLUMN log_message VARCHAR(255);
+
 -------------------------------------------------------
 -- pay_period
 -------------------------------------------------------
@@ -222,9 +225,9 @@ CREATE INDEX idx_timesheet_period ON timesheet_summary(pay_period_id);
 -------------------------------------------------------
 
 INSERT INTO pay_group (group_name, payment_cycle, base_tax_rate, benefit_rate, deduction_rate, holiday_rate) VALUES
-('Regular Staff', 'MONTHLY', 10.00, 5.00, 2.00, 1.00),
+('Regular Staff', 'MONTHLY', 10.00, 5.00, 2.00, 0),
 ('Contract Staff', 'WEEKLY', 8.00, 3.00, 1.50, 1.50),
-('Expat Staff', 'MONTHLY', 12.00, 8.00, 3.00, 1.00);
+('Expat Staff', 'MONTHLY', 12.00, 8.00, 3.00, 0);
 
 INSERT INTO employee_master (
     employee_id, first_name, last_name, department, designation, email, pay_group_id, status, joining_date, pay_type
@@ -233,7 +236,7 @@ INSERT INTO employee_master (
 ('E002', 'Mina', 'Choi', 'HR', 'HR Manager', 'mina.cho@company.com', 1, 'ACTIVE', '2020-08-01', 'SALARIED'),
 ('E003', 'Ravi', 'Kumar', 'Engineering', 'Backend Dev', 'ravi.kumar@company.com', 1, 'ACTIVE', '2022-05-15', 'SALARIED'),
 ('E004', 'Sujin', 'Lee', 'Engineering', 'Frontend Dev', 'sujin.lee@company.com', 1, 'ACTIVE', '2022-10-05', 'SALARIED'),
-('E005', 'Alex', 'Kim', 'Finance', 'Accountant', 'alex.kim@company.com', 1, 'ACTIVE', '2021-07-20', 'SALARIED'),
+('E005', 'Alex', 'Kim', 'Finance', 'Accountant', 'alex.kim@company.com', 1, 'ACTIVE', '2025-11-10', 'SALARIED'),
 ('E006', 'Rohan', 'Sharma', 'Operations', 'Supervisor', 'rohan.sharma@company.com', 2, 'ACTIVE', '2023-01-12', 'HOURLY'),
 ('E007', 'Yuna', 'Han', 'Support', 'CSR', 'yuna.han@company.com', 2, 'ACTIVE', '2023-03-09', 'HOURLY'),
 ('E008', 'Eunji', 'Kang', 'Engineering', 'QA Engineer', 'eunji.kang@company.com', 1, 'ACTIVE', '2022-06-20', 'SALARIED'),
@@ -247,7 +250,7 @@ INSERT INTO payroll_run (
 ('E002', '2025-10-01', '2025-10-31', 7000.00, 700.00, 350.00, 6650.00),
 ('E003', '2025-10-01', '2025-10-31', 6000.00, 600.00, 300.00, 5700.00),
 ('E004', '2025-10-01', '2025-10-31', 5800.00, 580.00, 290.00, 5510.00),
-('E005', '2025-10-01', '2025-10-31', 6200.00, 620.00, 310.00, 5890.00),
+-- ('E005', '2025-10-01', '2025-10-31', 6200.00, 620.00, 310.00, 5890.00), => Joined in November
 ('E006', '2025-10-01', '2025-10-07', 1200.00, 96.00, 36.00, 1140.00),
 ('E007', '2025-10-01', '2025-10-07', 1000.00, 80.00, 30.00, 950.00),
 ('E008', '2025-10-01', '2025-10-31', 5500.00, 550.00, 275.00, 5225.00),
@@ -277,28 +280,66 @@ VALUES
 ('Payroll Calculation', 'E007', 'Invalid pay group ID reference'),
 ('Bank Integration', 'E005', 'Bank account verification failed');
 
-INSERT INTO pay_period (pay_period_id, pay_group_id, period_start_date, period_end_date, range)
+-- MONTHLY PAY PERIODS (PayGroup 1 & 2)
+INSERT INTO pay_period (pay_group_id, period_start_date, period_end_date, range)
 VALUES
-(1, 1, '2025-01-01', '2025-01-31', '2025-01-01/2025-01-31'),
-(2, 1, '2025-02-01', '2025-02-28', '2025-02-01/2025-02-28'),
-(3, 2, '2025-06-01', '2025-06-07', '2025-06-01/2025-06-07'),
-(4, 2, '2025-06-08', '2025-06-14', '2025-06-08/2025-06-14'),
-(5, 2, '2025-06-15', '2025-06-21', '2025-06-15/2025-06-21'),
-(6, 2, '2025-06-22', '2025-06-28', '2025-06-22/2025-06-28');
+-- October 2025
+(1, '2025-10-01', '2025-10-31', '2025-10-01/2025-10-31'), -- Regular Staff(E001 - E005, E008)
+(3, '2025-10-01', '2025-10-31', '2025-10-01/2025-10-31'), -- Expat Staff(E009 - E010)
+-- November 2025
+(1, '2025-11-01', '2025-11-30', '2025-11-01/2025-11-30'), -- Regular Staff(E001 - E005, E008)
+(3, '2025-11-01', '2025-11-30', '2025-11-01/2025-11-30'), -- Expat Staff(E009 - E010)
+-- December 2025
+(1, '2025-12-01', '2025-12-31', '2025-12-01/2025-12-31'), -- Regular Staff(E001 - E005, E008)
+(3, '2025-12-01', '2025-12-31', '2025-12-01/2025-12-31'), -- Expat Staff(E009 - E010)
+
+-- WEEKLY PAY PERIODS (PayGroup 2 - Contract Staff(E006 - E007))
+-- October 2025
+(2, '2025-10-01', '2025-10-07', '2025-10-01/2025-10-07'),
+(2, '2025-10-08', '2025-10-14', '2025-10-08/2025-10-14'),
+(2, '2025-10-15', '2025-10-21', '2025-10-15/2025-10-21'),
+(2, '2025-10-22', '2025-10-28', '2025-10-22/2025-10-28'),
+-- November 2025
+(2, '2025-10-29', '2025-11-04', '2025-10-29/2025-11-04'),
+(2, '2025-11-05', '2025-11-11', '2025-11-05/2025-11-11'),
+(2, '2025-11-12', '2025-11-18', '2025-11-12/2025-11-18'),
+(2, '2025-11-19', '2025-11-25', '2025-11-19/2025-11-25'),
+-- December 2025
+(2, '2025-11-26', '2025-12-02', '2025-11-26/2025-12-02'),
+(2, '2025-12-03', '2025-12-09', '2025-12-03/2025-12-09'),
+(2, '2025-12-10', '2025-12-16', '2025-12-10/2025-12-16'),
+(2, '2025-12-17', '2025-12-23', '2025-12-17/2025-12-23'),
+(2, '2025-12-24', '2025-12-30', '2025-12-24/2025-12-30');
 
 INSERT INTO timesheet_summary
 (employee_id, pay_period_id, no_of_days_worked, hours_worked, holiday_hours_worked, holiday_days)
 VALUES
--- Salaried employees (E001-E005, E008-E010)
-('E001', 1, 22, 0, 0, 0),
-('E002', 2, 20, 0, 0, 2),
-('E003', 1, 18, 0, 0, 4),
-('E004', 2, 20, 0, 0, 2),
-('E005', 1, 15, 0, 0, 7),
-('E008', 2, 22, 0, 0, 0),
-('E009', 1, 20, 0, 0, 2),
-('E010', 2, 21, 0, 0, 1),
+-- MONTHLY - Regular Staff (E001 - E005, E008) & Expat Staff (E009 - E010)
+-- October 2025 & Regular Staff (E001 - E004, E008)
+('E001', 1, 21, 0, 0, 2),
+('E002', 1, 20, 0, 0, 3),
+('E003', 1, 18, 0, 0, 5),
+('E004', 1, 21, 0, 0, 2),
+('E008', 1, 21, 0, 0, 2),
+-- October 2025 & Expat Staff (E009 - E010)
+('E009', 2, 21, 0, 0, 2),
+('E010', 2, 20, 0, 0, 3),
 
--- Hourly / Contract employees (E006-E007)
-('E006', 3, 0, 40.00, 8.00, 0),
-('E007', 4, 0, 120.00, 16.00, 0);
+-- November 2025 & Regular Staff (E001 - E005, E008)
+('E001', 3, 20, 0, 0, 0),
+('E002', 3, 20, 0, 0, 0),
+('E003', 3, 18, 0, 0, 2),
+('E004', 3, 15, 0, 0, 5),
+('E005', 3, 14, 0, 0, 1), -- Joined on 10th November, 2025
+('E008', 3, 19, 0, 0, 1),
+-- November 2025 & Expat Staff (E009 - E010)
+('E009', 4, 20, 0, 0, 0),
+('E010', 4, 20, 0, 0, 0),
+
+-- WEEKLY - Contract Staff (E006 - E007)
+-- October 2025
+('E006', 4, 0, 32.00, 8.00, 0),
+('E007', 4, 0, 32.00, 0.00, 0),
+-- November 2025
+('E006', 11, 0, 40.00, 0.00, 0),
+('E007', 11, 0, 40.00, 0.00, 0);

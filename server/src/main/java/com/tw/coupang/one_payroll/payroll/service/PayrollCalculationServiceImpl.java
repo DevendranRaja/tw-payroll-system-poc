@@ -146,15 +146,15 @@ public class PayrollCalculationServiceImpl implements PayrollCalculationService 
                 : DEFAULT_HOLIDAY_RATE;
     }
 
-    private BigDecimal calculateProrationGrossPay(EmployeeMaster employee, TimesheetSummary timesheet, int totalWorkingDays, BigDecimal holidayRate) {
-        final ProrationCalculatorContext context = buildProrationCalculatorContext(totalWorkingDays, holidayRate);
+    private BigDecimal calculateProrationGrossPay(EmployeeMaster employee, TimesheetSummary timesheet, int totalWorkingDaysInPayPeriod, BigDecimal holidayRate) {
+        final ProrationCalculatorContext context = buildProrationCalculatorContext(totalWorkingDaysInPayPeriod, holidayRate);
         ProrationPayCalculator prorationPayCalculator = prorationCalculatorFactory.getCalculator(employee.getPayType());
         return prorationPayCalculator.calculate(employee, timesheet, context);
     }
 
-    private ProrationCalculatorContext buildProrationCalculatorContext(int totalWorkingDays, BigDecimal holidayRate) {
+    private ProrationCalculatorContext buildProrationCalculatorContext(int totalWorkingDaysInPayPeriod, BigDecimal holidayRate) {
         return ProrationCalculatorContext.builder()
-                .totalWorkingDays(totalWorkingDays)
+                .totalWorkingDaysInPayPeriod(totalWorkingDaysInPayPeriod)
                 .holidayRate(holidayRate)
                 .build();
     }

@@ -15,19 +15,18 @@ import static java.math.RoundingMode.HALF_UP;
 @Component
 public class ContractProrationPayCalculator implements ProrationPayCalculator {
 
-    private static final BigDecimal HOURS_PER_DAY = BigDecimal.valueOf(8);
-
     @Override
     public BigDecimal calculate(EmployeeMaster employee, TimesheetSummary timesheet, ProrationCalculatorContext context) {
         log.info("Calculating contract prorated pay for employeeId: {}, timesheetId: {}", employee.getEmployeeId(), timesheet.getId());
 
-        BigDecimal basePayPerHour = BigDecimal.valueOf(5000).divide(HOURS_PER_DAY, 2, HALF_UP); // TODO: Mock value, shall be replaced with actual salary from EmployeeMaster
+        BigDecimal basePayPerHour = BigDecimal.valueOf(500); // TODO: Hourly basePay - Mock value, shall be replaced with actual basePay from EmployeeMaster
 
         BigDecimal hoursWorked = safe(timesheet.getHoursWorked());
         BigDecimal extraHoursWorked = safe(timesheet.getHolidayHoursWorked());
 
-        return basePayPerHour.multiply(hoursWorked)
-                .add(basePayPerHour.multiply(context.holidayRate()).multiply(extraHoursWorked))
-                .setScale(2, HALF_UP);
+        BigDecimal regularPay = basePayPerHour.multiply(hoursWorked);
+        BigDecimal holidayPay = basePayPerHour.multiply(context.holidayRate()).multiply(extraHoursWorked);
+
+        return regularPay.add(holidayPay).setScale(2, HALF_UP);
     }
 }
