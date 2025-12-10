@@ -1,5 +1,6 @@
 package com.tw.coupang.one_payroll.employee_master.entity;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -56,6 +57,9 @@ public class EmployeeMaster {
 
     @Column(name = "joining_date")
     private LocalDate joiningDate;
+
+    @Column(name = "base_salary", precision = 15, scale = 2)
+    private BigDecimal baseSalary;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
