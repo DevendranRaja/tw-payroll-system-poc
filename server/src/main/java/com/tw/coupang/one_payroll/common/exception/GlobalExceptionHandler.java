@@ -10,6 +10,7 @@ import com.tw.coupang.one_payroll.paygroups.exception.DuplicatePayGroupException
 import com.tw.coupang.one_payroll.paygroups.exception.PayGroupNotFoundException;
 import com.tw.coupang.one_payroll.payperiod.exception.PayPeriodNotFoundException;
 import com.tw.coupang.one_payroll.payroll.exception.InvalidPayrollStateException;
+import com.tw.coupang.one_payroll.payroll.exception.PayrollRunAlreadyExistsException;
 import com.tw.coupang.one_payroll.payslip.exception.PayslipNotFoundException;
 import com.tw.coupang.one_payroll.payperiod.exception.OverlappingPayPeriodException;
 import com.tw.coupang.one_payroll.payroll.dto.response.ApiResponse;
@@ -315,5 +316,18 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(PayrollRunAlreadyExistsException.class)
+    public ResponseEntity<ApiResponse> handlePayrollRunAlreadyExists(PayrollRunAlreadyExistsException ex) {
+        log.warn("Payroll run already exists: {}", ex.getMessage());
+
+        ApiResponse response = ApiResponse.failure(
+                "PAYROLL_RUN_ALREADY_EXISTS",
+                ex.getMessage(),
+                null
+        );
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
     }
 }
